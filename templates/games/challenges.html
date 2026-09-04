@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Desafíos y Partidas - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem;">
+
+    <!-- Active Games -->
+    <div>
+        <h2 style="margin-bottom: 1rem;">🔥 Mis Partidas en Juego</h2>
+        {% if my_games %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+                {% for g in my_games %}
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                            <span class="status-badge status-in_progress">En Juego</span>
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ g.time_control_minutes }} min</span>
+                        </div>
+                        <p style="font-weight: 600; margin-bottom: 1rem;">
+                            ⚪ {{ g.white_player.username }} vs ⬛ {{ g.black_player.username }}
+                        </p>
+                        <a href="{% url 'game_detail' g.id %}" class="btn btn-primary" style="width: 100%;">
+                            Continuar Partida ♟️
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="text-align: center; color: var(--text-secondary);">
+                No tienes partidas activas en este momento.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Received Challenges -->
+    <div>
+        <h2 style="margin-bottom: 1rem;">📩 Desafíos Recibidos</h2>
+        {% if received_challenges %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+                {% for ch in received_challenges %}
+                    <div class="card">
+                        <p style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">
+                            ⚔️ {{ ch.sender.username }} te ha desafiado
+                        </p>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+                            Ritmo de juego: {{ ch.time_control_minutes }} min + {{ ch.time_control_increment }}s
+                        </p>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <form action="{% url 'accept_challenge' ch.id %}" method="post" style="flex: 1;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">Aceptar</button>
+                            </form>
+                            <form action="{% url 'decline_challenge' ch.id %}" method="post" style="flex: 1;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-secondary" style="width: 100%;">Rechazar</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="text-align: center; color: var(--text-secondary);">
+                No tienes desafíos pendientes recibidos.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Sent Challenges -->
+    <div>
+        <h2 style="margin-bottom: 1rem;">📤 Desafíos Enviados</h2>
+        {% if sent_challenges %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+                {% for ch in sent_challenges %}
+                    <div class="card">
+                        <p style="font-weight: 600; margin-bottom: 0.5rem;">
+                            Desafío enviado a {{ ch.receiver.username }}
+                        </p>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem;">
+                            Esperando respuesta... ({{ ch.created_at|timesince }})
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="text-align: center; color: var(--text-secondary);">
+                No has enviado ningún desafío pendiente.
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

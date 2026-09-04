@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Compañeros - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <h2>Directorio de Estudiantes y Docentes</h2>
+            <p style="color: var(--text-secondary);">Selecciona un compañero para enviarle un desafío a una partida en tiempo real.</p>
+        </div>
+        <a href="{% url 'challenges_list' %}" class="btn btn-secondary">
+            Ver Mis Desafíos / Partidas
+        </a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem;">
+        {% for classmate in classmates %}
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem;">{{ classmate.username }}</h3>
+                        <span class="role-pill">{{ classmate.get_role_display }}</span>
+                    </div>
+                    <p style="color: var(--accent-color); font-weight: 700; font-size: 0.95rem; margin-bottom: 1rem;">
+                        ELO: {{ classmate.elo_rating }}
+                    </p>
+                </div>
+
+                <form action="{% url 'create_challenge' classmate.id %}" method="post" style="margin-top: 1rem;">
+                    {% csrf_token %}
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <select name="time_control_minutes" class="form-select" style="font-size: 0.85rem; padding: 0.4rem;">
+                            <option value="5">5 min (Blitz)</option>
+                            <option value="10" selected>10 min (Rápida)</option>
+                            <option value="15">15 min</option>
+                        </select>
+                        <select name="time_control_increment" class="form-select" style="font-size: 0.85rem; padding: 0.4rem;">
+                            <option value="0" selected>+0s</option>
+                            <option value="2">+2s</option>
+                            <option value="5">+5s</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        ⚔️ Desafiar
+                    </button>
+                </form>
+            </div>
+        {% empty %}
+            <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                <p style="color: var(--text-secondary);">No hay otros estudiantes o docentes registrados aún.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

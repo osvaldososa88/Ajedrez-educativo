@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ activity.title }} - {{ classroom.name }}{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2>{{ activity.title }}</h2>
+    <p style="color: var(--text-secondary); margin-top: 0.5rem;">{{ activity.description }}</p>
+    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+        Asignada: {{ activity.assigned_date|date:"d/m/Y" }}
+        {% if activity.due_date %} · Fecha límite: {{ activity.due_date|date:"d/m/Y" }}{% endif %}
+    </p>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h4>🎯 Objetivos</h4>
+    <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
+        {% for objective in activity.objectives.all %}
+            <li>{{ objective.get_objective_type_display }} — meta: {{ objective.target_count }}</li>
+        {% empty %}
+            <li style="color: var(--text-secondary);">Esta actividad no tiene objetivos medibles definidos.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% if is_teacher %}
+<div class="card">
+    <h4>Progreso por Estudiante</h4>
+    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Vista individual — no es una comparación pública entre estudiantes.</p>
+    <div style="display:flex; flex-direction:column; gap: 0.75rem;">
+        {% for row in progress_by_student %}
+        <div class="card" style="padding: 0.75rem 1rem;">
+            <strong>{{ row.student.username }}</strong>
+            {% if row.is_complete %}<span class="role-pill" style="background: rgba(16,185,129,0.2); color: var(--success-color);">Completada</span>{% endif %}
+            <ul style="margin-top: 0.4rem; padding-left: 1.25rem; font-size: 0.85rem;">
+                {% for item in row.objectives %}
+                <li>{{ item.objective.get_objective_type_display }}: {{ item.achieved }} / {{ item.target }} {% if item.completed %}✅{% endif %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% empty %}
+        <p style="color: var(--text-secondary);">No hay estudiantes asignados a esta actividad.</p>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <h4>Mi Progreso</h4>
+    {% if my_progress.is_complete %}<p style="color: var(--success-color); font-weight: 600;">✅ ¡Actividad completada!</p>{% endif %}
+    <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
+        {% for item in my_progress.objectives %}
+        <li>{{ item.objective.get_objective_type_display }}: {{ item.achieved }} / {{ item.target }} {% if item.completed %}✅{% endif %}</li>
+        {% empty %}
+        <li style="color: var(--text-secondary);">Esta actividad no tiene objetivos medibles todavía.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}

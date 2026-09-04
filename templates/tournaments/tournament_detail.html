@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ tournament.name }} - Torneo{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div style="display:flex; justify-content: space-between; align-items:start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h2>🏆 {{ tournament.name }}</h2>
+            <p style="color: var(--text-secondary); margin-top: 0.5rem;">{{ tournament.description }}</p>
+            <p style="font-size: 0.85rem; margin-top: 0.5rem;">
+                {{ tournament.get_format_display }} · <span class="role-pill">{{ tournament.get_status_display }}</span>
+                · Ritmo: {{ tournament.time_control_minutes }}+{{ tournament.time_control_increment }}
+            </p>
+        </div>
+        {% if can_register %}
+            {% if my_participation %}
+                {% if my_participation.status == 'WITHDRAWN' %}
+                <form method="post" action="{% url 'tournament_register' tournament.id %}"><button type="submit" class="btn btn-primary">Volver a Inscribirme</button></form>
+                {% else %}
+                <form method="post" action="{% url 'tournament_withdraw' tournament.id %}"><button type="submit" class="btn btn-danger">Retirarme</button></form>
+                {% endif %}
+            {% else %}
+            <form method="post" action="{% url 'tournament_register' tournament.id %}"><button type="submit" class="btn btn-primary">Inscribirme</button></form>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {% if is_organizer %}
+    <div style="display:flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+        {% if tournament.status == 'DRAFT' %}
+        <form method="post" action="{% url 'tournament_open_registration' tournament.id %}"><button type="submit" class="btn btn-secondary">Abrir Inscripción</button></form>
+        {% endif %}
+        {% if tournament.status == 'DRAFT' or tournament.status == 'REGISTRATION_OPEN' %}
+        <form method="post" action="{% url 'tournament_start' tournament.id %}"><button type="submit" class="btn btn-primary">Iniciar Torneo</button></form>
+        {% endif %}
+        {% if tournament.status == 'IN_PROGRESS' %}
+        <form method="post" action="{% url 'tournament_next_round' tournament.id %}"><button type="submit" class="btn btn-primary">Generar Próxima Ronda</button></form>
+        <form method="post" action="{% url 'tournament_finalize' tournament.id %}"><button type="submit" class="btn btn-secondary">Finalizar Torneo</button></form>
+        {% endif %}
+        {% if tournament.status != 'COMPLETED' and tournament.status != 'CANCELLED' %}
+        <form method="post" action="{% url 'tournament_cancel' tournament.id %}" onsubmit="return confirm('¿Cancelar el torneo?');"><button type="submit" class="btn btn-danger">Cancelar Torneo</button></form>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<div class="game-container">
+    <div class="board-wrapper">
+        <div class="card">
+            <h3>📋 Rondas</h3>
+            <div style="display:flex; flex-direction:column; gap: 0.5rem; margin-top: 0.75rem;">
+                {% for round in rounds %}
+                <a href="{% url 'round_detail' tournament.id round.id %}" class="card" style="padding: 0.6rem 1rem; display:flex; justify-content:space-between;">
+                    <span>Ronda {{ round.number }}</span>
+                    <span class="role-pill">{{ round.get_status_display }}</span>
+                </a>
+                {% empty %}
+                <p style="color: var(--text-secondary);">El torneo todavía no tiene rondas generadas.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="game-sidebar">
+        <div class="card">
+            <h4>📊 Clasificación</h4>
+            <table style="width:100%; margin-top: 0.75rem; font-size: 0.85rem; border-collapse: collapse;">
+                <thead>
+                    <tr style="text-align:left; color: var(--text-secondary);">
+                        <th>#</th><th>Jugador</th><th>Pts</th><th>V</th><th>T</th><th>D</th><th>Bh</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in standings %}
+                    <tr>
+                        <td>{{ row.rank }}</td>
+                        <td>{{ row.participant.user.username }}</td>
+                        <td>{{ row.points }}</td>
+                        <td>{{ row.wins }}</td>
+                        <td>{{ row.draws }}</td>
+                        <td>{{ row.losses }}</td>
+                        <td>{{ row.buchholz }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" style="color: var(--text-secondary);">Sin participantes todavía.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

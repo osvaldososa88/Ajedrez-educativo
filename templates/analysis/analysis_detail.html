@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Visor de Análisis Stockfish - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div class="game-container">
+
+    <!-- Board Area with Evaluation Bar -->
+    <div class="board-wrapper">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span style="font-weight: 700; font-size: 1.1rem; color: var(--accent-color);" id="eval-header-text">Evaluación: 0.00</span>
+            <div style="display: flex; gap: 0.5rem;">
+                <button id="mode-analysis-btn" class="btn btn-primary" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Modo Análisis</button>
+                <button id="mode-training-btn" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Entrenamiento</button>
+                <button id="mode-competition-btn" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Competición</button>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <!-- Vertical Evaluation Gauge Bar -->
+            <div id="eval-bar-container" style="width: 24px; height: 480px; background: #334155; border-radius: 6px; overflow: hidden; position: relative; display: flex; flex-direction: column;">
+                <div id="eval-bar-white" style="width: 100%; height: 50%; background: #f8fafc; transition: height 0.3s ease;"></div>
+                <div id="eval-bar-black" style="width: 100%; height: 50%; background: #0f172a; transition: height 0.3s ease;"></div>
+            </div>
+
+            <!-- The Interactive Chess Board -->
+            <div class="chessboard" id="chessboard"></div>
+        </div>
+
+        <!-- Navigation Control Bar -->
+        <div style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem;">
+            <button id="btn-first" class="btn btn-secondary" style="padding: 0.5rem 1rem;">⏮ Inicio</button>
+            <button id="btn-prev" class="btn btn-primary" style="padding: 0.5rem 1.25rem;">◀ Anterior</button>
+            <button id="btn-next" class="btn btn-primary" style="padding: 0.5rem 1.25rem;">Siguiente ▶</button>
+            <button id="btn-last" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Fin ⏭</button>
+        </div>
+    </div>
+
+    <!-- Sidebar & Engine Feedback -->
+    <div class="game-sidebar">
+
+        <!-- Progress Bar Card (for PENDING/PROCESSING jobs) -->
+        <div class="card" id="job-progress-card" style="{% if job.status == 'COMPLETED' %}display: none;{% endif %} margin-bottom: 1rem;">
+            <h3>Procesando Análisis...</h3>
+            <p id="job-status-text" style="color: var(--text-secondary); margin: 0.5rem 0;">Estado: {{ job.get_status_display }}</p>
+            <div style="width: 100%; background: rgba(255,255,255,0.1); height: 12px; border-radius: 6px; overflow: hidden;">
+                <div id="job-progress-bar" style="width: {{ job.progress_percent }}%; background: var(--accent-color); height: 100%; transition: width 0.3s ease;"></div>
+            </div>
+        </div>
+
+        <!-- Engine Analysis Card -->
+        <div class="card" style="margin-bottom: 1rem;">
+            <h3>Sugerencia de Stockfish</h3>
+            <div style="margin-top: 0.75rem;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary);">Mejor Movimiento:</p>
+                <p id="best-move-text" style="font-weight: 700; font-size: 1.2rem; color: var(--success-color);">--</p>
+            </div>
+            <div style="margin-top: 0.75rem;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary);">Línea Principal (PV):</p>
+                <p id="pv-line-text" style="font-family: monospace; font-size: 0.95rem; color: var(--accent-color);">--</p>
+            </div>
+            <div style="margin-top: 0.75rem;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary);">Calidad de Jugada:</p>
+                <span id="move-quality-badge" style="display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 700; font-size: 0.85rem; background: rgba(255,255,255,0.1);">--</span>
+            </div>
+        </div>
+
+        <!-- Position FEN Card -->
+        <div class="card" style="margin-bottom: 1rem;">
+            <h4>Posición FEN</h4>
+            <input type="text" id="fen-input" class="form-control" readonly style="font-family: monospace; font-size: 0.8rem; margin: 0.5rem 0;" value="">
+            <button id="btn-copy-fen" class="btn btn-secondary" style="width: 100%; font-size: 0.85rem;">📋 Copiar FEN</button>
+        </div>
+
+        <!-- Move History Table -->
+        <div class="card">
+            <h4 style="margin-bottom: 0.75rem;">Movimientos de la Partida</h4>
+            <div class="move-history" id="move-history" style="max-height: 260px; overflow-y: auto;">
+                <!-- Move rows dynamically populated -->
+            </div>
+        </div>
+
+        {% if job.game and job.status == 'COMPLETED' %}
+        <div class="card" style="margin-top: 1rem;">
+            <h4>🎯 Entrenamiento Personalizado</h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.5rem 0;">
+                Convierte tus errores importantes (jugadas marcadas como Error o Gran Error) en
+                posiciones privadas para practicar, sin revelarte la solución de antemano.
+            </p>
+            <form method="post" action="{% url 'personalization_generate_from_job' job.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Generar Entrenamiento de mis Errores</button>
+            </form>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script>
+    const JOB_ID = "{{ job.id }}";
+    const MOVE_ANALYSES = {{ move_analyses_json|safe }};
+    const JOB_INITIAL_STATUS = "{{ job.status }}";
+</script>
+<script src="{% static 'js/analysis_app.js' %}"></script>
+{% endblock %}

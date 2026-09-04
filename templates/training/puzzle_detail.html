@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ puzzle.title }} - Entrenamiento{% endblock %}
+
+{% block content %}
+<div class="game-container">
+
+    <div class="board-wrapper">
+        <div class="chessboard" id="chessboard"></div>
+
+        <div class="card" id="puzzle-feedback" style="display:none; margin-top: 1rem; text-align: center; font-weight: 600;"></div>
+    </div>
+
+    <div class="game-sidebar">
+        <div class="card">
+            <h3>{{ puzzle.title }}</h3>
+            <p style="color: var(--text-secondary); margin-top: 0.5rem;">{{ puzzle.description }}</p>
+
+            <div style="margin-top: 1rem; font-size: 0.85rem;">
+                <p><strong>Categoría:</strong> {{ puzzle.get_category_display }}</p>
+                <p><strong>Tema:</strong> {{ puzzle.get_theme_display }}</p>
+                <p><strong>Dificultad:</strong> {{ puzzle.get_difficulty_display }}</p>
+                <p><strong>Objetivo:</strong> {{ puzzle.get_objective_display }}</p>
+                <p><strong>Juegan:</strong> {{ puzzle.get_side_to_move_display }}</p>
+                <p><strong>Autor:</strong> {{ puzzle.author.username|default:"Anónimo" }}</p>
+                <p><strong>Estado:</strong> {{ puzzle.get_status_display }}</p>
+            </div>
+
+            {% if puzzle.status == 'PUBLISHED' %}
+            <div style="margin-top: 1rem; display:flex; align-items:center; gap: 0.5rem;">
+                <button id="btn-toggle-favorite" class="btn btn-secondary" data-favorited="{{ is_favorited|yesno:'true,false' }}">
+                    {% if is_favorited %}★ En Favoritos{% else %}☆ Añadir a Favoritos{% endif %}
+                </button>
+            </div>
+            <div style="margin-top: 0.75rem;">
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                    Valoración media: {% if puzzle.ratings_count > 0 %}⭐ {{ puzzle.average_rating }} ({{ puzzle.ratings_count }} valoraciones){% else %}Sin valoraciones aún{% endif %}
+                </p>
+                <div id="rating-widget" data-current-value="{{ user_rating.value|default:0 }}" style="margin-top: 0.35rem;">
+                    {% for i in "12345" %}
+                        <span class="rating-star" data-value="{{ i }}" style="cursor:pointer; font-size:1.3rem;">☆</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if hints_count > 0 %}
+            <button id="btn-request-hint" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">💡 Pedir Pista ({{ hints_count }} disponibles)</button>
+            <div id="hint-box" style="display:none; margin-top: 0.75rem; padding: 0.75rem; background: rgba(59,130,246,0.15); border-radius: 8px;">
+                <p id="hint-text" style="font-size: 0.9rem;"></p>
+            </div>
+            {% endif %}
+
+            {% if can_edit %}
+            <div style="margin-top: 1rem; display:flex; flex-direction: column; gap: 0.5rem;">
+                <a href="{% url 'puzzle_edit' puzzle.id %}" class="btn btn-secondary">✏️ Editar Problema</a>
+                {% if puzzle.status == 'DRAFT' or puzzle.status == 'REJECTED' %}
+                <form method="post" action="{% url 'puzzle_submit_review' puzzle.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary" style="width:100%;">📤 Enviar a Revisión</button>
+                </form>
+                {% endif %}
+                <form method="post" action="{% url 'puzzle_delete' puzzle.id %}" onsubmit="return confirm('¿Eliminar este problema?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" style="width:100%;">🗑️ Eliminar</button>
+                </form>
+            </div>
+            {% if puzzle.status == 'REJECTED' and puzzle.moderation_notes %}
+            <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(239,68,68,0.15); border-radius: 8px;">
+                <p style="font-size: 0.85rem;"><strong>Motivo de rechazo:</strong> {{ puzzle.moderation_notes }}</p>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <a href="{% url 'training_dashboard' %}" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;">← Volver al Entrenamiento</a>
+        </div>
+    </div>
+
+</div>
+
+<!-- Promotion Choice Modal -->
+<div id="promotion-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content">
+        <h3>Promoción de Peón</h3>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">Elige la pieza para promocionar:</p>
+        <div class="promotion-choices">
+            <div class="promotion-choice" data-piece="q" title="Reina">♛</div>
+            <div class="promotion-choice" data-piece="r" title="Torre">♜</div>
+            <div class="promotion-choice" data-piece="b" title="Alfil">♝</div>
+            <div class="promotion-choice" data-piece="n" title="Caballo">♞</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script>
+    const PUZZLE_FEN = "{{ puzzle.initial_fen }}";
+    const PUZZLE_SIDE_TO_MOVE = "{{ puzzle.side_to_move|lower }}";
+    const SUBMIT_MOVE_URL = "{% url 'submit_puzzle_move_api' puzzle.id %}";
+    const HINT_URL = "{% url 'get_puzzle_hint_api' puzzle.id %}";
+    const FAVORITE_URL = "{% url 'puzzle_toggle_favorite' puzzle.id %}";
+    const RATE_URL = "{% url 'puzzle_rate' puzzle.id %}";
+</script>
+<script src="{% static 'js/training_app.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Crear Torneo - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card">
+        <h2>➕ Crear Torneo</h2>
+        <form method="post" style="margin-top: 1rem;">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="name">Nombre</label>
+                <input type="text" id="name" name="name" class="form-input" required maxlength="200">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="description">Descripción</label>
+                <textarea id="description" name="description" class="form-input" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="format">Formato</label>
+                <select id="format" name="format" class="form-select">
+                    {% for value, label in formats %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="rounds_total">Cantidad de Rondas (obligatorio para Sistema Suizo; se calcula solo en Todos contra Todos)</label>
+                <input type="number" id="rounds_total" name="rounds_total" class="form-input" min="1">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="time_control_minutes">Minutos por Jugador</label>
+                <input type="number" id="time_control_minutes" name="time_control_minutes" class="form-input" value="15" min="1">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="time_control_increment">Incremento (segundos)</label>
+                <input type="number" id="time_control_increment" name="time_control_increment" class="form-input" value="0" min="0">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Crear Torneo</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

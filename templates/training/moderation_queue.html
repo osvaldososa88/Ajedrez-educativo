@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Moderación de Problemas - Entrenamiento{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2>🛡️ Cola de Moderación</h2>
+    <p style="color: var(--text-secondary); margin-top: 0.5rem;">Problemas enviados por estudiantes/docentes pendientes de revisión.</p>
+</div>
+
+<div id="moderation-feedback" class="card" style="display:none; margin-bottom: 1rem; font-weight: 600;"></div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;">
+    {% for puzzle in puzzles %}
+    <div class="card" id="puzzle-card-{{ puzzle.id }}">
+        <h4>{{ puzzle.title }}</h4>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.5rem 0;">
+            {{ puzzle.get_category_display }} · {{ puzzle.get_theme_display }} · {{ puzzle.get_difficulty_display }} · {{ puzzle.get_objective_display }}
+        </p>
+        <p style="font-size: 0.8rem; color: var(--text-secondary);">Autor: {{ puzzle.author.username|default:"Anónimo" }}</p>
+        <p style="font-size: 0.8rem; font-family: monospace; word-break: break-all;">{{ puzzle.initial_fen }}</p>
+
+        <div style="display:flex; gap: 0.5rem; margin-top: 0.75rem;">
+            <a href="{% url 'puzzle_detail' puzzle.id %}" class="btn btn-secondary" style="flex:1;">Revisar</a>
+            <a href="{% url 'puzzle_edit' puzzle.id %}" class="btn btn-secondary" style="flex:1;">Editar</a>
+        </div>
+        <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem;">
+            <button class="btn btn-primary btn-approve" data-puzzle-id="{{ puzzle.id }}" style="flex:1;">✅ Aprobar</button>
+            <button class="btn btn-danger btn-reject" data-puzzle-id="{{ puzzle.id }}" style="flex:1;">❌ Rechazar</button>
+        </div>
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary);">No hay problemas pendientes de revisión.</p>
+    {% endfor %}
+</div>
+
+<!-- Rejection Reason Modal -->
+<div id="reject-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content">
+        <h3>Motivo de Rechazo</h3>
+        <textarea id="reject-reason-input" class="form-input" rows="4" style="margin-top: 0.75rem;" placeholder="Explica al autor por qué se rechaza el problema..."></textarea>
+        <div style="display:flex; gap: 0.5rem; margin-top: 1rem;">
+            <button id="btn-confirm-reject" class="btn btn-danger" style="flex:1;">Confirmar Rechazo</button>
+            <button id="btn-cancel-reject" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script>
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    }
+
+    let pendingRejectPuzzleId = null;
+    const rejectModal = document.getElementById('reject-modal');
+    const feedbackEl = document.getElementById('moderation-feedback');
+
+    function showFeedback(message, isError) {
+        feedbackEl.textContent = message;
+        feedbackEl.style.display = 'block';
+        feedbackEl.style.color = isError ? 'var(--danger-color)' : 'var(--success-color)';
+    }
+
+    document.querySelectorAll('.btn-approve').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const puzzleId = btn.getAttribute('data-puzzle-id');
+            fetch(`/training/puzzle/${puzzleId}/approve/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showFeedback('Problema aprobado y publicado.', false);
+                        document.getElementById(`puzzle-card-${puzzleId}`).remove();
+                    } else {
+                        showFeedback((data.errors || ['Error desconocido']).join(' '), true);
+                    }
+                });
+        });
+    });
+
+    document.querySelectorAll('.btn-reject').forEach(btn => {
+        btn.addEventListener('click', () => {
+            pendingRejectPuzzleId = btn.getAttribute('data-puzzle-id');
+            rejectModal.style.display = 'flex';
+        });
+    });
+
+    document.getElementById('btn-cancel-reject').addEventListener('click', () => {
+        rejectModal.style.display = 'none';
+        pendingRejectPuzzleId = null;
+    });
+
+    document.getElementById('btn-confirm-reject').addEventListener('click', () => {
+        const reason = document.getElementById('reject-reason-input').value.trim();
+        if (!reason || !pendingRejectPuzzleId) return;
+
+        fetch(`/training/puzzle/${pendingRejectPuzzleId}/reject/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+            .then(res => res.json())
+            .then(data => {
+                rejectModal.style.display = 'none';
+                if (data.success) {
+                    showFeedback('Problema rechazado.', false);
+                    document.getElementById(`puzzle-card-${pendingRejectPuzzleId}`).remove();
+                } else {
+                    showFeedback((data.errors || ['Error desconocido']).join(' '), true);
+                }
+                pendingRejectPuzzleId = null;
+            });
+    });
+</script>
+{% endblock %}

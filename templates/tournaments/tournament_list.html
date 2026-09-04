@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Torneos - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem; display:flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 1rem;">
+    <h2>🏆 Torneos Escolares</h2>
+    {% if can_create %}
+        <a href="{% url 'tournament_create' %}" class="btn btn-primary">➕ Crear Torneo</a>
+    {% endif %}
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+    {% for tournament in tournaments %}
+    <div class="card">
+        <h4>{{ tournament.name }}</h4>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.5rem 0;">
+            {{ tournament.get_format_display }} · <span class="role-pill">{{ tournament.get_status_display }}</span>
+        </p>
+        <p style="font-size: 0.8rem; color: var(--text-secondary);">{{ tournament.start_date|date:"d/m/Y" }}</p>
+        <a href="{% url 'tournament_detail' tournament.id %}" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">Ver Torneo</a>
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary);">Todavía no hay torneos.</p>
+    {% endfor %}
+</div>
+{% endblock %}

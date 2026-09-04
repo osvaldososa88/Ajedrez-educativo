@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Perfil de {{ profile_user.username }} - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 2rem auto;">
+    <div class="card">
+        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
+            <div style="width: 80px; height: 80px; background: var(--accent-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; color: white;">
+                ♟️
+            </div>
+            <div>
+                <h2>{{ profile_user.username }}</h2>
+                <p style="color: var(--text-secondary); margin-top: 0.25rem;">
+                    Rol: <span class="role-pill">{{ profile_user.get_role_display }}</span>
+                </p>
+                <p style="color: var(--accent-color); font-weight: 700; margin-top: 0.5rem;">
+                    Puntuación ELO: {{ profile_user.elo_rating }}
+                </p>
+            </div>
+        </div>
+
+        {% if profile_user.bio %}
+            <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <h4 style="color: var(--text-secondary); margin-bottom: 0.5rem;">Biografía</h4>
+                <p>{{ profile_user.bio }}</p>
+            </div>
+        {% endif %}
+
+        {% if profile_user != user %}
+            <form action="{% url 'create_challenge' profile_user.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    ⚔️ Desafiar a una partida
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

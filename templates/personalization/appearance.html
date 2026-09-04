@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Personalización Visual - Ajedrez Educativo Escolar{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto; padding: 1rem 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">
+                ⚙️ Configuración de Apariencia
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                Personaliza la estética visual de tus piezas y tablero. Los cambios se aplicarán automáticamente a todas tus partidas.
+            </p>
+        </div>
+
+        <div>
+            {% if is_custom %}
+                <span class="role-pill" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                    ✓ Usando preferencia personalizada
+                </span>
+                <form action="{% url 'personalization_appearance' %}" method="post" style="display: inline-block; margin-left: 0.5rem;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="reset">
+                    <button type="submit" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                        Restaurar predeterminados
+                    </button>
+                </form>
+            {% else %}
+                <span class="role-pill" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                    ⚙️ Usando configuración global del Administrador
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not allow_customization %}
+        <div style="padding: 1rem; border-radius: 8px; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #f59e0b; margin-bottom: 1.5rem;">
+            ⚠️ El Administrador ha configurado la apariencia global de la plataforma y ha deshabilitado la personalización individual.
+        </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'personalization_appearance' %}" id="appearanceForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save">
+        <input type="hidden" name="piece_set" id="selectedPieceSet" value="{{ current_piece_set }}">
+        <input type="hidden" name="board_theme" id="selectedBoardTheme" value="{{ current_board_theme }}">
+
+        <div style="display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start;" class="settings-grid">
+
+            <!-- Options Column -->
+            <div>
+                <!-- Piece Sets Section -->
+                <section style="margin-bottom: 2.5rem;">
+                    <h2 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                        👑 Set de Piezas
+                    </h2>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+                        {% for ps in piece_sets %}
+                            <div class="theme-card piece-card {% if current_piece_set == ps.id %}active{% endif %}"
+                                 data-piece-id="{{ ps.id }}"
+                                 style="padding: 1rem; border-radius: 12px; background: var(--bg-card); border: 2px solid {% if current_piece_set == ps.id %}var(--accent-color){% else %}var(--border-color){% endif %}; cursor: pointer; transition: all 0.2s ease;">
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                    <h3 style="font-size: 1rem; font-weight: 600;">{{ ps.name }}</h3>
+                                    <input type="radio" name="radio_piece" value="{{ ps.id }}" {% if current_piece_set == ps.id %}checked{% endif %} style="accent-color: var(--accent-color);">
+                                </div>
+
+                                <!-- Piece Preview Row -->
+                                <div style="display: flex; justify-content: space-around; background: rgba(0,0,0,0.15); padding: 0.5rem; border-radius: 8px; margin-bottom: 0.5rem;">
+                                    {% for p in ps.preview_pieces %}
+                                        <img src="{% static 'img/pieces/' %}{{ ps.id }}/{{ p }}.svg" alt="{{ p }}" style="width: 24px; height: 24px;">
+                                    {% endfor %}
+                                </div>
+
+                                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">
+                                    {{ ps.description }}
+                                </p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <!-- Board Themes Section -->
+                <section style="margin-bottom: 2rem;">
+                    <h2 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                        🎨 Tema del Tablero
+                    </h2>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+                        {% for bt in board_themes %}
+                            <div class="theme-card board-card {% if current_board_theme == bt.id %}active{% endif %}"
+                                 data-theme-id="{{ bt.id }}"
+                                 style="padding: 1rem; border-radius: 12px; background: var(--bg-card); border: 2px solid {% if current_board_theme == bt.id %}var(--accent-color){% else %}var(--border-color){% endif %}; cursor: pointer; transition: all 0.2s ease;">
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                    <h3 style="font-size: 1rem; font-weight: 600;">{{ bt.name }}</h3>
+                                    <input type="radio" name="radio_theme" value="{{ bt.id }}" {% if current_board_theme == bt.id %}checked{% endif %} style="accent-color: var(--accent-color);">
+                                </div>
+
+                                <!-- Mini Board Tile Preview -->
+                                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; width: 100%; height: 60px; border-radius: 6px; overflow: hidden; border: 2px solid {{ bt.frame_color }}; margin-bottom: 0.5rem;">
+                                    <div style="background: {{ bt.light_color }}"></div>
+                                    <div style="background: {{ bt.dark_color }}"></div>
+                                    <div style="background: {{ bt.light_color }}"></div>
+                                    <div style="background: {{ bt.dark_color }}"></div>
+
+                                    <div style="background: {{ bt.dark_color }}"></div>
+                                    <div style="background: {{ bt.light_color }}"></div>
+                                    <div style="background: {{ bt.dark_color }}"></div>
+                                    <div style="background: {{ bt.light_color }}"></div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                {% if allow_customization %}
+                    <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem; font-weight: 600; font-size: 1rem;">
+                        💾 Guardar Preferencias
+                    </button>
+                {% endif %}
+            </div>
+
+            <!-- Real-Time Live Preview Column -->
+            <div style="position: sticky; top: 2rem;">
+                <div style="background: var(--bg-card); padding: 1.25rem; border-radius: 14px; border: 1px solid var(--border-color); text-align: center;">
+                    <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">
+                        👁️ Previsualización en Tiempo Real
+                    </h3>
+
+                    <!-- Board Container -->
+                    <div id="previewBoard" class="chessboard" style="width: 100%; aspect-ratio: 1; margin: 0 auto; max-width: 280px;"></div>
+
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.75rem;">
+                        Esta vista previa muestra exactamente cómo se verá tu tablero en todas las partidas y ejercicios.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<style>
+.theme-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.theme-card.active {
+    border-color: var(--accent-color) !important;
+    background: rgba(59, 130, 246, 0.08) !important;
+}
+@media (max-width: 768px) {
+    .settings-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block board_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const previewBoardEl = document.getElementById('previewBoard');
+    const pieceInput = document.getElementById('selectedPieceSet');
+    const themeInput = document.getElementById('selectedBoardTheme');
+    const pieceCards = document.querySelectorAll('.piece-card');
+    const boardCards = document.querySelectorAll('.board-card');
+
+    let currentPieceSet = pieceInput.value || 'staunton';
+    let currentBoardTheme = themeInput.value || 'classic';
+
+    const SAMPLE_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
+    function renderPreview() {
+        document.body.setAttribute('data-board-theme', currentBoardTheme);
+        window.CHESS_PIECE_BASE = `/static/img/pieces/${currentPieceSet}/`;
+        ChessUI.renderFEN(previewBoardEl, SAMPLE_FEN);
+    }
+
+    pieceCards.forEach(card => {
+        card.addEventListener('click', () => {
+            pieceCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            const pId = card.dataset.pieceId;
+            card.querySelector('input[type="radio"]').checked = true;
+            pieceInput.value = pId;
+            currentPieceSet = pId;
+            renderPreview();
+        });
+    });
+
+    boardCards.forEach(card => {
+        card.addEventListener('click', () => {
+            boardCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            const tId = card.dataset.themeId;
+            card.querySelector('input[type="radio"]').checked = true;
+            themeInput.value = tId;
+            currentBoardTheme = tId;
+            renderPreview();
+        });
+    });
+
+    renderPreview();
+});
+</script>
+{% endblock %}

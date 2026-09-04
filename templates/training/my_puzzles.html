@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Problemas - Entrenamiento{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem; display:flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 1rem;">
+    <h2>📝 Mis Problemas</h2>
+    <a href="{% url 'puzzle_create' %}" class="btn btn-primary">✏️ Crear Nuevo Problema</a>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+    {% for puzzle in puzzles %}
+    <div class="card">
+        <div style="display:flex; justify-content: space-between; align-items:start;">
+            <h4>{{ puzzle.title }}</h4>
+            <span class="role-pill">{{ puzzle.get_status_display }}</span>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.5rem 0;">
+            {{ puzzle.get_category_display }} · {{ puzzle.get_theme_display }} · {{ puzzle.get_difficulty_display }}
+        </p>
+        {% if puzzle.status == 'REJECTED' and puzzle.moderation_notes %}
+        <p style="font-size: 0.8rem; color: var(--danger-color);">Rechazado: {{ puzzle.moderation_notes }}</p>
+        {% endif %}
+        <div style="display:flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+            <a href="{% url 'puzzle_detail' puzzle.id %}" class="btn btn-secondary" style="flex:1;">Ver</a>
+            {% if puzzle.status == 'DRAFT' or puzzle.status == 'REJECTED' or user.is_staff %}
+            <a href="{% url 'puzzle_edit' puzzle.id %}" class="btn btn-secondary" style="flex:1;">Editar</a>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary);">Todavía no has creado ningún problema.</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Nueva Actividad - {{ classroom.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 720px; margin: 0 auto;">
+    <div class="card">
+        <h2>➕ Nueva Actividad — {{ classroom.name }}</h2>
+        <form method="post" style="margin-top: 1rem;">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="title">Título</label>
+                <input type="text" id="title" name="title" class="form-input" placeholder="Ej: Semana 3 - Finales de peones" required maxlength="200">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="description">Descripción / Tareas</label>
+                <textarea id="description" name="description" class="form-input" rows="3" placeholder="Ej: Resolver 5 problemas, jugar 2 partidas, analizar 1 partida, crear 1 problema"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="due_date">Fecha Límite (opcional)</label>
+                <input type="date" id="due_date" name="due_date" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Objetivos Medibles</label>
+                <div id="objective-rows"></div>
+                <button type="button" id="btn-add-objective" class="btn btn-secondary" style="margin-top: 0.5rem;">+ Añadir Objetivo</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Problemas Específicos (opcional)</label>
+                <select name="puzzle_ids" class="form-select" multiple size="6">
+                    {% for puzzle in published_puzzles %}
+                        <option value="{{ puzzle.id }}">{{ puzzle.title }} ({{ puzzle.get_category_display }})</option>
+                    {% endfor %}
+                </select>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top:0.25rem;">Si no seleccionas ninguno, "resolver problemas" contará cualquier problema publicado que el estudiante resuelva en el período.</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Estudiantes (opcional)</label>
+                <select name="student_ids" class="form-select" multiple size="6">
+                    {% for student in students %}
+                        <option value="{{ student.id }}">{{ student.username }}</option>
+                    {% endfor %}
+                </select>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top:0.25rem;">Si no seleccionas a nadie, la actividad se asigna a todo el aula.</p>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Crear Actividad</button>
+        </form>
+    </div>
+</div>
+
+<template id="objective-row-template">
+    <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem;" class="objective-row">
+        <select name="objective_type" class="form-select">
+            <option value="">-- Tipo de objetivo --</option>
+            {% for value, label in objective_types %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+        <input type="number" name="objective_target" class="form-input" value="1" min="1" style="max-width: 90px;">
+        <button type="button" class="btn btn-danger btn-remove-objective">✕</button>
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const container = document.getElementById('objective-rows');
+    const template = document.getElementById('objective-row-template');
+
+    function addObjectiveRow() {
+        const clone = template.content.cloneNode(true);
+        clone.querySelector('.btn-remove-objective').addEventListener('click', (e) => {
+            e.target.closest('.objective-row').remove();
+        });
+        container.appendChild(clone);
+    }
+
+    document.getElementById('btn-add-objective').addEventListener('click', addObjectiveRow);
+    addObjectiveRow();
+</script>
+{% endblock %}

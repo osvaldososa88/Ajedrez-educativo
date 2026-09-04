@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Entrenamiento - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div style="display:flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h2>♟️ Entrenamiento</h2>
+            <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+                Resuelve problemas de táctica, estrategia, aperturas y finales. Progreso resuelto: {{ total_solved }} / intentos: {{ total_attempts }}.
+            </p>
+        </div>
+        <div style="display:flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="{% url 'puzzle_create' %}" class="btn btn-primary">✏️ Crear Problema</a>
+            <a href="{% url 'my_puzzles' %}" class="btn btn-secondary">Mis Problemas</a>
+            <a href="{% url 'puzzle_favorites' %}" class="btn btn-secondary">⭐ Favoritos</a>
+            {% if user.role == 'TEACHER' or user.role == 'ADMIN' or user.is_staff %}
+                <a href="{% url 'puzzle_moderation' %}" class="btn btn-secondary">🛡️ Moderación</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if weak_themes %}
+<div class="card" style="margin-bottom: 1.5rem; border: 1px solid rgba(245, 158, 11, 0.4);">
+    <h3 style="color: #f59e0b;">⚠️ Temas para reforzar</h3>
+    <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
+        {% for stat in weak_themes %}
+            <li>{{ stat.get_theme_display }} ({{ stat.get_category_display }}) — {{ stat.success_rate }}% de aciertos</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <form method="get" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end;">
+        <div>
+            <label for="category">Categoría</label><br>
+            <select name="category" id="category" class="form-select">
+                <option value="">Todas</option>
+                {% for value, label in categories %}
+                    <option value="{{ value }}" {% if value == selected_category %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="difficulty">Dificultad</label><br>
+            <select name="difficulty" id="difficulty" class="form-select">
+                <option value="">Todas</option>
+                {% for value, label in difficulties %}
+                    <option value="{{ value }}" {% if value == selected_difficulty %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+    </form>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem;">
+    {% for puzzle in puzzles %}
+    <div class="card">
+        <h4>{{ puzzle.title }}</h4>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.5rem 0;">
+            {{ puzzle.get_category_display }} · {{ puzzle.get_theme_display }} · {{ puzzle.get_difficulty_display }}
+        </p>
+        <p style="font-size: 0.85rem;">Objetivo: {{ puzzle.get_objective_display }}</p>
+        <p style="font-size: 0.8rem; color: var(--text-secondary);">
+            Autor: {{ puzzle.author.username|default:"Anónimo" }}
+            {% if puzzle.ratings_count > 0 %} · ⭐ {{ puzzle.average_rating }} ({{ puzzle.ratings_count }}){% endif %}
+            {% if puzzle.id in favorite_puzzle_ids %} · ⭐ En favoritos{% endif %}
+        </p>
+        <a href="{% url 'puzzle_detail' puzzle.id %}" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">Resolver</a>
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary);">No hay problemas disponibles con estos filtros.</p>
+    {% endfor %}
+</div>
+{% endblock %}
+

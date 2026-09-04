@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Aulas - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem; display:flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 1rem;">
+    <h2>🏫 Aulas</h2>
+    {% if is_teacher %}
+        <a href="{% url 'classroom_create' %}" class="btn btn-primary">➕ Crear Aula</a>
+    {% endif %}
+</div>
+
+{% if not is_teacher %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h4>Unirme a un Aula</h4>
+    <form method="post" action="{% url 'classroom_join' %}" style="display:flex; gap: 0.5rem; margin-top: 0.5rem;">
+        {% csrf_token %}
+        <input type="text" name="join_code" class="form-input" placeholder="Código de acceso" required style="max-width: 220px;">
+        <button type="submit" class="btn btn-primary">Unirme</button>
+    </form>
+</div>
+{% endif %}
+
+{% if pending_invitations %}
+<div class="card" style="margin-bottom: 1.5rem; border: 1px solid rgba(59,130,246,0.4);">
+    <h4>📩 Invitaciones Pendientes</h4>
+    <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
+        {% for inv in pending_invitations %}
+        <li style="margin-bottom: 0.5rem;">
+            {{ inv.classroom.name }} — invitado por {{ inv.invited_by.username|default:"docente" }}
+            <a href="{% url 'classroom_invitation_accept' inv.id %}" class="btn btn-primary" style="padding:0.15rem 0.6rem; font-size:0.75rem; margin-left:0.5rem;">Aceptar</a>
+            <a href="{% url 'classroom_invitation_decline' inv.id %}" class="btn btn-secondary" style="padding:0.15rem 0.6rem; font-size:0.75rem;">Rechazar</a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+    {% for classroom in classrooms %}
+    <div class="card">
+        <h4>{{ classroom.name }}</h4>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.5rem 0;">{{ classroom.description|default:"Sin descripción" }}</p>
+        {% if is_teacher %}
+        <p style="font-size: 0.8rem; font-family: monospace;">Código: {{ classroom.join_code }}</p>
+        {% endif %}
+        <a href="{% url 'classroom_detail' classroom.id %}" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">Entrar</a>
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary);">
+        {% if is_teacher %}Todavía no has creado ningún aula.{% else %}No estás inscrito en ningún aula todavía. Usa un código de acceso para unirte.{% endif %}
+    </p>
+    {% endfor %}
+</div>
+{% endblock %}

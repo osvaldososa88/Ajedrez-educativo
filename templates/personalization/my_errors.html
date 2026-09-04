@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Errores - Entrenamiento Personalizado{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2>🔍 Mis Errores Convertidos en Entrenamiento</h2>
+    <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+        Estas posiciones vienen de tus propias partidas analizadas. Son privadas: nadie más puede verlas.
+    </p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+    {% for error in errors %}
+    <div class="card">
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">{{ error.get_category_display }} · {{ error.get_theme_display }}</p>
+        <p style="margin-top: 0.5rem;">Jugaste <strong>{{ error.student_move_san }}</strong>, la mejor continuación era otra.</p>
+        {% if error.generated_puzzle %}
+        <a href="{% url 'puzzle_detail' error.generated_puzzle.id %}" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">Practicar Ahora</a>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary);">Todavía no has convertido errores en entrenamiento. Analiza una de tus partidas para empezar.</p>
+    {% endfor %}
+</div>
+{% endblock %}

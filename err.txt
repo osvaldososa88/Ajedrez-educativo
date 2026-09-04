@@ -1,0 +1,48 @@
+Traceback (most recent call last):
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\urls\resolvers.py", line 720, in url_patterns
+    iter(patterns)
+    ~~~~^^^^^^^^^^
+TypeError: 'module' object is not iterable
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "F:\Ema\vibe coding\organizacion futbol\Ajedrez educativo\manage.py", line 18, in <module>
+    main()
+    ~~~~^^
+  File "F:\Ema\vibe coding\organizacion futbol\Ajedrez educativo\manage.py", line 15, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\management\__init__.py", line 442, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\management\__init__.py", line 436, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\management\base.py", line 413, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\management\base.py", line 454, in execute
+    self.check()
+    ~~~~~~~~~~^^
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\management\base.py", line 486, in check
+    all_issues = checks.run_checks(
+        app_configs=app_configs,
+    ...<2 lines>...
+        databases=databases,
+    )
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\checks\registry.py", line 88, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\checks\urls.py", line 16, in check_url_config
+    return check_resolver(resolver)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\checks\urls.py", line 26, in check_resolver
+    return check_method()
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\urls\resolvers.py", line 531, in check
+    for pattern in self.url_patterns:
+                   ^^^^^^^^^^^^^^^^^
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\urls\resolvers.py", line 728, in url_patterns
+    raise ImproperlyConfigured(msg.format(name=self.urlconf_name)) from e
+django.core.exceptions.ImproperlyConfigured: The included URLconf 'config.urls' does not appear to have any patterns in it. If you see the 'urlpatterns' variable with valid patterns in the file then the issue is probably caused by a circular import.

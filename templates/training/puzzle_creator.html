@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if puzzle %}Editar Problema{% else %}Crear Problema{% endif %} - Entrenamiento{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2>{% if puzzle %}✏️ Editar Problema{% else %}✏️ Crear Nuevo Problema{% endif %}</h2>
+    <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+        Coloca piezas, define el objetivo, la solución y guarda como borrador. Podrás enviarlo a revisión luego.
+    </p>
+</div>
+
+{% if errors %}
+<div class="card" style="margin-bottom: 1.5rem; border: 1px solid rgba(239, 68, 68, 0.4);">
+    <h4 style="color: var(--danger-color);">No se pudo guardar el problema:</h4>
+    <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
+        {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="game-container">
+    <div class="board-wrapper">
+        <div style="display:flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+            <button type="button" id="btn-reset-start" class="btn btn-secondary" style="font-size:0.8rem;">Posición Inicial</button>
+            <button type="button" id="btn-clear-board" class="btn btn-secondary" style="font-size:0.8rem;">Tablero Vacío</button>
+            <button type="button" id="btn-load-fen" class="btn btn-secondary" style="font-size:0.8rem;">Cargar FEN del cuadro</button>
+        </div>
+
+        <div class="chessboard" id="chessboard"></div>
+
+        <div id="piece-palette" style="display:grid; grid-template-columns: repeat(6, 1fr); gap: 0.4rem; margin-top: 1rem;">
+            <!-- Filled dynamically by JS -->
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label class="form-label" for="fen-display">FEN</label>
+            <input type="text" id="fen-display" class="form-input" style="font-family: monospace; font-size: 0.8rem;">
+        </div>
+    </div>
+
+    <div class="game-sidebar">
+        <form id="puzzle-form" method="post">
+            {% csrf_token %}
+            <div class="card">
+                <div class="form-group">
+                    <label class="form-label" for="title">Título</label>
+                    <input type="text" id="title" name="title" class="form-input" value="{{ puzzle.title|default:'' }}" required maxlength="200">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="description">Descripción / Instrucción</label>
+                    <textarea id="description" name="description" class="form-input" rows="3">{{ puzzle.description|default:'' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="side_to_move">¿Quién Juega?</label>
+                    <select id="side_to_move" name="side_to_move" class="form-select">
+                        {% for value, label in sides %}
+                            <option value="{{ value }}" {% if puzzle.side_to_move == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="category">Categoría</label>
+                    <select id="category" name="category" class="form-select">
+                        {% for value, label in categories %}
+                            <option value="{{ value }}" {% if puzzle.category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="theme">Tema</label>
+                    <select id="theme" name="theme" class="form-select">
+                        {% for value, label in themes %}
+                            <option value="{{ value }}" {% if puzzle.theme == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="difficulty">Dificultad</label>
+                    <select id="difficulty" name="difficulty" class="form-select">
+                        {% for value, label in difficulties %}
+                            <option value="{{ value }}" {% if puzzle.difficulty == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="objective">Objetivo</label>
+                    <select id="objective" name="objective" class="form-select">
+                        {% for value, label in objectives %}
+                            <option value="{{ value }}" {% if puzzle.objective == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 1rem;">
+                <h4>Solución (secuencia UCI)</h4>
+                <p style="font-size:0.8rem; color: var(--text-secondary);">Ej: e2e4. Añade cada jugada en orden empezando por el bando que juega.</p>
+                <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem;">
+                    <input type="text" id="solution-move-input" class="form-input" placeholder="e2e4" maxlength="5">
+                    <button type="button" id="btn-add-solution-move" class="btn btn-secondary">Añadir</button>
+                </div>
+                <ol id="solution-move-list" style="margin-top: 0.75rem; padding-left: 1.25rem;"></ol>
+            </div>
+
+            <div class="card" style="margin-top: 1rem;">
+                <h4>Variantes Aceptadas</h4>
+                <p style="font-size:0.8rem; color: var(--text-secondary);">Jugadas alternativas válidas en un ply concreto de la solución.</p>
+                <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                    <input type="number" id="variation-ply-input" class="form-input" style="max-width: 90px;" min="0" placeholder="Ply #">
+                    <input type="text" id="variation-move-input" class="form-input" placeholder="e2e4" maxlength="5">
+                    <button type="button" id="btn-add-variation" class="btn btn-secondary">Añadir</button>
+                </div>
+                <ul id="variation-list" style="margin-top: 0.75rem; padding-left: 1.25rem;"></ul>
+            </div>
+
+            <div class="card" style="margin-top: 1rem;">
+                <h4>Pistas</h4>
+                <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem;">
+                    <input type="text" id="hint-input" class="form-input" placeholder="Busca un jaque...">
+                    <button type="button" id="btn-add-hint" class="btn btn-secondary">Añadir</button>
+                </div>
+                <ol id="hint-list" style="margin-top: 0.75rem; padding-left: 1.25rem;"></ol>
+            </div>
+
+            <input type="hidden" name="initial_fen" id="initial_fen">
+            <input type="hidden" name="solution_moves" id="solution_moves">
+            <input type="hidden" name="variations_json" id="variations_json">
+            <input type="hidden" name="hints" id="hints">
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">💾 Guardar como Borrador</button>
+        </form>
+    </div>
+</div>
+
+{% if puzzle %}
+{{ puzzle.solution_moves|json_script:"initial-solution-moves" }}
+{{ puzzle.variations_json|json_script:"initial-variations" }}
+{{ puzzle.hints|json_script:"initial-hints" }}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script>
+    const INITIAL_FEN = {% if puzzle %}"{{ puzzle.initial_fen }}"{% else %}null{% endif %};
+    const HAS_EXISTING_PUZZLE = {% if puzzle %}true{% else %}false{% endif %};
+</script>
+<script src="{% static 'js/training_creator.js' %}"></script>
+{% endblock %}

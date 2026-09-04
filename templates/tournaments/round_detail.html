@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Ronda {{ round.number }} - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem; display:flex; justify-content: space-between; align-items:center; flex-wrap: wrap; gap: 1rem;">
+    <h2>Ronda {{ round.number }} — {{ tournament.name }}</h2>
+    {% if is_organizer and round.status == 'IN_PROGRESS' %}
+    <form method="post" action="{% url 'round_close' tournament.id round.id %}"><button type="submit" class="btn btn-primary">Cerrar Ronda</button></form>
+    {% endif %}
+</div>
+
+<div style="display:flex; flex-direction:column; gap: 0.75rem;">
+    {% for pairing in pairings %}
+    <div class="card" id="pairing-{{ pairing.id }}">
+        {% if pairing.is_bye %}
+            <p>Tablero {{ pairing.board_number }}: <strong>{{ pairing.white_player.username }}</strong> — Bye (descanso, 1 punto)</p>
+        {% else %}
+            <p>Tablero {{ pairing.board_number }}: <strong>{{ pairing.white_player.username }}</strong> (Blancas) vs <strong>{{ pairing.black_player.username }}</strong> (Negras)</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Resultado: {{ pairing.get_result_display }}</p>
+            {% if pairing.game %}
+            <a href="{% url 'game_detail' pairing.game.id %}" class="btn btn-secondary" style="font-size:0.8rem;">Ver Partida</a>
+            {% endif %}
+
+            {% if is_organizer and pairing.result == 'PENDING' %}
+            <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-danger btn-incident" data-pairing-id="{{ pairing.id }}" data-white-absent="true" data-black-absent="false">Ausencia Blancas</button>
+                <button type="button" class="btn btn-danger btn-incident" data-pairing-id="{{ pairing.id }}" data-white-absent="false" data-black-absent="true">Ausencia Negras</button>
+                <button type="button" class="btn btn-danger btn-incident" data-pairing-id="{{ pairing.id }}" data-white-absent="true" data-black-absent="true">Doble Ausencia</button>
+            </div>
+            {% endif %}
+            {% if is_organizer and pairing.result != 'PENDING' %}
+            <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary btn-set-result" data-pairing-id="{{ pairing.id }}" data-result="WHITE_WIN">Corregir: Ganan Blancas</button>
+                <button type="button" class="btn btn-secondary btn-set-result" data-pairing-id="{{ pairing.id }}" data-result="BLACK_WIN">Corregir: Ganan Negras</button>
+                <button type="button" class="btn btn-secondary btn-set-result" data-pairing-id="{{ pairing.id }}" data-result="DRAW">Corregir: Tablas</button>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    }
+
+    document.querySelectorAll('.btn-incident').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const pairingId = btn.getAttribute('data-pairing-id');
+            const body = new URLSearchParams({
+                white_absent: btn.getAttribute('data-white-absent'),
+                black_absent: btn.getAttribute('data-black-absent'),
+            });
+            fetch(`/tournaments/{{ tournament.id }}/rounds/{{ round.id }}/pairings/${pairingId}/incident/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body.toString(),
+            }).then(() => window.location.reload());
+        });
+    });
+
+    document.querySelectorAll('.btn-set-result').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const pairingId = btn.getAttribute('data-pairing-id');
+            const body = new URLSearchParams({ result: btn.getAttribute('data-result') });
+            fetch(`/tournaments/{{ tournament.id }}/rounds/{{ round.id }}/pairings/${pairingId}/result/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body.toString(),
+            }).then(() => window.location.reload());
+        });
+    });
+</script>
+{% endblock %}

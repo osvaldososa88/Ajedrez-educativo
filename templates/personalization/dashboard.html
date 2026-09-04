@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Progreso - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2>📈 Mi Perfil de Práctica</h2>
+    <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+        Estos indicadores reflejan tu práctica reciente en la plataforma — <strong>no son una
+        medición absoluta de tu inteligencia ni de tu nivel de ajedrez</strong>, solo una guía
+        para saber en qué conviene entrenar más.
+    </p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+    {% for indicator in profile %}
+    <div class="card">
+        <h4>{{ indicator.label }}</h4>
+        {% if indicator.score is not None %}
+            <p style="font-size: 2rem; font-weight: 700; color: var(--accent-color); margin: 0.5rem 0;">{{ indicator.score }}</p>
+            <p style="font-size: 0.75rem; color: var(--text-secondary);">
+                {{ indicator.attempts }} intento(s) · {{ indicator.recent_errors }} error(es) reciente(s)
+            </p>
+        {% else %}
+            <p style="color: var(--text-secondary); margin-top: 0.5rem;">Sin datos suficientes todavía.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card">
+    <h3>🗓️ Recomendaciones de esta Semana</h3>
+    <div style="display:flex; flex-direction:column; gap: 1rem; margin-top: 1rem;">
+        {% for item in recommendations %}
+        <div class="card" style="padding: 0.75rem 1rem;">
+            <p style="font-weight: 600;">{{ item.count }} — {{ item.reason }}</p>
+            <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                {% for puzzle in item.puzzles %}
+                <a href="{% url 'puzzle_detail' puzzle.id %}" class="btn btn-secondary" style="font-size: 0.8rem;">{{ puzzle.title }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <p style="color: var(--text-secondary);">
+            Todavía no hay suficiente información para generar recomendaciones. Resuelve algunos
+            problemas y analiza tus partidas para empezar a recibir sugerencias personalizadas.
+        </p>
+        {% endfor %}
+    </div>
+</div>
+
+<div style="margin-top: 1rem;">
+    <a href="{% url 'personalization_my_errors' %}" class="btn btn-secondary">Ver mis errores convertidos en entrenamiento</a>
+</div>
+{% endblock %}

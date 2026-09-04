@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Estadísticas - {{ classroom.name }}{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2>📊 Estadísticas del Aula — {{ classroom.name }}</h2>
+    <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+        Progreso individual de cada estudiante. Esta información es privada y solo la ven los docentes del aula.
+    </p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+    {% for summary in summaries %}
+    <div class="card">
+        <h4><a href="{% url 'classroom_student_progress' classroom.id summary.student.id %}">{{ summary.student.username }}</a></h4>
+        <ul style="margin-top: 0.5rem; padding-left: 1.25rem; font-size: 0.85rem;">
+            <li>Problemas resueltos: {{ summary.puzzles_solved }}</li>
+            <li>Intentos fallidos: {{ summary.puzzle_attempts_failed }}</li>
+            <li>Partidas jugadas: {{ summary.games_played }}</li>
+            <li>Última actividad: {{ summary.recent_activity_at|date:"d/m/Y H:i"|default:"Sin actividad" }}</li>
+        </ul>
+        {% if summary.weak_themes %}
+        <p style="font-size: 0.8rem; color: #f59e0b; margin-top: 0.5rem;">⚠️ Temas para reforzar:</p>
+        <ul style="padding-left: 1.25rem; font-size: 0.8rem;">
+            {% for stat in summary.weak_themes %}
+            <li>{{ stat.get_theme_display }} ({{ stat.success_rate }}%)</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary);">No hay estudiantes inscritos todavía.</p>
+    {% endfor %}
+</div>
+{% endblock %}

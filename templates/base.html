@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ajedrez Educativo Escolar{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+<body data-board-theme="{{ user_board_theme|default:'classic' }}">
+
+    <nav class="navbar">
+        <a href="{% url 'home' %}" class="nav-brand">
+            ♟️ Ajedrez Escolar
+        </a>
+
+        <div class="nav-links">
+            {% if user.is_authenticated %}
+                <a href="{% url 'classmates' %}" class="nav-link">Compañeros</a>
+                <a href="{% url 'challenges_list' %}" class="nav-link">Mis Desafíos / Partidas</a>
+                <a href="{% url 'training_dashboard' %}" class="nav-link">Entrenamiento</a>
+                <a href="{% url 'classroom_list' %}" class="nav-link">Aulas</a>
+                <a href="{% url 'tournament_list' %}" class="nav-link">Torneos</a>
+                <a href="{% url 'personalization_dashboard' %}" class="nav-link">Mi Progreso</a>
+                <a href="{% url 'personalization_appearance' %}" class="nav-link">⚙️ Apariencia</a>
+                <div class="user-badge">
+                    <span>👤 {{ user.username }}</span>
+                    <span class="role-pill">{{ user.get_role_display }}</span>
+                    <span style="opacity: 0.7; font-size: 0.8rem;">(ELO: {{ user.elo_rating }})</span>
+                </div>
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">Salir</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="nav-link">Ingresar</a>
+                <a href="{% url 'register' %}" class="btn btn-primary">Registrarse</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="container">
+        {% if messages %}
+            <div style="margin-bottom: 1.5rem;">
+                {% for message in messages %}
+                    <div style="padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem; background: rgba(59,130,246,0.2); border: 1px solid #3b82f6;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer style="text-align: center; padding: 2rem; border-top: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.85rem;">
+        <p>&copy; 2026 Plataforma de Ajedrez Educativo Escolar. Desarrollado con Django & python-chess.</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+    {% load static %}
+    <script>window.CHESS_PIECE_BASE = "{% static 'img/pieces/' %}{{ user_piece_set|default:'staunton' }}/";</script>
+    <script src="{% static 'js/chess_ui.js' %}"></script>
+    {% block board_js %}{% endblock %}
+</body>
+</html>

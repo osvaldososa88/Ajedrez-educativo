@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Invitaciones - Aulas{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2>📩 Mis Invitaciones</h2>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+    {% for inv in invitations %}
+    <div class="card">
+        <h4>{{ inv.classroom.name }}</h4>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">Invitado por {{ inv.invited_by.username|default:"docente" }}</p>
+        <div style="display:flex; gap: 0.5rem; margin-top: 0.75rem;">
+            <a href="{% url 'classroom_invitation_accept' inv.id %}" class="btn btn-primary" style="flex:1;">Aceptar</a>
+            <a href="{% url 'classroom_invitation_decline' inv.id %}" class="btn btn-secondary" style="flex:1;">Rechazar</a>
+        </div>
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary);">No tienes invitaciones pendientes.</p>
+    {% endfor %}
+</div>
+{% endblock %}

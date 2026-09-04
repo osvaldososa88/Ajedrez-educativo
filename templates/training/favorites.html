@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Favoritos - Entrenamiento{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2>⭐ Mis Problemas Favoritos</h2>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem;">
+    {% for puzzle in puzzles %}
+    <div class="card">
+        <h4>{{ puzzle.title }}</h4>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.5rem 0;">
+            {{ puzzle.get_category_display }} · {{ puzzle.get_theme_display }} · {{ puzzle.get_difficulty_display }}
+        </p>
+        <p style="font-size: 0.8rem; color: var(--text-secondary);">Autor: {{ puzzle.author.username|default:"Anónimo" }}</p>
+        <a href="{% url 'puzzle_detail' puzzle.id %}" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">Resolver</a>
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary);">Todavía no tienes problemas favoritos. Márcalos con ⭐ al resolverlos.</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ classroom.name }} - Aula{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div style="display:flex; justify-content: space-between; align-items:start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h2>🏫 {{ classroom.name }}</h2>
+            <p style="color: var(--text-secondary); margin-top: 0.5rem;">{{ classroom.description|default:"" }}</p>
+        </div>
+        {% if is_teacher %}
+        <div style="text-align:right;">
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Código de acceso</p>
+            <p style="font-family: monospace; font-size: 1.2rem; font-weight: 700;">{{ classroom.join_code }}</p>
+        </div>
+        {% endif %}
+    </div>
+    <div style="display:flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+        {% if is_teacher %}
+            <a href="{% url 'activity_create' classroom.id %}" class="btn btn-primary">➕ Nueva Actividad</a>
+            <a href="{% url 'classroom_stats' classroom.id %}" class="btn btn-secondary">📊 Estadísticas del Aula</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="game-container">
+    <div class="board-wrapper">
+        <div class="card">
+            <h3>📋 Actividades</h3>
+            <div style="display:flex; flex-direction:column; gap: 0.75rem; margin-top: 0.75rem;">
+                {% for activity in activities %}
+                <div class="card" style="padding: 0.75rem 1rem;">
+                    <strong>{{ activity.title }}</strong>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.25rem 0;">
+                        Asignada: {{ activity.assigned_date|date:"d/m/Y" }}
+                        {% if activity.due_date %} · Vence: {{ activity.due_date|date:"d/m/Y" }}{% endif %}
+                    </p>
+                    <a href="{% url 'activity_detail' classroom.id activity.id %}" class="btn btn-secondary" style="font-size:0.8rem;">Ver Detalle</a>
+                </div>
+                {% empty %}
+                <p style="color: var(--text-secondary);">No hay actividades asignadas todavía.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="game-sidebar">
+        {% if is_teacher %}
+        <div class="card">
+            <h4>👥 Estudiantes Inscritos ({{ enrollments|length }})</h4>
+            <div style="margin-top: 0.75rem;">
+                <form method="post" action="{% url 'classroom_invite_student' classroom.id %}" id="invite-form" style="display:flex; gap: 0.5rem; margin-bottom: 1rem;">
+                    {% csrf_token %}
+                    <input type="text" name="username" class="form-input" placeholder="usuario a invitar" required>
+                    <button type="submit" class="btn btn-secondary">Invitar</button>
+                </form>
+                <ul style="padding-left: 1.25rem;">
+                    {% for enrollment in enrollments %}
+                    <li style="margin-bottom: 0.4rem; display:flex; justify-content: space-between; align-items:center;">
+                        <a href="{% url 'classroom_student_progress' classroom.id enrollment.student.id %}">{{ enrollment.student.username }}</a>
+                        <button type="button" class="btn btn-danger btn-remove-student" data-user-id="{{ enrollment.student.id }}" style="padding: 0.1rem 0.5rem; font-size: 0.7rem;">Quitar</button>
+                    </li>
+                    {% empty %}
+                    <li style="color: var(--text-secondary);">Sin estudiantes inscritos.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% if pending_invitations %}
+            <div style="margin-top: 1rem;">
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Invitaciones pendientes:</p>
+                <ul style="padding-left: 1.25rem;">
+                    {% for inv in pending_invitations %}
+                    <li style="font-size: 0.85rem;">{{ inv.student.username }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    }
+
+    document.querySelectorAll('.btn-remove-student').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!confirm('¿Quitar a este estudiante del aula?')) return;
+            const userId = btn.getAttribute('data-user-id');
+            fetch(`/classrooms/{{ classroom.id }}/students/${userId}/remove/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            }).then(() => window.location.reload());
+        });
+    });
+</script>
+{% endblock %}

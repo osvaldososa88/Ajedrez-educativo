@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Progreso de {{ student.username }} - {{ classroom.name }}{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2>📈 Progreso de {{ student.username }}</h2>
+    <p style="color: var(--text-secondary); margin-top: 0.5rem;">Aula: {{ classroom.name }}</p>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h4>Resumen General</h4>
+    <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
+        <li>Problemas resueltos: {{ summary.puzzles_solved }}</li>
+        <li>Intentos fallidos: {{ summary.puzzle_attempts_failed }}</li>
+        <li>Partidas jugadas: {{ summary.games_played }}</li>
+        <li>Última actividad: {{ summary.recent_activity_at|date:"d/m/Y H:i"|default:"Sin actividad" }}</li>
+    </ul>
+    {% if summary.weak_themes %}
+    <p style="font-size: 0.85rem; color: #f59e0b; margin-top: 0.75rem;">⚠️ Temas para reforzar:</p>
+    <ul style="padding-left: 1.25rem; font-size: 0.85rem;">
+        {% for stat in summary.weak_themes %}
+        <li>{{ stat.get_theme_display }} ({{ stat.get_category_display }}) — {{ stat.success_rate }}%</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h4>Actividades del Aula</h4>
+    <div style="display:flex; flex-direction:column; gap: 0.75rem; margin-top: 0.75rem;">
+        {% for row in activity_progress %}
+        <div class="card" style="padding: 0.75rem 1rem;">
+            <strong>{{ row.activity.title }}</strong>
+            {% if row.is_complete %}<span class="role-pill" style="background: rgba(16,185,129,0.2); color: var(--success-color);">Completada</span>{% endif %}
+            <ul style="margin-top: 0.4rem; padding-left: 1.25rem; font-size: 0.85rem;">
+                {% for item in row.objectives %}
+                <li>{{ item.objective.get_objective_type_display }}: {{ item.achieved }} / {{ item.target }} {% if item.completed %}✅{% endif %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% empty %}
+        <p style="color: var(--text-secondary);">No hay actividades asignadas a este estudiante.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
