@@ -71,6 +71,23 @@
                 </div>
             {% endif %}
 
+            {% if game.status != 'IN_PROGRESS' %}
+                <div class="game-finished-card" style="background: rgba(59, 130, 246, 0.12); border: 1px solid var(--accent-color); padding: 1rem; border-radius: 8px; margin-top: 1rem; text-align: center;">
+                    <h4 style="color: var(--accent-color); margin-bottom: 0.25rem;">Partida Finalizada</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                        Resultado: <strong>{{ game.get_status_display }}</strong>
+                    </p>
+                    <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
+                        <a href="{% url 'create_game_analysis_job' game.id %}" class="btn btn-primary" style="flex: 1; font-size: 0.9rem;">
+                            🔍 Analizar Partida
+                        </a>
+                        <button class="btn btn-secondary btn-fav-toggle-detail" data-game-id="{{ game.id }}" style="font-size: 0.9rem; padding: 0.4rem 0.75rem;" title="Marcar como Favorita (Máx. 10)">
+                            <span id="detail-fav-icon">{% if is_favorite %}⭐ Favorita{% else %}☆ Guardar Favorita{% endif %}</span>
+                        </button>
+                    </div>
+                </div>
+            {% endif %}
+
             <a href="{% url 'export_pgn' game.id %}" class="btn btn-secondary" style="width: 100%; margin-top: 0.75rem; font-size: 0.85rem;">
                 📥 Descargar PGN
             </a>
@@ -104,10 +121,17 @@
 
 <!-- Game End Modal -->
 <div id="game-over-modal" class="modal-backdrop" style="display: none;">
-    <div class="modal-content">
+    <div class="modal-content" style="text-align: center;">
         <h2 id="game-over-title">¡Fin de la Partida!</h2>
         <p id="game-over-reason" style="margin: 1rem 0; font-size: 1.1rem; color: var(--text-secondary);"></p>
-        <a href="{% url 'challenges_list' %}" class="btn btn-primary">Volver a mis Desafíos</a>
+        <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem;">
+            <a href="{% url 'create_game_analysis_job' game.id %}" id="btn-analyze-modal" class="btn btn-primary">
+                🔍 Analizar Partida
+            </a>
+            <a href="{% url 'challenges_list' %}" class="btn btn-secondary">
+                Volver a mis Desafíos
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}

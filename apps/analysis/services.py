@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.db import connections
 from apps.core.stockfish_engine import StockfishEngine
 from .models import AnalysisJob, PositionAnalysis, MoveAnalysis
+from .review_engine import ReviewEngine
 
 def start_async_analysis_job(job_id: str):
     """
@@ -65,14 +66,19 @@ def _run_analysis_job(job_id: str):
 
         board = game.board()
         prev_score = 0
+        move_summary_list = []
 
         for idx, (move, move_san) in enumerate(moves_list, start=1):
             fen_before = board.fen()
             move_uci = move.uci()
+
+            # Position before eval
+            eval_before = StockfishEngine.evaluate_position(fen_before, depth=job.target_depth)
+
             board.push(move)
             fen_after = board.fen()
 
-            # Check cached position analysis or run Stockfish
+            # Check cached position analysis or run Stockfish for fen_after
             pos_analysis, created = PositionAnalysis.objects.get_or_create(
                 fen=fen_after,
                 defaults={
@@ -87,18 +93,38 @@ def _run_analysis_job(job_id: str):
             )
 
             if created or (pos_analysis.score_cp is None and pos_analysis.mate_in is None):
-                eval_res = StockfishEngine.evaluate_position(fen_after, depth=job.target_depth)
-                pos_analysis.score_cp = eval_res['score_cp']
-                pos_analysis.mate_in = eval_res['mate_in']
-                pos_analysis.best_move_uci = eval_res['best_move_uci']
-                pos_analysis.best_move_san = eval_res['best_move_san']
-                pos_analysis.pv_san = eval_res['pv_san']
-                pos_analysis.engine_name = eval_res['engine_name']
+                eval_after = StockfishEngine.evaluate_position(fen_after, depth=job.target_depth)
+                pos_analysis.score_cp = eval_after['score_cp']
+                pos_analysis.mate_in = eval_after['mate_in']
+                pos_analysis.best_move_uci = eval_after['best_move_uci']
+                pos_analysis.best_move_san = eval_after['best_move_san']
+                pos_analysis.pv_san = eval_after['pv_san']
+                pos_analysis.engine_name = eval_after['engine_name']
                 pos_analysis.save()
+            else:
+                eval_after = {
+                    'score_cp': pos_analysis.score_cp,
+                    'mate_in': pos_analysis.mate_in,
+                    'best_move_uci': pos_analysis.best_move_uci,
+                    'best_move_san': pos_analysis.best_move_san,
+                    'pv_san': pos_analysis.pv_san
+                }
 
             current_score = pos_analysis.score_cp if pos_analysis.score_cp is not None else 0
             cp_loss = max(0, prev_score - current_score) if (idx % 2 != 0) else max(0, current_score - prev_score)
-            quality = StockfishEngine.classify_move_quality(cp_loss)
+
+            # Pedagogical review analysis
+            review_data = ReviewEngine.analyze_move_pedagogically(
+                fen_before=fen_before,
+                move_uci=move_uci,
+                move_san=move_san,
+                fen_after=fen_after,
+                eval_before=eval_before,
+                eval_after=eval_after,
+                cp_loss=cp_loss
+            )
+
+            quality = review_data['classification']
 
             MoveAnalysis.objects.create(
                 job=job,
@@ -110,8 +136,15 @@ def _run_analysis_job(job_id: str):
                 position_analysis=pos_analysis,
                 score_cp=pos_analysis.score_cp,
                 mate_in=pos_analysis.mate_in,
-                quality=quality
+                quality=quality,
+                review_data=review_data
             )
+
+            move_summary_list.append({
+                'ply': idx,
+                'quality': quality,
+                'cp_loss': cp_loss
+            })
 
             prev_score = current_score
 
@@ -119,6 +152,14 @@ def _run_analysis_job(job_id: str):
             progress = int((idx / total_moves) * 90) + 5
             job.progress_percent = progress
             job.save()
+
+        # Calculate overall game review summary metrics
+        summary_metrics = ReviewEngine.compute_game_summary_metrics(move_summary_list)
+        job.accuracy_white = summary_metrics['accuracy_white']
+        job.accuracy_black = summary_metrics['accuracy_black']
+        job.estimated_elo_white = summary_metrics['estimated_elo_white']
+        job.estimated_elo_black = summary_metrics['estimated_elo_black']
+        job.summary_stats = summary_metrics
 
         job.status = AnalysisJob.Status.COMPLETED
         job.progress_percent = 100
@@ -129,3 +170,4 @@ def _run_analysis_job(job_id: str):
         job.status = AnalysisJob.Status.FAILED
         job.error_message = str(e)
         job.save()
+

@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial de Partidas & Favoritas - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto; padding: 1.5rem 1rem;">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 style="margin: 0; font-size: 1.8rem; color: #f8fafc;">📜 Historial de Partidas</h1>
+            <p style="color: var(--text-secondary); margin: 0.25rem 0 0 0; font-size: 0.95rem;">
+                Guarda hasta <strong>50 partidas</strong> recientes y conserva hasta <strong>10 favoritas</strong> ⭐ que nunca se eliminarán.
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <div style="background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">
+                Favoritas: <strong id="fav-counter" style="color: #f59e0b;">{{ favorite_count }} / 10 ⭐</strong>
+            </div>
+            <a href="{% url 'challenges_list' %}" class="btn btn-primary" style="font-size: 0.9rem;">⚔️ Jugar Nueva Partida</a>
+        </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+        <button id="filter-all-btn" class="btn btn-primary" onclick="filterGames('all')" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Todas ({{ games|length }})</button>
+        <button id="filter-fav-btn" class="btn btn-secondary" onclick="filterGames('fav')" style="padding: 0.4rem 1rem; font-size: 0.85rem;">⭐ Favoritas ({{ favorite_count }})</button>
+    </div>
+
+    <!-- Games List Grid -->
+    <div id="games-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+        {% for game in games %}
+        <div class="card game-card {% if game.id in favorite_ids %}is-favorite{% endif %}" data-is-fav="{% if game.id in favorite_ids %}true{% else %}false{% endif %}" style="display: flex; flex-direction: column; justify-content: space-between; border-left: 4px solid {% if game.winner == 'WHITE' %}#10b981{% elif game.winner == 'BLACK' %}#38bdf8{% else %}#94a3b8{% endif %};">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.75rem; color: var(--text-secondary);">{{ game.created_at|date:"d M Y, H:i" }}</span>
+                    <button class="btn-fav-toggle" data-game-id="{{ game.id }}" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 0; line-height: 1;" title="Marcar como Favorita (Máx. 10)">
+                        {% if game.id in favorite_ids %}⭐{% else %}☆{% endif %}
+                    </button>
+                </div>
+
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.3rem;">
+                        <span style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">⚪ {{ game.white_player.username }}</span>
+                        {% if game.winner == 'WHITE' %}<span class="badge" style="background: #10b981; font-size: 0.7rem;">Ganador</span>{% endif %}
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">⬛ {{ game.black_player.username }}</span>
+                        {% if game.winner == 'BLACK' %}<span class="badge" style="background: #38bdf8; font-size: 0.7rem;">Ganador</span>{% endif %}
+                    </div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.04); padding: 0.4rem 0.6rem; border-radius: 6px; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                    Resultado: <strong style="color: #f8fafc;">{{ game.get_winner_display }}</strong> ({{ game.get_finish_reason_display }})
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <a href="{% url 'create_game_analysis_job' game.id %}" class="btn btn-primary" style="flex: 1; font-size: 0.8rem; padding: 0.4rem; text-align: center;">
+                    🔍 Analizar Partida
+                </a>
+                <button class="btn btn-secondary btn-share-game" data-share-url="{{ request.scheme }}://{{ request.get_host }}/games/share/{{ game.share_token }}/" style="font-size: 0.8rem; padding: 0.4rem 0.75rem;" title="Compartir Enlace">
+                    🔗 Compartir
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: rgba(255,255,255,0.03); border-radius: 12px;">
+            <p style="font-size: 1.2rem; color: var(--text-secondary);">Aún no tienes partidas registradas en tu historial.</p>
+            <a href="{% url 'challenges_list' %}" class="btn btn-primary" style="margin-top: 1rem;">¡Jugar mi primera partida!</a>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- Share Modal -->
+<div id="share-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z-index: 9999;">
+    <div class="card" style="width: 90%; max-width: 450px; background: #1e293b; border: 1px solid var(--accent-color);">
+        <h3 style="margin-top: 0; color: #f8fafc;">🔗 Compartir Partida</h3>
+        <p style="font-size: 0.85rem; color: var(--text-secondary);">Copia este enlace para presumir de tu partida y compartir el análisis con amigos o compañeros:</p>
+        <input type="text" id="share-url-input" class="form-control" readonly style="width: 100%; margin: 1rem 0; font-family: monospace; font-size: 0.85rem;" value="">
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="closeShareModal()">Cerrar</button>
+            <button class="btn btn-primary" onclick="copyShareUrl()">📋 Copiar Enlace</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filterGames(type) {
+        const btnAll = document.getElementById('filter-all-btn');
+        const btnFav = document.getElementById('filter-fav-btn');
+        const cards = document.querySelectorAll('.game-card');
+
+        if (type === 'fav') {
+            btnFav.className = 'btn btn-primary';
+            btnAll.className = 'btn btn-secondary';
+            cards.forEach(card => {
+                card.style.display = card.getAttribute('data-is-fav') === 'true' ? 'flex' : 'none';
+            });
+        } else {
+            btnAll.className = 'btn btn-primary';
+            btnFav.className = 'btn btn-secondary';
+            cards.forEach(card => {
+                card.style.display = 'flex';
+            });
+        }
+    }
+
+    document.querySelectorAll('.btn-fav-toggle').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const gameId = btn.getAttribute('data-game-id');
+            try {
+                const res = await fetch(`/games/game/${gameId}/favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    btn.textContent = data.is_favorite ? '⭐' : '☆';
+                    const card = btn.closest('.game-card');
+                    if (card) card.setAttribute('data-is-fav', data.is_favorite ? 'true' : 'false');
+                    document.getElementById('fav-counter').textContent = `${data.favorite_count} / 10 ⭐`;
+                } else {
+                    alert(data.error || 'Error al cambiar favorita');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    });
+
+    document.querySelectorAll('.btn-share-game').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const url = btn.getAttribute('data-share-url');
+            document.getElementById('share-url-input').value = url;
+            document.getElementById('share-modal').style.display = 'flex';
+        });
+    });
+
+    function closeShareModal() {
+        document.getElementById('share-modal').style.display = 'none';
+    }
+
+    function copyShareUrl() {
+        const input = document.getElementById('share-url-input');
+        input.select();
+        navigator.clipboard.writeText(input.value);
+        alert('¡Enlace de la partida copiado al portapapeles!');
+        closeShareModal();
+    }
+</script>
+{% endblock %}

@@ -101,11 +101,13 @@ class GameDetailView(LoginRequiredMixin, DetailView):
         is_black = (user == game.black_player)
         is_player = is_white or is_black
 
+        from .models import GameFavorite
         context['is_player'] = is_player
         context['is_white'] = is_white
         context['is_black'] = is_black
         context['player_color'] = 'white' if is_white else ('black' if is_black else 'spectator')
         context['moves'] = game.moves.order_by('ply')
+        context['is_favorite'] = GameFavorite.objects.filter(user=user, game=game).exists()
         return context
 
 @login_required
@@ -115,3 +117,64 @@ def export_pgn(request, game_id):
     response = HttpResponse(pgn_content, content_type='application/x-chess-pgn')
     response['Content-Disposition'] = f'attachment; filename="partida_{game.id.hex[:8]}.pgn"'
     return response
+
+class GameHistoryView(LoginRequiredMixin, ListView):
+    model = Game
+    template_name = 'games/game_history.html'
+    context_object_name = 'games'
+
+    def get_queryset(self):
+        user = self.request.user
+        Game.prune_user_history(user, limit=50)
+        return Game.objects.filter(
+            models.Q(white_player=user) | models.Q(black_player=user),
+            status=Game.Status.FINISHED
+        ).order_by('-created_at')[:50]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        from .models import GameFavorite
+        fav_game_ids = set(GameFavorite.objects.filter(user=user).values_list('game_id', flat=True))
+        context['favorite_ids'] = fav_game_ids
+        context['favorite_count'] = len(fav_game_ids)
+        return context
+
+@login_required
+def toggle_favorite_game(request, game_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    game = get_object_or_404(Game, id=game_id)
+    user = request.user
+    if user not in [game.white_player, game.black_player] and not user.is_staff:
+        return JsonResponse({'error': 'No tienes permisos'}, status=403)
+
+    from .models import GameFavorite
+    fav = GameFavorite.objects.filter(user=user, game=game).first()
+
+    if fav:
+        fav.delete()
+        is_favorite = False
+    else:
+        # Check max 10 favorites limit
+        current_favs_count = GameFavorite.objects.filter(user=user).count()
+        if current_favs_count >= 10:
+            return JsonResponse({
+                'error': 'Has alcanzado el límite máximo de 10 partidas favoritas. Desmarca una favorita para agregar otra.'
+            }, status=400)
+        GameFavorite.objects.create(user=user, game=game)
+        is_favorite = True
+
+    return JsonResponse({
+        'status': 'success',
+        'is_favorite': is_favorite,
+        'favorite_count': GameFavorite.objects.filter(user=user).count()
+    })
+
+def shared_game_view(request, share_token):
+    game = get_object_or_404(Game, share_token=share_token)
+    analysis_job = game.analysis_jobs.filter(status='COMPLETED').first()
+    if analysis_job:
+        return redirect('analysis_job_detail', job_id=analysis_job.id)
+    return redirect('game_detail', game_id=game.id)

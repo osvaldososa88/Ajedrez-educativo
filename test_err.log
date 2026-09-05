@@ -1,0 +1,276 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.3, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\emanu\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+django: version: 5.1.7, settings: config.settings (from ini)
+rootdir: F:\Ema\vibe coding\Juegos\Ajedrez educativo
+configfile: pytest.ini
+plugins: asyncio-1.4.0, django-4.14.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 7 items
+
+apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_analysis_access_after_checkmate FAILED [ 14%]
+apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_analysis_access_after_draw FAILED [ 28%]
+apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_analysis_access_after_resignation FAILED [ 42%]
+apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_analysis_access_after_timeout FAILED [ 57%]
+apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_outsider_cannot_analyze PASSED [ 71%]
+apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_teacher_can_analyze FAILED [ 85%]
+apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_analysis_does_not_mutate_finished_game FAILED [100%]
+
+================================== FAILURES ===================================
+________ TestFinishedGameAnalysis.test_analysis_access_after_checkmate ________
+apps\games\tests\test_game_finish_analysis.py:40: in test_analysis_access_after_checkmate
+    response = client.get(url)
+               ^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1129: in get
+    response = super().get(
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:479: in get
+    return self.generic(
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:676: in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1092: in request
+    self.check_exception(response)
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:805: in check_exception
+    raise exc_value
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py:55: in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py:197: in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py:60: in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps\analysis\views.py:40: in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Game' object has no attribute 'generate_pgn'
+---------------------------- Captured stderr setup ----------------------------
+Creating test database for alias 'default'...
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:248 Internal Server Error: /analysis/game/a42da8d2-df95-487f-8881-ada796a4d6c3/start/
+Traceback (most recent call last):
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "F:\Ema\vibe coding\Juegos\Ajedrez educativo\apps\analysis\views.py", line 40, in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+AttributeError: 'Game' object has no attribute 'generate_pgn'
+__________ TestFinishedGameAnalysis.test_analysis_access_after_draw ___________
+apps\games\tests\test_game_finish_analysis.py:51: in test_analysis_access_after_draw
+    response = client.get(url)
+               ^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1129: in get
+    response = super().get(
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:479: in get
+    return self.generic(
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:676: in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1092: in request
+    self.check_exception(response)
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:805: in check_exception
+    raise exc_value
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py:55: in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py:197: in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py:60: in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps\analysis\views.py:40: in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Game' object has no attribute 'generate_pgn'
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:248 Internal Server Error: /analysis/game/51825846-0909-4af1-b01d-d325ae56b1ed/start/
+Traceback (most recent call last):
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "F:\Ema\vibe coding\Juegos\Ajedrez educativo\apps\analysis\views.py", line 40, in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+AttributeError: 'Game' object has no attribute 'generate_pgn'
+_______ TestFinishedGameAnalysis.test_analysis_access_after_resignation _______
+apps\games\tests\test_game_finish_analysis.py:61: in test_analysis_access_after_resignation
+    response = client.get(url)
+               ^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1129: in get
+    response = super().get(
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:479: in get
+    return self.generic(
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:676: in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1092: in request
+    self.check_exception(response)
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:805: in check_exception
+    raise exc_value
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py:55: in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py:197: in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py:60: in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps\analysis\views.py:40: in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Game' object has no attribute 'generate_pgn'
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:248 Internal Server Error: /analysis/game/86573319-fe8f-4307-906a-6d8e25094611/start/
+Traceback (most recent call last):
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "F:\Ema\vibe coding\Juegos\Ajedrez educativo\apps\analysis\views.py", line 40, in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+AttributeError: 'Game' object has no attribute 'generate_pgn'
+_________ TestFinishedGameAnalysis.test_analysis_access_after_timeout _________
+apps\games\tests\test_game_finish_analysis.py:70: in test_analysis_access_after_timeout
+    response = client.get(url)
+               ^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1129: in get
+    response = super().get(
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:479: in get
+    return self.generic(
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:676: in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1092: in request
+    self.check_exception(response)
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:805: in check_exception
+    raise exc_value
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py:55: in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py:197: in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py:60: in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps\analysis\views.py:40: in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Game' object has no attribute 'generate_pgn'
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:248 Internal Server Error: /analysis/game/8cf17d5f-6a90-4fb2-bad4-d3e607e9ed54/start/
+Traceback (most recent call last):
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "F:\Ema\vibe coding\Juegos\Ajedrez educativo\apps\analysis\views.py", line 40, in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+AttributeError: 'Game' object has no attribute 'generate_pgn'
+______________ TestFinishedGameAnalysis.test_teacher_can_analyze ______________
+apps\games\tests\test_game_finish_analysis.py:89: in test_teacher_can_analyze
+    response = client.get(url)
+               ^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1129: in get
+    response = super().get(
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:479: in get
+    return self.generic(
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:676: in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1092: in request
+    self.check_exception(response)
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:805: in check_exception
+    raise exc_value
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py:55: in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py:197: in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py:60: in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps\analysis\views.py:40: in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Game' object has no attribute 'generate_pgn'
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:248 Internal Server Error: /analysis/game/9830bbf8-361c-48d6-a144-504c6488ae59/start/
+Traceback (most recent call last):
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "F:\Ema\vibe coding\Juegos\Ajedrez educativo\apps\analysis\views.py", line 40, in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+AttributeError: 'Game' object has no attribute 'generate_pgn'
+____ TestFinishedGameAnalysis.test_analysis_does_not_mutate_finished_game _____
+apps\games\tests\test_game_finish_analysis.py:100: in test_analysis_does_not_mutate_finished_game
+    client.get(url)
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1129: in get
+    response = super().get(
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:479: in get
+    return self.generic(
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:676: in generic
+    return self.request(**r)
+           ^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1092: in request
+    self.check_exception(response)
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:805: in check_exception
+    raise exc_value
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py:55: in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py:197: in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py:60: in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+apps\analysis\views.py:40: in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+E   AttributeError: 'Game' object has no attribute 'generate_pgn'
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:248 Internal Server Error: /analysis/game/1b7a0b85-fd4e-45b8-9aac-fa94850268b9/start/
+Traceback (most recent call last):
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "F:\Ema\vibe coding\Juegos\Ajedrez educativo\apps\analysis\views.py", line 40, in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+AttributeError: 'Game' object has no attribute 'generate_pgn'
+-------------------------- Captured stderr teardown ---------------------------
+Destroying test database for alias 'default'...
+=========================== short test summary info ===========================
+FAILED apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_analysis_access_after_checkmate
+FAILED apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_analysis_access_after_draw
+FAILED apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_analysis_access_after_resignation
+FAILED apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_analysis_access_after_timeout
+FAILED apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_teacher_can_analyze
+FAILED apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_analysis_does_not_mutate_finished_game
+======================== 6 failed, 1 passed in 13.18s =========================

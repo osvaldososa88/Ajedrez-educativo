@@ -1,0 +1,293 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.3, pytest-9.1.1, pluggy-1.6.0
+django: version: 5.1.7, settings: config.settings (from ini)
+rootdir: F:\Ema\vibe coding\Juegos\Ajedrez educativo
+configfile: pytest.ini
+plugins: asyncio-1.4.0, django-4.14.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 7 items / 6 deselected / 1 selected
+
+apps\games\tests\test_game_finish_analysis.py F                          [100%]
+
+================================== FAILURES ===================================
+________ TestFinishedGameAnalysis.test_analysis_access_after_checkmate ________
+
+self = <test_game_finish_analysis.TestFinishedGameAnalysis object at 0x0000024F4F984B90>
+client = <django.test.client.Client object at 0x0000024F4FFD6C10>
+
+    def test_analysis_access_after_checkmate(self, client):
+        game = self.create_finished_game(Game.Winner.WHITE, Game.FinishReason.CHECKMATE)
+        client.login(username='white_player', password='password123')
+    
+        url = reverse('create_game_analysis_job', kwargs={'game_id': game.id})
+>       response = client.get(url)
+                   ^^^^^^^^^^^^^^^
+
+apps\games\tests\test_game_finish_analysis.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <django.test.client.Client object at 0x0000024F4FFD6C10>
+path = '/analysis/game/1bcbb1a5-6f11-41cc-8982-4dbec836f30c/start/', data = None
+follow = False, secure = False, headers = None, query_params = None, extra = {}
+
+    def get(
+        self,
+        path,
+        data=None,
+        follow=False,
+        secure=False,
+        *,
+        headers=None,
+        query_params=None,
+        **extra,
+    ):
+        """Request a response from the server using GET."""
+        self.extra = extra
+        self.headers = headers
+>       response = super().get(
+            path,
+            data=data,
+            secure=secure,
+            headers=headers,
+            query_params=query_params,
+            **extra,
+        )
+
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1129: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <django.test.client.Client object at 0x0000024F4FFD6C10>
+path = '/analysis/game/1bcbb1a5-6f11-41cc-8982-4dbec836f30c/start/', data = None
+secure = False, headers = None, query_params = {}, extra = {}
+
+    def get(
+        self, path, data=None, secure=False, *, headers=None, query_params=None, **extra
+    ):
+        """Construct a GET request."""
+        if query_params and data:
+            raise ValueError("query_params and data arguments are mutually exclusive.")
+        query_params = data or query_params
+        query_params = {} if query_params is None else query_params
+>       return self.generic(
+            "GET",
+            path,
+            secure=secure,
+            headers=headers,
+            query_params=query_params,
+            **extra,
+        )
+
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:479: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <django.test.client.Client object at 0x0000024F4FFD6C10>, method = 'GET'
+path = '/analysis/game/1bcbb1a5-6f11-41cc-8982-4dbec836f30c/start/', data = b''
+content_type = 'application/octet-stream', secure = False, headers = None
+query_params = {}, extra = {}
+
+    def generic(
+        self,
+        method,
+        path,
+        data="",
+        content_type="application/octet-stream",
+        secure=False,
+        *,
+        headers=None,
+        query_params=None,
+        **extra,
+    ):
+        """Construct an arbitrary HTTP request."""
+        parsed = urlparse(str(path))  # path can be lazy
+        data = force_bytes(data, settings.DEFAULT_CHARSET)
+        r = {
+            "PATH_INFO": self._get_path(parsed),
+            "REQUEST_METHOD": method,
+            "SERVER_PORT": "443" if secure else "80",
+            "wsgi.url_scheme": "https" if secure else "http",
+        }
+        if data:
+            r.update(
+                {
+                    "CONTENT_LENGTH": str(len(data)),
+                    "CONTENT_TYPE": content_type,
+                    "wsgi.input": FakePayload(data),
+                }
+            )
+        if headers:
+            extra.update(HttpHeaders.to_wsgi_names(headers))
+        if query_params:
+            extra["QUERY_STRING"] = urlencode(query_params, doseq=True)
+        r.update(extra)
+        # If QUERY_STRING is absent or empty, we want to extract it from the URL.
+        if not r.get("QUERY_STRING"):
+            # WSGI requires latin-1 encoded strings. See get_path_info().
+            query_string = parsed[4].encode().decode("iso-8859-1")
+            r["QUERY_STRING"] = query_string
+>       return self.request(**r)
+               ^^^^^^^^^^^^^^^^^
+
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:676: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <django.test.client.Client object at 0x0000024F4FFD6C10>
+request = {'PATH_INFO': '/analysis/game/1bcbb1a5-6f11-41cc-8982-4dbec836f30c/start/', 'REQUEST_METHOD': 'GET', 'SERVER_PORT': '80', 'wsgi.url_scheme': 'http', ...}
+
+    def request(self, **request):
+        """
+        Make a generic request. Compose the environment dictionary and pass
+        to the handler, return the result of the handler. Assume defaults for
+        the query environment, which can be overridden using the arguments to
+        the request.
+        """
+        environ = self._base_environ(**request)
+    
+        # Curry a data dictionary into an instance of the template renderer
+        # callback function.
+        data = {}
+        on_template_render = partial(store_rendered_templates, data)
+        signal_uid = "template-render-%s" % id(request)
+        signals.template_rendered.connect(on_template_render, dispatch_uid=signal_uid)
+        # Capture exceptions created by the handler.
+        exception_uid = "request-exception-%s" % id(request)
+        got_request_exception.connect(self.store_exc_info, dispatch_uid=exception_uid)
+        try:
+            response = self.handler(environ)
+        finally:
+            signals.template_rendered.disconnect(dispatch_uid=signal_uid)
+            got_request_exception.disconnect(dispatch_uid=exception_uid)
+        # Check for signaled exceptions.
+>       self.check_exception(response)
+
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:1092: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <django.test.client.Client object at 0x0000024F4FFD6C10>
+response = <HttpResponseServerError status_code=500, "text/html; charset=utf-8">
+
+    def check_exception(self, response):
+        """
+        Look for a signaled exception, clear the current context exception
+        data, re-raise the signaled exception, and clear the signaled exception
+        from the local cache.
+        """
+        response.exc_info = self.exc_info
+        if self.exc_info:
+            _, exc_value, _ = self.exc_info
+            self.exc_info = None
+            if self.raise_request_exception:
+>               raise exc_value
+
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\test\client.py:805: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+request = <WSGIRequest: GET '/analysis/game/1bcbb1a5-6f11-41cc-8982-4dbec836f30c/start/'>
+
+    @wraps(get_response)
+    def inner(request):
+        try:
+>           response = get_response(request)
+                       ^^^^^^^^^^^^^^^^^^^^^
+
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <django.test.client.ClientHandler object at 0x0000024F4FFD6FD0>
+request = <WSGIRequest: GET '/analysis/game/1bcbb1a5-6f11-41cc-8982-4dbec836f30c/start/'>
+
+    def _get_response(self, request):
+        """
+        Resolve and call the view, then apply view, exception, and
+        template_response middleware. This method is everything that happens
+        inside the request/response middleware.
+        """
+        response = None
+        callback, callback_args, callback_kwargs = self.resolve_request(request)
+    
+        # Apply view middleware
+        for middleware_method in self._view_middleware:
+            response = middleware_method(
+                request, callback, callback_args, callback_kwargs
+            )
+            if response:
+                break
+    
+        if response is None:
+            wrapped_callback = self.make_view_atomic(callback)
+            # If it is an asynchronous view, run it in a subthread.
+            if iscoroutinefunction(wrapped_callback):
+                wrapped_callback = async_to_sync(wrapped_callback)
+            try:
+>               response = wrapped_callback(request, *callback_args, **callback_kwargs)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py:197: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+request = <WSGIRequest: GET '/analysis/game/1bcbb1a5-6f11-41cc-8982-4dbec836f30c/start/'>
+args = (), kwargs = {'game_id': UUID('1bcbb1a5-6f11-41cc-8982-4dbec836f30c')}
+
+    def _view_wrapper(request, *args, **kwargs):
+        if asyncio.iscoroutinefunction(test_func):
+            test_pass = async_to_sync(test_func)(request.user)
+        else:
+            test_pass = test_func(request.user)
+    
+        if test_pass:
+>           return view_func(request, *args, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+request = <WSGIRequest: GET '/analysis/game/1bcbb1a5-6f11-41cc-8982-4dbec836f30c/start/'>
+game_id = UUID('1bcbb1a5-6f11-41cc-8982-4dbec836f30c')
+
+    @login_required
+    def create_game_analysis_job(request, game_id):
+        """Create asynchronous Stockfish analysis job for an existing game."""
+        game = get_object_or_404(Game, id=game_id)
+    
+        # Permission check: User must be white, black, teacher, or admin
+        is_participant = (request.user == game.white_player or request.user == game.black_player)
+        is_staff = request.user.role in ['TEACHER', 'ADMIN'] or request.user.is_staff
+    
+        if not (is_participant or is_staff):
+            return HttpResponseForbidden("No tienes permiso para analizar esta partida.")
+    
+        # Tournament games are competitive play: analysis stays disabled while the
+        # round is still being played, matching the "no analysis during competition" rule.
+        if game.status == Game.Status.IN_PROGRESS and hasattr(game, 'tournament_pairing'):
+            return HttpResponseForbidden("El análisis no está disponible mientras la partida de torneo está en curso.")
+    
+        # Check if existing job is already in progress or completed
+        existing_job = AnalysisJob.objects.filter(game=game, status=AnalysisJob.Status.COMPLETED).order_by('-created_at').first()
+        if existing_job:
+            return redirect('analysis_job_detail', job_id=existing_job.id)
+    
+        job = AnalysisJob.objects.create(
+            game=game,
+            user=request.user,
+>           pgn_text=game.generate_pgn(),
+                     ^^^^^^^^^^^^^^^^^
+            target_depth=12
+        )
+E       AttributeError: 'Game' object has no attribute 'generate_pgn'
+
+apps\analysis\views.py:40: AttributeError
+------------------------------ Captured log call ------------------------------
+ERROR    django.request:log.py:248 Internal Server Error: /analysis/game/1bcbb1a5-6f11-41cc-8982-4dbec836f30c/start/
+Traceback (most recent call last):
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\emanu\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "F:\Ema\vibe coding\Juegos\Ajedrez educativo\apps\analysis\views.py", line 40, in create_game_analysis_job
+    pgn_text=game.generate_pgn(),
+             ^^^^^^^^^^^^^^^^^
+AttributeError: 'Game' object has no attribute 'generate_pgn'
+=========================== short test summary info ===========================
+FAILED apps/games/tests/test_game_finish_analysis.py::TestFinishedGameAnalysis::test_analysis_access_after_checkmate
+======================= 1 failed, 6 deselected in 2.71s =======================

@@ -148,6 +148,16 @@ class AnalysisApp {
         const whiteBar = document.getElementById('eval-bar-white');
         const blackBar = document.getElementById('eval-bar-black');
 
+        // Coach UI elements
+        const coachAvatar = document.getElementById('coach-avatar');
+        const coachTitle = document.getElementById('coach-title');
+        const coachThemeBadge = document.getElementById('coach-theme-badge');
+        const coachMessageText = document.getElementById('coach-message-text');
+        const coachExplanationText = document.getElementById('coach-explanation-text');
+        const coachHintBox = document.getElementById('coach-hint-box');
+        const coachHintText = document.getElementById('coach-hint-text');
+        const btnToggleHint = document.getElementById('btn-toggle-hint');
+
         if (this.currentMode === 'COMPETITION') {
             if (evalHeader) evalHeader.textContent = 'Evaluación deshabilitada';
             if (bestMoveText) bestMoveText.textContent = 'Oculto';
@@ -184,15 +194,67 @@ class AnalysisApp {
             if (pvLineText) pvLineText.textContent = 'Oculto en modo Entrenamiento';
         }
 
-        // Quality badge formatting
+        // Spanish Quality Badges Mapping
+        const SPANISH_QUALITY_MAP = {
+            'BOOK': { label: '📚 LIBRO', bg: 'rgba(59, 130, 246, 0.3)' },
+            'BRILLIANT': { label: '💎 BRILLANTE', bg: 'rgba(168, 85, 247, 0.35)' },
+            'BEST': { label: '🎯 MEJOR', bg: 'rgba(16, 185, 129, 0.35)' },
+            'EXCELLENT': { label: '👍 EXCELENTE', bg: 'rgba(52, 211, 153, 0.3)' },
+            'GOOD': { label: '✓ BUENA', bg: 'rgba(96, 165, 250, 0.3)' },
+            'INACCURACY': { label: '⚠️ INEXACTITUD', bg: 'rgba(245, 158, 11, 0.3)' },
+            'MISTAKE': { label: '❌ ERROR', bg: 'rgba(249, 115, 22, 0.3)' },
+            'BLUNDER': { label: '💥 GRAN ERROR', bg: 'rgba(239, 68, 68, 0.35)' },
+            'MISS': { label: '❓ OPORTUNIDAD PERDIDA', bg: 'rgba(236, 72, 153, 0.3)' }
+        };
+
         if (qualityBadge) {
-            const quality = currentAnalysis?.quality || '--';
-            qualityBadge.textContent = quality;
-            let bg = 'rgba(255,255,255,0.1)';
-            if (quality === 'BEST' || quality === 'GOOD') bg = 'rgba(16, 185, 129, 0.3)';
-            if (quality === 'INACCURACY') bg = 'rgba(245, 158, 11, 0.3)';
-            if (quality === 'MISTAKE' || quality === 'BLUNDER') bg = 'rgba(239, 68, 68, 0.3)';
-            qualityBadge.style.background = bg;
+            const qualityCode = currentAnalysis?.quality || '--';
+            const mapped = SPANISH_QUALITY_MAP[qualityCode] || { label: qualityCode, bg: 'rgba(255,255,255,0.1)' };
+            qualityBadge.textContent = mapped.label;
+            qualityBadge.style.background = mapped.bg;
+        }
+
+        // Update Coach UI Card
+        const reviewData = currentAnalysis?.review_data || {};
+        if (currentAnalysis && reviewData) {
+            const emotion = reviewData.coach_emotion || 'NEUTRAL';
+            let avatarEmoji = '🎓';
+            if (emotion === 'EXCITED') avatarEmoji = '🌟';
+            if (emotion === 'HAPPY') avatarEmoji = '🎯';
+            if (emotion === 'WARNING') avatarEmoji = '⚠️';
+            if (emotion === 'SURPRISED') avatarEmoji = '😮';
+
+            if (coachAvatar) coachAvatar.textContent = avatarEmoji;
+            if (coachTitle) coachTitle.textContent = `Entrenador de Ajedrez`;
+            if (coachThemeBadge) coachThemeBadge.textContent = reviewData.tactical_theme || 'Posicional';
+            if (coachMessageText) coachMessageText.textContent = reviewData.coach_message || 'Observa la posición.';
+            if (coachExplanationText) coachExplanationText.textContent = reviewData.explanation_text || 'Análisis en progreso.';
+
+            const hints = reviewData.hints || [];
+            if (hints.length > 0) {
+                if (btnToggleHint) {
+                    btnToggleHint.style.display = 'block';
+                    btnToggleHint.onclick = () => {
+                        if (coachHintBox) {
+                            coachHintBox.style.display = coachHintBox.style.display === 'none' ? 'block' : 'none';
+                            if (coachHintText) coachHintText.textContent = hints[0];
+                        }
+                    };
+                }
+            } else {
+                if (btnToggleHint) btnToggleHint.style.display = 'none';
+                if (coachHintBox) coachHintBox.style.display = 'none';
+            }
+
+            // Apply square highlights on board if present
+            if (reviewData.highlighted_squares) {
+                reviewData.highlighted_squares.forEach(hs => {
+                    const sqEl = this.boardEl?.querySelector(`[data-square="${hs.square}"]`);
+                    if (sqEl) {
+                        sqEl.style.boxShadow = `inset 0 0 0 4px ${hs.color === 'red' ? '#ef4444' : '#f59e0b'}`;
+                    }
+                });
+            }
         }
 
         // Evaluation gauge bar (0% to 100% white height)
@@ -252,3 +314,4 @@ class AnalysisApp {
 document.addEventListener('DOMContentLoaded', () => {
     window.analysisApp = new AnalysisApp();
 });
+

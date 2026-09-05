@@ -77,9 +77,39 @@ class Game(models.Model):
         default=Turn.WHITE
     )
     is_competitive = models.BooleanField(default=True)
+    share_token = models.UUIDField(default=uuid.uuid4, editable=False)
+    is_public = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def prune_user_history(cls, user, limit=50):
+        """
+        Keeps up to `limit` (default 50) recent finished games for `user`.
+        Games favorited by `user` (in GameFavorite) are protected and never pruned.
+        """
+        user_games = cls.objects.filter(
+            models.Q(white_player=user) | models.Q(black_player=user),
+            status=cls.Status.FINISHED
+        ).order_by('-created_at')
+
+        favorited_game_ids = set(
+            GameFavorite.objects.filter(user=user).values_list('game_id', flat=True)
+        )
+
+        non_fav_count = 0
+        games_to_delete = []
+
+        for game in user_games:
+            if game.id in favorited_game_ids:
+                continue
+            non_fav_count += 1
+            if non_fav_count > limit:
+                games_to_delete.append(game.id)
+
+        if games_to_delete:
+            cls.objects.filter(id__in=games_to_delete).delete()
 
     def __str__(self):
         return f"Partida {self.id.hex[:8]} - {self.white_player.username} vs {self.black_player.username}"
@@ -125,8 +155,28 @@ class Game(models.Model):
             black_name=self.black_player.username,
             uci_moves=moves,
             result=result_str,
-            date_str=self.created_at.strftime("%Y.%m.%d")
+            date_str=self.created_at.strftime("%Y.%m.%d") if self.created_at else None
         )
+
+class GameFavorite(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='favorite_games'
+    )
+    game = models.ForeignKey(
+        Game,
+        on_delete=models.CASCADE,
+        related_name='favorited_by'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'game')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Favorita de {self.user.username}: {self.game.id.hex[:8]}"
 
 class Challenge(models.Model):
     class Status(models.TextChoices):

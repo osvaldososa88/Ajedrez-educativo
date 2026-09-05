@@ -9,7 +9,12 @@
     <div class="board-wrapper">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
             <span style="font-weight: 700; font-size: 1.1rem; color: var(--accent-color);" id="eval-header-text">Evaluación: 0.00</span>
-            <div style="display: flex; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                {% if job.game %}
+                <button id="btn-toggle-fav-analysis" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;" data-game-id="{{ job.game.id }}" title="Marcar como Favorita (Máx. 10)">
+                    <span id="fav-star-icon">{% if is_favorite %}⭐ Favorita{% else %}☆ Guardar Favorita{% endif %}</span>
+                </button>
+                {% endif %}
                 <button id="mode-analysis-btn" class="btn btn-primary" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Modo Análisis</button>
                 <button id="mode-training-btn" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Entrenamiento</button>
                 <button id="mode-competition-btn" class="btn btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">Competición</button>
@@ -46,6 +51,113 @@
             <div style="width: 100%; background: rgba(255,255,255,0.1); height: 12px; border-radius: 6px; overflow: hidden;">
                 <div id="job-progress-bar" style="width: {{ job.progress_percent }}%; background: var(--accent-color); height: 100%; transition: width 0.3s ease;"></div>
             </div>
+        </div>
+
+        <!-- Phase 8: Game Review Summary Metrics Card -->
+        {% if job.status == 'COMPLETED' %}
+        <div class="card" style="margin-bottom: 1rem; background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9)); border: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #f8fafc;">📊 Resumen de la Partida</h3>
+                <span class="badge" style="background: var(--accent-color); color: #fff; padding: 0.2rem 0.6rem; font-size: 0.75rem; border-radius: 999px;">Game Review</span>
+            </div>
+
+            <!-- Accuracy & Estimated Elo Comparison -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; text-align: center;">
+                <div style="background: rgba(255,255,255,0.05); padding: 0.6rem; border-radius: 8px; border-left: 3px solid #f8fafc;">
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">⚪ Blancas</p>
+                    <p style="font-size: 1.2rem; font-weight: 800; color: #10b981; margin: 0;">{{ job.accuracy_white|default:"0" }}%</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Elo est. <strong>{{ job.estimated_elo_white|default:"--" }}</strong></p>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 0.6rem; border-radius: 8px; border-left: 3px solid #38bdf8;">
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">⬛ Negras</p>
+                    <p style="font-size: 1.2rem; font-weight: 800; color: #38bdf8; margin: 0;">{{ job.accuracy_black|default:"0" }}%</p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Elo est. <strong>{{ job.estimated_elo_black|default:"--" }}</strong></p>
+                </div>
+            </div>
+
+            <!-- Move Classification Breakdown Table -->
+            <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); text-align: center;">
+                        <th style="text-align: left; padding: 0.3rem 0;">Categoría</th>
+                        <th style="padding: 0.3rem 0;">⚪ Blancas</th>
+                        <th style="padding: 0.3rem 0;">⬛ Negras</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 0.3rem 0;"><span style="color: #a855f7;">💎 Brillante</span></td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_white.BRILLIANT|default:0 }}</td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_black.BRILLIANT|default:0 }}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 0.3rem 0;"><span style="color: #3b82f6;">📚 Libro</span></td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_white.BOOK|default:0 }}</td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_black.BOOK|default:0 }}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 0.3rem 0;"><span style="color: #10b981;">🎯 Mejor</span></td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_white.BEST|default:0 }}</td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_black.BEST|default:0 }}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 0.3rem 0;"><span style="color: #34d399;">👍 Excelente</span></td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_white.EXCELLENT|default:0 }}</td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_black.EXCELLENT|default:0 }}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 0.3rem 0;"><span style="color: #60a5fa;">✓ Buena</span></td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_white.GOOD|default:0 }}</td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_black.GOOD|default:0 }}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 0.3rem 0;"><span style="color: #f59e0b;">⚠️ Inexactitud</span></td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_white.INACCURACY|default:0 }}</td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_black.INACCURACY|default:0 }}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 0.3rem 0;"><span style="color: #f97316;">❌ Error</span></td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_white.MISTAKE|default:0 }}</td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_black.MISTAKE|default:0 }}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 0.3rem 0;"><span style="color: #ef4444;">💥 Gran Error</span></td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_white.BLUNDER|default:0 }}</td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_black.BLUNDER|default:0 }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.3rem 0;"><span style="color: #ec4899;">❓ Oportunidad Perdida</span></td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_white.MISS|default:0 }}</td>
+                        <td style="text-align: center; font-weight: bold;">{{ summary_stats.counts_black.MISS|default:0 }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Coach & Pedagogical Feedback Card -->
+        <div class="card" id="coach-card" style="margin-bottom: 1rem; background: rgba(59,130,246,0.08); border: 1px solid var(--accent-color);">
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <div id="coach-avatar" style="font-size: 2rem; width: 44px; height: 44px; border-radius: 50%; background: var(--accent-color); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(59,130,246,0.3);">
+                    🎓
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 1rem; color: #f8fafc;" id="coach-title">Entrenador de Ajedrez</h4>
+                    <span id="coach-theme-badge" class="badge" style="background: rgba(255,255,255,0.1); font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; color: var(--accent-color);">Apertura</span>
+                </div>
+            </div>
+            <p id="coach-message-text" style="font-weight: 600; font-size: 0.95rem; margin: 0.75rem 0 0.25rem 0; color: var(--accent-color);">
+                Selecciona una jugada para ver la explicación pedagógica.
+            </p>
+            <p id="coach-explanation-text" style="font-size: 0.88rem; color: var(--text-secondary); margin: 0; line-height: 1.4;">
+                Navega movimiento por movimiento para aprender sobre táctica, desarrollo y control de centro.
+            </p>
+            <div id="coach-hint-box" style="display: none; margin-top: 0.75rem; padding: 0.5rem; background: rgba(245,158,11,0.15); border-left: 3px solid #f59e0b; border-radius: 4px;">
+                <p id="coach-hint-text" style="font-size: 0.82rem; color: #fef08a; margin: 0;"></p>
+            </div>
+            <button id="btn-toggle-hint" class="btn btn-secondary" style="display: none; width: 100%; margin-top: 0.75rem; font-size: 0.8rem; padding: 0.3rem 0.6rem;">
+                💡 Ver Pista del Entrenador
+            </button>
         </div>
 
         <!-- Engine Analysis Card -->
@@ -105,6 +217,31 @@
     const JOB_ID = "{{ job.id }}";
     const MOVE_ANALYSES = {{ move_analyses_json|safe }};
     const JOB_INITIAL_STATUS = "{{ job.status }}";
+
+    document.getElementById('btn-toggle-fav-analysis')?.addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        const gameId = btn.getAttribute('data-game-id');
+        try {
+            const res = await fetch(`/games/game/${gameId}/favorite/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                const icon = document.getElementById('fav-star-icon');
+                if (icon) icon.textContent = data.is_favorite ? '⭐ Favorita' : '☆ Guardar Favorita';
+                alert(data.is_favorite ? '¡Partida guardada en tus 10 Favoritas! ⭐' : 'Partida eliminada de tus favoritas.');
+            } else {
+                alert(data.error || 'Error al guardar favorita');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    });
 </script>
+<script src="{% static 'js/chess_ui.js' %}"></script>
 <script src="{% static 'js/analysis_app.js' %}"></script>
 {% endblock %}

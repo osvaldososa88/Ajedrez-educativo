@@ -42,6 +42,13 @@ class AnalysisJob(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 
+    # Phase 8 Game Review Metrics
+    accuracy_white = models.FloatField(null=True, blank=True)
+    accuracy_black = models.FloatField(null=True, blank=True)
+    estimated_elo_white = models.IntegerField(null=True, blank=True)
+    estimated_elo_black = models.IntegerField(null=True, blank=True)
+    summary_stats = models.JSONField(default=dict, blank=True)
+
     def __str__(self):
         return f"Job {self.id.hex[:8]} | Status: {self.status} | User: {self.user.username}"
 
@@ -50,11 +57,15 @@ class MoveAnalysis(models.Model):
     Evaluation of an individual move in a game or PGN analysis job.
     """
     class Quality(models.TextChoices):
+        BOOK = 'BOOK', 'Teoría / Libro'
+        BRILLIANT = 'BRILLIANT', 'Brillante'
         BEST = 'BEST', 'Mejor Movimiento'
+        EXCELLENT = 'EXCELLENT', 'Excelente'
         GOOD = 'GOOD', 'Buen Movimiento'
         INACCURACY = 'INACCURACY', 'Inexactitud'
         MISTAKE = 'MISTAKE', 'Error'
         BLUNDER = 'BLUNDER', 'Gran Error'
+        MISS = 'MISS', 'Oportunidad Perdida'
 
     job = models.ForeignKey(AnalysisJob, on_delete=models.CASCADE, related_name='move_analyses')
     ply = models.IntegerField()
@@ -66,9 +77,11 @@ class MoveAnalysis(models.Model):
     score_cp = models.IntegerField(null=True, blank=True)
     mate_in = models.IntegerField(null=True, blank=True)
     quality = models.CharField(max_length=20, choices=Quality.choices, default=Quality.GOOD)
+    review_data = models.JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ['ply']
 
     def __str__(self):
         return f"Ply {self.ply}: {self.move_san} | Quality: {self.quality}"
+

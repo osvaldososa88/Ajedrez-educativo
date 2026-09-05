@@ -29,8 +29,8 @@ def create_game_analysis_job(request, game_id):
     if game.status == Game.Status.IN_PROGRESS and hasattr(game, 'tournament_pairing'):
         return HttpResponseForbidden("El análisis no está disponible mientras la partida de torneo está en curso.")
 
-    # Check if existing job is already in progress or completed
-    existing_job = AnalysisJob.objects.filter(game=game, status=AnalysisJob.Status.COMPLETED).order_by('-created_at').first()
+    # Check if an existing job is already created/completed/processing for this game
+    existing_job = AnalysisJob.objects.filter(game=game).exclude(status=AnalysisJob.Status.FAILED).order_by('-created_at').first()
     if existing_job:
         return redirect('analysis_job_detail', job_id=existing_job.id)
 
@@ -82,24 +82,37 @@ class AnalysisJobDetailView(LoginRequiredMixin, DetailView):
     pk_url_kwarg = 'job_id'
 
     def get_queryset(self):
-        # Security check: User can only access their own jobs or staff
+        # Security check: User can access if staff, job owner, or a player in the game
         if self.request.user.role in ['TEACHER', 'ADMIN'] or self.request.user.is_staff:
             return AnalysisJob.objects.all()
-        return AnalysisJob.objects.filter(user=self.request.user)
+        from django.db.models import Q
+        return AnalysisJob.objects.filter(
+            Q(user=self.request.user) |
+            Q(game__white_player=self.request.user) |
+            Q(game__black_player=self.request.user)
+        ).distinct()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         job = self.object
 
+        import json
+        from apps.games.models import GameFavorite
         move_analyses = list(job.move_analyses.select_related('position_analysis').values(
             'ply', 'move_san', 'move_uci', 'fen_before', 'fen_after',
-            'score_cp', 'mate_in', 'quality',
+            'score_cp', 'mate_in', 'quality', 'review_data',
             'position_analysis__best_move_san',
             'position_analysis__best_move_uci',
             'position_analysis__pv_san'
         ))
 
-        context['move_analyses_json'] = move_analyses
+        context['move_analyses_json'] = json.dumps(move_analyses, default=str)
+        context['summary_stats'] = job.summary_stats or {}
+        context['is_favorite'] = (
+            self.request.user.is_authenticated and
+            job.game is not None and
+            GameFavorite.objects.filter(user=self.request.user, game=job.game).exists()
+        )
         return context
 
 @login_required
