@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0f172a"/>
+  <rect x="16" y="16" width="480" height="480" rx="80" fill="none" stroke="#3b82f6" stroke-width="8"/>
+  <!-- Peón de ajedrez -->
+  <g transform="translate(256, 256)">
+    <!-- Base del peón -->
+    <ellipse cx="0" cy="120" rx="80" ry="20" fill="#f8fafc"/>
+    <rect x="-60" y="80" width="120" height="40" rx="8" fill="#f8fafc"/>
+    <!-- Cuerpo del peón -->
+    <path d="M-35 80 C-35 40, -20 20, -20 -20 C-20 -60, 20 -60, 20 -20 C20 20, 35 40, 35 80 Z" fill="#f8fafc"/>
+    <!-- Cabeza del peón -->
+    <circle cx="0" cy="-70" r="30" fill="#f8fafc"/>
+    <!-- Detalle azul -->
+    <circle cx="0" cy="-70" r="12" fill="#3b82f6"/>
+  </g>
+</svg>

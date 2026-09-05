@@ -719,6 +719,117 @@ body {
   outline-offset: 2px;
 }
 
+/* ============================================
+   PWA - Configuración y Menú
+   ============================================ */
+
+.settings-container {
+  position: relative;
+  display: inline-block;
+}
+
+.settings-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.35rem 0.6rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.settings-btn:hover {
+  background: var(--border-color);
+  transform: translateY(-1px);
+}
+
+.settings-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0.5rem;
+  display: none;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 200;
+}
+
+.settings-menu.open {
+  display: flex;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.settings-item:hover {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.settings-item-danger {
+  color: var(--danger-color);
+}
+
+.settings-item-danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* Botón Instalar Aplicación */
+#install-app-btn {
+  white-space: nowrap;
+}
+
+/* Modal de desinstalación */
+#uninstall-modal .modal-content {
+  max-width: 480px;
+  text-align: left;
+}
+
+#uninstall-modal .modal-content h3 {
+  text-align: center;
+}
+
+#uninstall-modal .modal-content p {
+  margin-bottom: 0.75rem;
+}
+
+#uninstall-modal .modal-content #uninstall-instructions p {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  border-left: 3px solid var(--accent-color);
+}
+
+#uninstall-modal .modal-content #uninstall-instructions p strong {
+  color: var(--text-primary);
+}
+
+#uninstall-modal .modal-content .btn {
+  width: 100%;
+}
+
 @media (max-width: 600px) {
   .container {
     margin: 1rem auto;
@@ -743,6 +854,14 @@ body {
   }
   .coord {
     font-size: 0.55rem;
+  }
+  .settings-menu {
+    position: fixed;
+    top: auto;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    min-width: auto;
   }
 }
 
