@@ -7,6 +7,8 @@ const STATIC_ASSETS = [
   '/static/js/training_app.js',
   '/static/js/training_creator.js',
   '/static/js/pwa.js',
+  '/static/js/notifications.js',
+  '/static/js/chat.js',
   '/manifest.json',
   '/static/img/pwa-icon-192.png',
   '/static/img/pwa-icon-512.png',

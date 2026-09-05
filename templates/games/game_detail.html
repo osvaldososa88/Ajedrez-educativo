@@ -71,6 +71,13 @@
                 </div>
             {% endif %}
 
+            <!-- Chat Button (solo para jugadores) -->
+            {% if is_player %}
+                <button id="btn-open-chat" class="btn btn-secondary" style="width: 100%; margin-top: 0.75rem; font-size: 0.85rem;">
+                    💬 Chat
+                </button>
+            {% endif %}
+
             {% if game.status != 'IN_PROGRESS' %}
                 <div class="game-finished-card" style="background: rgba(59, 130, 246, 0.12); border: 1px solid var(--accent-color); padding: 1rem; border-radius: 8px; margin-top: 1rem; text-align: center;">
                     <h4 style="color: var(--accent-color); margin-bottom: 0.25rem;">Partida Finalizada</h4>
@@ -103,6 +110,26 @@
 
     </div>
 
+</div>
+
+<!-- Chat Panel (Overlay) -->
+<div id="chat-panel" class="chat-panel">
+    <div class="chat-panel-header">
+        <h4>💬 Chat de la Partida</h4>
+        <button id="btn-close-chat" class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">
+            ← Volver a la partida
+        </button>
+    </div>
+    <div id="chat-messages" class="chat-messages">
+        <div style="text-align:center;color:var(--text-secondary);font-size:0.85rem;padding:1rem;">Cargando mensajes...</div>
+    </div>
+    <div id="chat-closed-msg" style="display:none; text-align:center; padding: 1rem; color: var(--text-secondary); font-size: 0.85rem; border-top: 1px solid var(--border-color);">
+        🔒 El chat está cerrado porque la partida terminó.
+    </div>
+    <form id="chat-form" class="chat-form">
+        <input type="text" id="chat-input" placeholder="Escribe un mensaje..." autocomplete="off" maxlength="500">
+        <button type="submit" class="btn btn-primary">Enviar</button>
+    </form>
 </div>
 
 <!-- Promotion Choice Modal -->
@@ -143,5 +170,6 @@
     const USER_NAME = "{{ request.user.username }}";
     const PLAYER_COLOR = "{{ player_color }}"; // 'white', 'black', or 'spectator'
 </script>
+<script src="{% static 'js/chat.js' %}"></script>
 <script src="{% static 'js/chessboard_app.js' %}"></script>
 {% endblock %}

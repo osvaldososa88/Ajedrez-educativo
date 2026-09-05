@@ -69,6 +69,7 @@ class Game(models.Model):
 
     white_time_left_ms = models.IntegerField(default=600000) # 10 mins in ms
     black_time_left_ms = models.IntegerField(default=600000)
+    clock_started = models.BooleanField(default=False)
 
     last_move_at = models.DateTimeField(default=timezone.now)
     turn = models.CharField(
@@ -118,8 +119,12 @@ class Game(models.Model):
         """
         Deducts elapsed time since `last_move_at` from the active player's clock.
         If time expires, finishes the game.
+        Only deducts time when `clock_started` is True (i.e. after the second ply / first black move).
         """
         if self.status != self.Status.IN_PROGRESS:
+            return
+
+        if not self.clock_started:
             return
 
         now = timezone.now()
@@ -157,6 +162,41 @@ class Game(models.Model):
             result=result_str,
             date_str=self.created_at.strftime("%Y.%m.%d") if self.created_at else None
         )
+
+class Notification(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notifications'
+    )
+    message = models.CharField(max_length=255)
+    game = models.ForeignKey(
+        Game,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='notifications'
+    )
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notificación para {self.user.username}: {self.message}"
+
+class ChatMessage(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='chat_messages')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='chat_messages')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.sender.username} en {self.game.id.hex[:8]}: {self.content[:50]}"
 
 class GameFavorite(models.Model):
     user = models.ForeignKey(

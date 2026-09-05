@@ -3,7 +3,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
 from apps.core.chess_engine import ChessEngine
-from .models import Game, Move, Challenge
+from .models import Game, Move, Challenge, ChatMessage
 import chess
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
@@ -54,6 +54,12 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             await self.handle_offer_draw()
         elif msg_type == 'accept_draw':
             await self.handle_accept_draw()
+        elif msg_type == 'send_chat':
+            message = content.get('message', '').strip()
+            if message:
+                await self.handle_send_chat(message)
+        elif msg_type == 'get_chat_history':
+            await self.handle_get_chat_history()
 
     async def handle_make_move(self, uci: str):
         # Perform move validation and execution in DB transaction / sync context
@@ -118,6 +124,102 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'offered_by': event['offered_by']
         })
 
+    # --- Chat handlers ---
+
+    async def handle_send_chat(self, message):
+        """Save a chat message and broadcast it to the game room."""
+        # Only players in the game can chat
+        is_player = await self.is_game_player(self.user.id, self.game_id)
+        if not is_player:
+            await self.send_json({
+                'type': 'error',
+                'message': 'No eres jugador de esta partida.'
+            })
+            return
+
+        # Check if game is still active
+        game = await self.get_game(self.game_id)
+        if not game or game.status != Game.Status.IN_PROGRESS:
+            await self.send_json({
+                'type': 'error',
+                'message': 'El chat está cerrado porque la partida finalizó.'
+            })
+            return
+
+        saved = await self.save_chat_message(self.user.id, self.game_id, message)
+        if saved:
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'broadcast_chat_message',
+                    'sender': self.user.username,
+                    'content': message,
+                    'timestamp': timezone.now().isoformat()
+                }
+            )
+
+    async def handle_get_chat_history(self):
+        """Send full chat history to the requesting player."""
+        is_player = await self.is_game_player(self.user.id, self.game_id)
+        if not is_player:
+            await self.send_json({
+                'type': 'error',
+                'message': 'No eres jugador de esta partida.'
+            })
+            return
+
+        messages = await self.get_chat_history(self.game_id)
+        await self.send_json({
+            'type': 'chat_history',
+            'messages': messages
+        })
+
+    async def broadcast_chat_message(self, event):
+        await self.send_json({
+            'type': 'chat_message',
+            'sender': event['sender'],
+            'content': event['content'],
+            'timestamp': event['timestamp']
+        })
+
+    # --- Chat database sync methods ---
+
+    @database_sync_to_async
+    def is_game_player(self, user_id, game_id):
+        try:
+            game = Game.objects.get(id=game_id)
+            return user_id in [game.white_player.id, game.black_player.id]
+        except Game.DoesNotExist:
+            return False
+
+    @database_sync_to_async
+    def save_chat_message(self, user_id, game_id, content):
+        try:
+            game = Game.objects.get(id=game_id)
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            user = User.objects.get(id=user_id)
+            ChatMessage.objects.create(game=game, sender=user, content=content)
+            return True
+        except Exception:
+            return False
+
+    @database_sync_to_async
+    def get_chat_history(self, game_id):
+        try:
+            game = Game.objects.get(id=game_id)
+            messages = ChatMessage.objects.filter(game=game).order_by('created_at')
+            return [
+                {
+                    'sender': m.sender.username,
+                    'content': m.content,
+                    'timestamp': m.created_at.isoformat()
+                }
+                for m in messages
+            ]
+        except Game.DoesNotExist:
+            return []
+
     # --- Database sync methods ---
 
     @database_sync_to_async
@@ -149,6 +251,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'black_player': game.black_player.username,
             'white_time_left_ms': game.white_time_left_ms,
             'black_time_left_ms': game.black_time_left_ms,
+            'clock_started': game.clock_started,
             'legal_moves': legal_moves,
             'is_check': board.is_check(),
             'moves_history': moves_history,
@@ -178,12 +281,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         if game.turn == Game.Turn.BLACK and not is_black_player:
             return {'success': False, 'error': 'Es el turno de las piezas Negras.'}
 
-        # Deduct time elapsed before making move
+        # Deduct time elapsed before making move (only if clock has started)
         game.update_clocks()
         if game.status == Game.Status.FINISHED:
             game.save()
             # Game timed out during clock update
-            board = ChessEngine.get_board_from_fen(game.fen_current)
             return {
                 'success': True,
                 'state': {
@@ -193,6 +295,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     'finish_reason': game.get_finish_reason_display(),
                     'fen': game.fen_current,
                     'turn': game.turn,
+                    'clock_started': game.clock_started,
                     'white_time_left_ms': game.white_time_left_ms,
                     'black_time_left_ms': game.black_time_left_ms,
                     'legal_moves': [],
@@ -229,6 +332,12 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         game.fen_current = eval_res['fen']
         game.turn = Game.Turn.BLACK if game.turn == Game.Turn.WHITE else Game.Turn.WHITE
         game.last_move_at = timezone.now()
+
+        # Start the clock after the first move of the black player (ply 2)
+        # This ensures both players have joined the board and black has received white's first move
+        if current_ply == 2 and not game.clock_started:
+            game.clock_started = True
+            game.last_move_at = timezone.now()
 
         # Handle game over detection
         if eval_res['is_game_over']:
@@ -272,6 +381,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     'player': player.username
                 },
                 'is_check': eval_res['is_check'],
+                'clock_started': game.clock_started,
                 'white_time_left_ms': game.white_time_left_ms,
                 'black_time_left_ms': game.black_time_left_ms,
                 'legal_moves': legal_moves,
@@ -302,7 +412,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         game.pgn_history = game.generate_pgn()
         game.save()
 
-        board = ChessEngine.get_board_from_fen(game.fen_current)
         return {
             'success': True,
             'state': {
@@ -312,6 +421,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'finish_reason': game.get_finish_reason_display(),
                 'fen': game.fen_current,
                 'turn': game.turn,
+                'clock_started': game.clock_started,
                 'white_time_left_ms': game.white_time_left_ms,
                 'black_time_left_ms': game.black_time_left_ms,
                 'legal_moves': [],
@@ -345,6 +455,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'finish_reason': game.get_finish_reason_display(),
                 'fen': game.fen_current,
                 'turn': game.turn,
+                'clock_started': game.clock_started,
                 'white_time_left_ms': game.white_time_left_ms,
                 'black_time_left_ms': game.black_time_left_ms,
                 'legal_moves': [],
@@ -352,3 +463,82 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'pgn': game.pgn_history
             }
         }
+
+
+class NotificationConsumer(AsyncJsonWebsocketConsumer):
+    """WebSocket para notificaciones en tiempo real por usuario."""
+
+    async def connect(self):
+        self.user = self.scope.get("user")
+        if not self.user or not self.user.is_authenticated:
+            await self.close()
+            return
+
+        self.user_group_name = f'notifications_{self.user.id}'
+
+        await self.channel_layer.group_add(
+            self.user_group_name,
+            self.channel_name
+        )
+        await self.accept()
+
+        # Send unread notifications on connect
+        unread = await self.get_unread_notifications()
+        await self.send_json({
+            'type': 'unread_notifications',
+            'notifications': unread
+        })
+
+    async def disconnect(self, close_code):
+        if hasattr(self, 'user_group_name'):
+            await self.channel_layer.group_discard(
+                self.user_group_name,
+                self.channel_name
+            )
+
+    async def receive_json(self, content):
+        msg_type = content.get('type')
+        if msg_type == 'mark_read':
+            notif_id = content.get('notification_id')
+            if notif_id:
+                await self.mark_notification_read(notif_id)
+
+    async def send_notification(self, event):
+        """Handler for notification_new group send."""
+        await self.send_json({
+            'type': 'notification',
+            'notification': event['notification']
+        })
+
+    async def notification_read(self, event):
+        """Handler for notification_mark_read."""
+        await self.send_json({
+            'type': 'notification_read',
+            'notification_id': event['notification_id']
+        })
+
+    @database_sync_to_async
+    def get_unread_notifications(self):
+        from .models import Notification
+        notifications = Notification.objects.filter(
+            user=self.user,
+            is_read=False
+        ).order_by('-created_at')[:20]
+        return [
+            {
+                'id': str(n.id),
+                'message': n.message,
+                'game_id': str(n.game_id) if n.game_id else None,
+                'is_read': n.is_read,
+                'created_at': n.created_at.isoformat()
+            }
+            for n in notifications
+        ]
+
+    @database_sync_to_async
+    def mark_notification_read(self, notif_id):
+        from .models import Notification
+        try:
+            Notification.objects.filter(id=notif_id, user=self.user).update(is_read=True)
+        except Exception:
+            pass

@@ -22,7 +22,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
-<body data-board-theme="{{ user_board_theme|default:'classic' }}">
+<body data-board-theme="{{ user_board_theme|default:'classic' }}" data-user-id="{% if user.is_authenticated %}{{ user.id }}{% endif %}">
 
     <nav class="navbar">
         <a href="{% url 'home' %}" class="nav-brand">
@@ -36,13 +36,24 @@
             </button>
 
             {% if user.is_authenticated %}
-                <a href="{% url 'classmates' %}" class="nav-link">Compañeros</a>
-                <a href="{% url 'challenges_list' %}" class="nav-link">Mis Desafíos / Partidas</a>
-                <a href="{% url 'game_history' %}" class="nav-link">📜 Historial & Favoritas</a>
-                <a href="{% url 'training_dashboard' %}" class="nav-link">Entrenamiento</a>
-                <a href="{% url 'classroom_list' %}" class="nav-link">Aulas</a>
-                <a href="{% url 'tournament_list' %}" class="nav-link">Torneos</a>
-                <a href="{% url 'personalization_dashboard' %}" class="nav-link">Mi Progreso</a>
+                <a href="{% url 'classmates' %}" class="nav-link nav-btn">👥 Compañeros</a>
+                <a href="{% url 'challenges_list' %}" class="nav-link nav-btn">⚔️ Desafíos / Partidas</a>
+                <a href="{% url 'game_history' %}" class="nav-link nav-btn">📜 Historial</a>
+                <a href="{% url 'training_dashboard' %}" class="nav-link nav-btn">🎓 Entrenamiento</a>
+                <a href="{% url 'classroom_list' %}" class="nav-link nav-btn">🏫 Aulas</a>
+                <a href="{% url 'tournament_list' %}" class="nav-link nav-btn">🏆 Torneos</a>
+                <a href="{% url 'personalization_dashboard' %}" class="nav-link nav-btn">📊 Mi Progreso</a>
+
+                <!-- Notificaciones -->
+                <div class="notif-container">
+                    <button id="notif-bell" class="notif-bell" title="Notificaciones" aria-label="Notificaciones">
+                        🔔
+                        <span id="notif-badge" class="notif-badge" style="display:none;">0</span>
+                    </button>
+                    <div id="notif-dropdown" class="notif-dropdown">
+                        <div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">Cargando...</div>
+                    </div>
+                </div>
 
                 <!-- Botón Configuración (tuerca) -->
                 <div class="settings-container">
@@ -69,8 +80,8 @@
                     <button type="submit" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">Salir</button>
                 </form>
             {% else %}
-                <a href="{% url 'login' %}" class="nav-link">Ingresar</a>
-                <a href="{% url 'register' %}" class="btn btn-primary">Registrarse</a>
+                <a href="{% url 'login' %}" class="nav-link nav-btn">🔑 Ingresar</a>
+                <a href="{% url 'register' %}" class="btn btn-primary">📝 Registrarse</a>
             {% endif %}
         </div>
     </nav>
@@ -114,6 +125,7 @@
     <script>window.CHESS_PIECE_BASE = "{% static 'img/pieces/' %}{{ user_piece_set|default:'staunton' }}/";</script>
     <script src="{% static 'js/chess_ui.js' %}"></script>
     <script src="{% static 'js/pwa.js' %}"></script>
+    <script src="{% static 'js/notifications.js' %}"></script>
     {% block board_js %}{% endblock %}
 </body>
 </html>

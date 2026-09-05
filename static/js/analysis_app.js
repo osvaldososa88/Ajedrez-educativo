@@ -148,7 +148,7 @@ class AnalysisApp {
         const whiteBar = document.getElementById('eval-bar-white');
         const blackBar = document.getElementById('eval-bar-black');
 
-        // Coach UI elements
+        // Coach UI elements (desktop + mobile)
         const coachAvatar = document.getElementById('coach-avatar');
         const coachTitle = document.getElementById('coach-title');
         const coachThemeBadge = document.getElementById('coach-theme-badge');
@@ -157,6 +157,17 @@ class AnalysisApp {
         const coachHintBox = document.getElementById('coach-hint-box');
         const coachHintText = document.getElementById('coach-hint-text');
         const btnToggleHint = document.getElementById('btn-toggle-hint');
+
+        // Mobile coach elements
+        const coachMobile = document.getElementById('coach-card-mobile');
+        const coachAvatarMobile = document.getElementById('coach-avatar-mobile');
+        const coachTitleMobile = document.getElementById('coach-title-mobile');
+        const coachThemeBadgeMobile = document.getElementById('coach-theme-badge-mobile');
+        const coachMessageTextMobile = document.getElementById('coach-message-text-mobile');
+        const coachExplanationTextMobile = document.getElementById('coach-explanation-text-mobile');
+        const coachHintBoxMobile = document.getElementById('coach-hint-box-mobile');
+        const coachHintTextMobile = document.getElementById('coach-hint-text-mobile');
+        const btnToggleHintMobile = document.getElementById('btn-toggle-hint-mobile');
 
         if (this.currentMode === 'COMPETITION') {
             if (evalHeader) evalHeader.textContent = 'Evaluación deshabilitada';
@@ -216,7 +227,8 @@ class AnalysisApp {
 
         // Update Coach UI Card
         const reviewData = currentAnalysis?.review_data || {};
-        if (currentAnalysis && reviewData) {
+        const hasCoachData = currentAnalysis && reviewData && (reviewData.coach_message || reviewData.explanation_text);
+        if (hasCoachData) {
             const emotion = reviewData.coach_emotion || 'NEUTRAL';
             let avatarEmoji = '🎓';
             if (emotion === 'EXCITED') avatarEmoji = '🌟';
@@ -224,11 +236,20 @@ class AnalysisApp {
             if (emotion === 'WARNING') avatarEmoji = '⚠️';
             if (emotion === 'SURPRISED') avatarEmoji = '😮';
 
+            // Actualizar coach de desktop
             if (coachAvatar) coachAvatar.textContent = avatarEmoji;
             if (coachTitle) coachTitle.textContent = `Entrenador de Ajedrez`;
             if (coachThemeBadge) coachThemeBadge.textContent = reviewData.tactical_theme || 'Posicional';
             if (coachMessageText) coachMessageText.textContent = reviewData.coach_message || 'Observa la posición.';
             if (coachExplanationText) coachExplanationText.textContent = reviewData.explanation_text || 'Análisis en progreso.';
+
+            // Actualizar coach móvil (duplicar contenido)
+            if (coachMobile) coachMobile.style.display = 'block';
+            if (coachAvatarMobile) coachAvatarMobile.textContent = avatarEmoji;
+            if (coachTitleMobile) coachTitleMobile.textContent = `Entrenador de Ajedrez`;
+            if (coachThemeBadgeMobile) coachThemeBadgeMobile.textContent = reviewData.tactical_theme || 'Posicional';
+            if (coachMessageTextMobile) coachMessageTextMobile.textContent = reviewData.coach_message || 'Observa la posición.';
+            if (coachExplanationTextMobile) coachExplanationTextMobile.textContent = reviewData.explanation_text || 'Análisis en progreso.';
 
             const hints = reviewData.hints || [];
             if (hints.length > 0) {
@@ -241,9 +262,20 @@ class AnalysisApp {
                         }
                     };
                 }
+                if (btnToggleHintMobile) {
+                    btnToggleHintMobile.style.display = 'block';
+                    btnToggleHintMobile.onclick = () => {
+                        if (coachHintBoxMobile) {
+                            coachHintBoxMobile.style.display = coachHintBoxMobile.style.display === 'none' ? 'block' : 'none';
+                            if (coachHintTextMobile) coachHintTextMobile.textContent = hints[0];
+                        }
+                    };
+                }
             } else {
                 if (btnToggleHint) btnToggleHint.style.display = 'none';
                 if (coachHintBox) coachHintBox.style.display = 'none';
+                if (btnToggleHintMobile) btnToggleHintMobile.style.display = 'none';
+                if (coachHintBoxMobile) coachHintBoxMobile.style.display = 'none';
             }
 
             // Apply square highlights on board if present
@@ -255,6 +287,13 @@ class AnalysisApp {
                     }
                 });
             }
+        } else {
+            // Ocultar coach móvil si no hay datos de entrenador en esta posición
+            if (coachMobile) coachMobile.style.display = 'none';
+            if (btnToggleHint) btnToggleHint.style.display = 'none';
+            if (coachHintBox) coachHintBox.style.display = 'none';
+            if (btnToggleHintMobile) btnToggleHintMobile.style.display = 'none';
+            if (coachHintBoxMobile) coachHintBoxMobile.style.display = 'none';
         }
 
         // Evaluation gauge bar (0% to 100% white height)

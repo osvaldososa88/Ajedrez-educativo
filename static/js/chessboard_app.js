@@ -12,6 +12,11 @@ class ChessboardApp {
         this.timerInterval = null;
         this.lastAnimatedUci = null;
 
+        // Initialize chat if available
+        if (window.initChat) {
+            window.initChat();
+        }
+
         if (window.ChessUI) {
             const promoColor = (typeof PLAYER_COLOR !== 'undefined' && PLAYER_COLOR === 'black') ? 'black' : 'white';
             ChessUI.paintPromotionChoices(document.getElementById('promotion-modal'), promoColor);
@@ -60,6 +65,10 @@ class ChessboardApp {
                         banner.style.display = 'block';
                     }
                 }
+            } else if (data.type === 'chat_message') {
+                if (window.handleChatMessage) window.handleChatMessage(data);
+            } else if (data.type === 'chat_history') {
+                if (window.handleChatHistory) window.handleChatHistory(data);
             }
         };
     }
@@ -137,6 +146,9 @@ class ChessboardApp {
 
         this.updateSidebar();
         this.updateTimers();
+
+        // Update chat state based on game status
+        if (window.updateChatState) window.updateChatState(state);
 
         if (state.status === 'FINISHED' || state.status === 'ABANDONED') {
             this.showGameOverModal(state);
@@ -359,15 +371,18 @@ class ChessboardApp {
             };
 
             const renderClocks = () => {
-                const whiteActive = this.gameState.turn === 'WHITE';
-                const blackActive = this.gameState.turn === 'BLACK';
+                // Only show active state if the clock has started
+                const clockRunning = !!this.gameState.clock_started;
+                const whiteActive = clockRunning && this.gameState.turn === 'WHITE';
+                const blackActive = clockRunning && this.gameState.turn === 'BLACK';
                 paintClock(bottomTimer, isWhite ? whiteTime : blackTime, isWhite ? whiteActive : blackActive);
                 paintClock(topTimer, isWhite ? blackTime : whiteTime, isWhite ? blackActive : whiteActive);
             };
 
             renderClocks();
 
-            if (this.gameState.status === 'IN_PROGRESS') {
+            // Only tick the clock locally when the server has confirmed it started
+            if (this.gameState.status === 'IN_PROGRESS' && this.gameState.clock_started) {
                 this.timerInterval = setInterval(() => {
                     if (this.gameState.turn === 'WHITE') {
                         whiteTime = Math.max(0, whiteTime - 1000);
