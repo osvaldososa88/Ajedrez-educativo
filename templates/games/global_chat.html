@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat de la Comunidad - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div class="global-chat-page">
+    <div class="global-chat-header">
+        <h2>💬 Chat de la Comunidad</h2>
+        <p class="global-chat-note">
+            🕐 Los mensajes del chat de la comunidad se renuevan cada domingo.
+        </p>
+    </div>
+
+    <div class="global-chat-box card">
+        <div id="global-chat-messages" class="chat-messages">
+            <div style="text-align:center;color:var(--text-secondary);font-size:0.85rem;padding:1rem;">Cargando mensajes...</div>
+        </div>
+        <form id="global-chat-form" class="chat-form">
+            <input type="text" id="global-chat-input" placeholder="Escribe un mensaje a la comunidad..." autocomplete="off" maxlength="500">
+            <button type="submit" class="btn btn-primary">Enviar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script>
+    const GLOBAL_CHAT_USER = "{{ request.user.username }}";
+</script>
+<script src="{% static 'js/global_chat.js' %}"></script>
+{% endblock %}

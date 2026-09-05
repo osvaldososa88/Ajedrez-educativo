@@ -1,11 +1,13 @@
 from django.urls import path
 from .views import (
     ChallengeListView, create_challenge, accept_challenge, decline_challenge,
-    GameDetailView, export_pgn, GameHistoryView, toggle_favorite_game, shared_game_view
+    GameDetailView, export_pgn, GameHistoryView, toggle_favorite_game, shared_game_view,
+    global_chat_view
 )
 
 urlpatterns = [
     path('challenges/', ChallengeListView.as_view(), name='challenges_list'),
+    path('community-chat/', global_chat_view, name='global_chat'),
     path('challenges/create/<int:user_id>/', create_challenge, name='create_challenge'),
     path('challenges/<uuid:challenge_id>/accept/', accept_challenge, name='accept_challenge'),
     path('challenges/<uuid:challenge_id>/decline/', decline_challenge, name='decline_challenge'),

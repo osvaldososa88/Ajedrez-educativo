@@ -9,6 +9,7 @@ const STATIC_ASSETS = [
   '/static/js/pwa.js',
   '/static/js/notifications.js',
   '/static/js/chat.js',
+  '/static/js/global_chat.js',
   '/manifest.json',
   '/static/img/pwa-icon-192.png',
   '/static/img/pwa-icon-512.png',

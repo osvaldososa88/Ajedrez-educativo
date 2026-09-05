@@ -3,7 +3,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
 from apps.core.chess_engine import ChessEngine
-from .models import Game, Move, Challenge, ChatMessage
+from .models import Game, Move, Challenge, ChatMessage, GlobalChatMessage
 import chess
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
@@ -542,3 +542,94 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             Notification.objects.filter(id=notif_id, user=self.user).update(is_read=True)
         except Exception:
             pass
+
+
+class GlobalChatConsumer(AsyncJsonWebsocketConsumer):
+    """WebSocket del chat global de la comunidad."""
+
+    async def connect(self):
+        self.user = self.scope.get("user")
+        if not self.user or not self.user.is_authenticated:
+            await self.close()
+            return
+
+        self.group_name = 'global_chat'
+
+        await self.channel_layer.group_add(
+            self.group_name,
+            self.channel_name
+        )
+        await self.accept()
+
+        # Enviar los mensajes vigentes (ciclo semanal) al conectarse
+        messages = await self.get_active_messages()
+        await self.send_json({
+            'type': 'chat_history',
+            'messages': messages
+        })
+
+    async def disconnect(self, close_code):
+        if hasattr(self, 'group_name'):
+            await self.channel_layer.group_discard(
+                self.group_name,
+                self.channel_name
+            )
+
+    async def receive_json(self, content):
+        msg_type = content.get('type')
+
+        if msg_type == 'send_chat':
+            message = (content.get('message') or '').strip()
+            if message:
+                await self.handle_send_chat(message)
+        elif msg_type == 'get_chat_history':
+            messages = await self.get_active_messages()
+            await self.send_json({
+                'type': 'chat_history',
+                'messages': messages
+            })
+
+    async def handle_send_chat(self, message):
+        # Limitar longitud del mensaje
+        if len(message) > 500:
+            message = message[:500]
+
+        saved = await self.save_message(message)
+        if saved:
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'broadcast_chat_message',
+                    'sender': self.user.username,
+                    'content': message,
+                    'timestamp': timezone.now().isoformat()
+                }
+            )
+
+    async def broadcast_chat_message(self, event):
+        await self.send_json({
+            'type': 'chat_message',
+            'sender': event['sender'],
+            'content': event['content'],
+            'timestamp': event['timestamp']
+        })
+
+    @database_sync_to_async
+    def save_message(self, content):
+        try:
+            GlobalChatMessage.objects.create(sender=self.user, content=content)
+            return True
+        except Exception:
+            return False
+
+    @database_sync_to_async
+    def get_active_messages(self):
+        messages = GlobalChatMessage.objects.active_messages().order_by('created_at')
+        return [
+            {
+                'sender': m.sender.username,
+                'content': m.content,
+                'timestamp': m.created_at.isoformat()
+            }
+            for m in messages
+        ]

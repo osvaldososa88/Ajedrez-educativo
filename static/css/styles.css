@@ -720,7 +720,45 @@ body {
 }
 
 /* ============================================
-   Navegación - Botones
+   Chat Global de la Comunidad
+   ============================================ */
+
+.global-chat-page {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.global-chat-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+}
+
+.global-chat-header h2 {
+  margin: 0;
+}
+
+.global-chat-note {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.global-chat-box {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.global-chat-box .chat-messages {
+  height: 60vh;
+  min-height: 320px;
+  background: var(--bg-primary);
+}
+
+/* ============================================
+   PWA - Configuración y Menú
    ============================================ */
 
 .nav-btn {
@@ -944,7 +982,7 @@ body {
 }
 
 /* ============================================
-   PWA - Configuración y Menú
+   PWA - Configuraciรณn y Menรบ
    ============================================ */
 
 .settings-container {
@@ -1019,12 +1057,12 @@ body {
   background: rgba(239, 68, 68, 0.12);
 }
 
-/* Botón Instalar Aplicación */
+/* Botรณn Instalar Aplicaciรณn */
 #install-app-btn {
   white-space: nowrap;
 }
 
-/* Modal de desinstalación */
+/* Modal de desinstalaciรณn */
 #uninstall-modal .modal-content {
   max-width: 480px;
   text-align: left;
@@ -1129,11 +1167,11 @@ body {
 }
 
 /* ============================================
-   Análisis - Responsive Móvil (Entrenador arriba)
+   Anรกlisis - Responsive Mรณvil (Entrenador arriba)
    ============================================ */
 
 @media (max-width: 900px) {
-  /* En móviles, el Entrenador aparece arriba del tablero */
+  /* En mรณviles, el Entrenador aparece arriba del tablero */
   .analysis-mobile-coach {
     order: -1;
     margin-bottom: 1rem;
@@ -1149,7 +1187,7 @@ body {
   }
 }
 
-/* Botones de navegación del análisis más grandes para móviles */
+/* Botones de navegaciรณn del anรกlisis mรกs grandes para mรณviles */
 @media (max-width: 600px) {
   .analysis-nav-buttons {
     display: grid;

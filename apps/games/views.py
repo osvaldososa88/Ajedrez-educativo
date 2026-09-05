@@ -9,7 +9,7 @@ from django.utils import timezone
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from apps.accounts.models import CustomUser
-from .models import Game, Challenge, Move, Notification
+from .models import Game, Challenge, Move, Notification, GlobalChatMessage
 import chess
 
 class ChallengeListView(LoginRequiredMixin, ListView):
@@ -199,6 +199,11 @@ def toggle_favorite_game(request, game_id):
         'is_favorite': is_favorite,
         'favorite_count': GameFavorite.objects.filter(user=user).count()
     })
+
+@login_required
+def global_chat_view(request):
+    """Chat global de la comunidad."""
+    return render(request, 'games/global_chat.html')
 
 def shared_game_view(request, share_token):
     game = get_object_or_404(Game, share_token=share_token)

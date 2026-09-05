@@ -198,6 +198,30 @@ class ChatMessage(models.Model):
     def __str__(self):
         return f"{self.sender.username} en {self.game.id.hex[:8]}: {self.content[:50]}"
 
+class GlobalChatMessageManager(models.Manager):
+    def active_messages(self):
+        """Mensajes vigentes (dentro del ciclo semanal actual)."""
+        week_start = timezone.now() - timezone.timedelta(days=7)
+        return self.get_queryset().filter(created_at__gte=week_start)
+
+class GlobalChatMessage(models.Model):
+    """Mensaje del chat global de la comunidad. Se limpia cada domingo (tarea semanal)."""
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='global_chat_messages'
+    )
+    content = models.TextField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = GlobalChatMessageManager()
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.sender.username}: {self.content[:50]}"
+
 class GameFavorite(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
