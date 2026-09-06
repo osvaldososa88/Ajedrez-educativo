@@ -72,8 +72,12 @@ def accept_challenge(request, challenge_id):
         black_time_left_ms=time_ms,
         fen_current=chess.STARTING_FEN,
         status=Game.Status.IN_PROGRESS,
-        last_move_at=timezone.now()
+        last_move_at=timezone.now(),
+        # Desafíos normales entre usuarios son competitivos: afectan al ELO.
+        # Las partidas de entrenamiento/práctica futuras deben crearse con False.
+        is_competitive=True,
     )
+
 
     challenge.status = Challenge.Status.ACCEPTED
     challenge.game = game

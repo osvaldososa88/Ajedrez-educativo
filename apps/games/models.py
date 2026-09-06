@@ -78,8 +78,13 @@ class Game(models.Model):
         default=Turn.WHITE
     )
     is_competitive = models.BooleanField(default=True)
+    # True once this game's effect on player ratings has been evaluated and
+    # finalized by RatingService (applied, or determined to be non-rated).
+    # Protects against double-processing of the same finished game.
+    rating_processed = models.BooleanField(default=False)
     share_token = models.UUIDField(default=uuid.uuid4, editable=False)
     is_public = models.BooleanField(default=False)
+
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

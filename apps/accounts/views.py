@@ -41,3 +41,10 @@ class ProfileView(LoginRequiredMixin, DetailView):
         if username:
             return get_object_or_404(CustomUser, username=username)
         return self.request.user
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from apps.ratings.services import RatingService
+        context['rating_stats'] = RatingService.get_profile_stats(self.object)
+        return context
+

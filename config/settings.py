@@ -23,7 +23,9 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.accounts',
     'apps.games',
+    'apps.ratings',
     'apps.analysis',
+
     'apps.training',
     'apps.classrooms',
     'apps.tournaments',

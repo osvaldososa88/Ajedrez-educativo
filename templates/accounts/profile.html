@@ -15,12 +15,81 @@
                     Rol: <span class="role-pill">{{ profile_user.get_role_display }}</span>
                 </p>
                 <p style="color: var(--accent-color); font-weight: 700; margin-top: 0.5rem;">
-                    Puntuación ELO: {{ profile_user.elo_rating }}
+                    ELO: {{ rating_stats.current_elo }}
+                    <span class="role-pill" style="margin-left: 0.5rem;">{{ rating_stats.rank.label }}</span>
                 </p>
+                {% if rating_stats.total_change > 0 %}
+                    <p style="color: #2e9e5b; font-weight: 600; font-size: 0.9rem; margin-top: 0.25rem;">
+                        +{{ rating_stats.total_change }} desde que comenzaste 🎉
+                    </p>
+                {% elif rating_stats.total_change < 0 %}
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                        {{ rating_stats.total_change }} respecto a tu ELO inicial
+                    </p>
+                {% else %}
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                        ¡Juega partidas competitivas para empezar a ganar puntos!
+                    </p>
+                {% endif %}
+                {% if rating_stats.next_rank %}
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">
+                        Te faltan {{ rating_stats.points_to_next_rank }} puntos para {{ rating_stats.next_rank.label }}
+                    </p>
+                {% endif %}
             </div>
         </div>
 
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1.5rem;">
+            <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; text-align: center;">
+                <div style="font-size: 1.4rem; font-weight: 700;">{{ rating_stats.rated_games }}</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem;">Partidas competitivas</div>
+            </div>
+            <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; text-align: center;">
+                <div style="font-size: 1.4rem; font-weight: 700;">{{ rating_stats.win_rate }}%</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem;">Victorias</div>
+            </div>
+            <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; text-align: center;">
+                <div style="font-size: 1.4rem; font-weight: 700; color: #2e9e5b;">{{ rating_stats.wins }}</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem;">Ganadas</div>
+            </div>
+            <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; text-align: center;">
+                <div style="font-size: 1.4rem; font-weight: 700; color: #c0392b;">{{ rating_stats.losses }}</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem;">Perdidas</div>
+            </div>
+            <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; text-align: center;">
+                <div style="font-size: 1.4rem; font-weight: 700;">{{ rating_stats.draws }}</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem;">Empates</div>
+            </div>
+            <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; text-align: center;">
+                <div style="font-size: 1.4rem; font-weight: 700;">{{ rating_stats.best_elo }}</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem;">Mejor ELO</div>
+            </div>
+        </div>
+
+        {% if rating_stats.recent_changes %}
+            <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <h4 style="color: var(--text-secondary); margin-bottom: 0.75rem;">Evolución reciente del ELO</h4>
+                {% for change in rating_stats.recent_changes %}
+                    <div style="display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid var(--border-color, #eee); font-size: 0.9rem;">
+                        <span>
+                            {{ change.opponent_username }}
+                            · {{ change.get_result_display }}
+                            <span style="color: var(--text-secondary); font-size: 0.8rem;">
+                                ({{ change.get_game_mode_display }})
+                            </span>
+                        </span>
+                        <span style="font-weight: 600; {% if change.change > 0 %}color: #2e9e5b;{% elif change.change < 0 %}color: #c0392b;{% endif %}">
+                            {{ change.rating_before }} → {{ change.rating_after }}
+                            ({% if change.change > 0 %}+{% endif %}{{ change.change }})
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         {% if profile_user.bio %}
+
             <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
                 <h4 style="color: var(--text-secondary); margin-bottom: 0.5rem;">Biografía</h4>
                 <p>{{ profile_user.bio }}</p>

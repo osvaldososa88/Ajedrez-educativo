@@ -3,7 +3,9 @@ from django.db import transaction
 from django.utils import timezone
 from apps.accounts.models import CustomUser
 from apps.games.models import Game
+from apps.ratings.services import RatingService
 from .models import Tournament, TournamentParticipant, Round, Pairing
+
 from .pairing import get_pairing_service
 from .standings import StandingsService
 
@@ -174,6 +176,11 @@ class TournamentService:
             else:
                 continue
             pairing.save(update_fields=['result'])
+            # Safety net: make sure the finished game affected ratings exactly
+            # once (normally this already happened in GameConsumer; this call is
+            # idempotent and only fills gaps, never applies twice).
+            RatingService.process_game_result(pairing.game.id)
+
 
     @staticmethod
     def record_incident(pairing: Pairing, *, white_absent=False, black_absent=False) -> Pairing:
@@ -205,8 +212,12 @@ class TournamentService:
             elif pairing.result == Pairing.Result.BLACK_WIN:
                 pairing.game.winner = Game.Winner.BLACK
             pairing.game.save(update_fields=['status', 'finish_reason', 'winner'])
+            # Forfeit with a decided winner is a terminal competitive result:
+            # apply ratings once (idempotent).
+            RatingService.process_game_result(pairing.game.id)
 
         return pairing
+
 
     @staticmethod
     def set_manual_result(pairing: Pairing, result: str) -> Pairing:

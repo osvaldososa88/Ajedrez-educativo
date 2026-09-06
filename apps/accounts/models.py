@@ -18,3 +18,13 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
+
+    @property
+    def rank(self):
+        """
+        Friendly rank derived from the current ELO (never stored: the ELO is the
+        single source of truth). Crossing a rating boundary updates it instantly.
+        """
+        from apps.ratings.elo import rank_for_elo
+        return rank_for_elo(self.elo_rating)
+

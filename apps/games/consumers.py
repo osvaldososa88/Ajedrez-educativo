@@ -4,7 +4,9 @@ from channels.db import database_sync_to_async
 from django.utils import timezone
 from apps.core.chess_engine import ChessEngine
 from .models import Game, Move, Challenge, ChatMessage, GlobalChatMessage
+from apps.ratings.services import RatingService
 import chess
+
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -235,6 +237,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         game.update_clocks()
         game.save()
 
+        # If this clock update just finished the game (timeout), apply ratings
+        # exactly once; subsequent reloads/reconnects hit the idempotent path.
+        rating_result = RatingService.process_game_result(game.id)
+
         board = ChessEngine.get_board_from_fen(game.fen_current)
         legal_moves = ChessEngine.get_legal_moves(board)
 
@@ -255,8 +261,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'legal_moves': legal_moves,
             'is_check': board.is_check(),
             'moves_history': moves_history,
+            'rating_changes': rating_result['changes'],
             'pgn': game.generate_pgn()
         }
+
 
     @database_sync_to_async
     def process_move(self, user_id, game_id, uci_str):
@@ -286,6 +294,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         if game.status == Game.Status.FINISHED:
             game.save()
             # Game timed out during clock update
+            rating_result = RatingService.process_game_result(game.id)
             return {
                 'success': True,
                 'state': {
@@ -300,9 +309,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     'black_time_left_ms': game.black_time_left_ms,
                     'legal_moves': [],
                     'moves_history': list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username')),
+                    'rating_changes': rating_result['changes'],
                     'pgn': game.generate_pgn()
                 }
             }
+
 
         # Validate and execute move using python-chess
         try:
@@ -361,6 +372,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         game.pgn_history = game.generate_pgn()
         game.save()
 
+        # Jaque mate / tablas: la partida acaba de terminar -> aplicar ELO una vez.
+        rating_result = RatingService.process_game_result(game.id)
+
         board = ChessEngine.get_board_from_fen(game.fen_current)
         legal_moves = ChessEngine.get_legal_moves(board) if game.status == Game.Status.IN_PROGRESS else []
 
@@ -386,9 +400,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'black_time_left_ms': game.black_time_left_ms,
                 'legal_moves': legal_moves,
                 'moves_history': moves_history,
+                'rating_changes': rating_result['changes'],
                 'pgn': game.pgn_history
             }
         }
+
 
     @database_sync_to_async
     def process_resignation(self, user_id, game_id):
@@ -412,6 +428,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         game.pgn_history = game.generate_pgn()
         game.save()
 
+        # Abandono: resultado definitivo -> aplicar ELO exactamente una vez.
+        rating_result = RatingService.process_game_result(game.id)
+
         return {
             'success': True,
             'state': {
@@ -426,9 +445,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'black_time_left_ms': game.black_time_left_ms,
                 'legal_moves': [],
                 'moves_history': list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username')),
+                'rating_changes': rating_result['changes'],
                 'pgn': game.pgn_history
             }
         }
+
 
     @database_sync_to_async
     def process_draw_acceptance(self, user_id, game_id):
@@ -446,6 +467,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         game.pgn_history = game.generate_pgn()
         game.save()
 
+        # Tablas por acuerdo: resultado definitivo -> aplicar ELO exactamente una vez.
+        rating_result = RatingService.process_game_result(game.id)
+
         return {
             'success': True,
             'state': {
@@ -460,9 +484,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'black_time_left_ms': game.black_time_left_ms,
                 'legal_moves': [],
                 'moves_history': list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username')),
+                'rating_changes': rating_result['changes'],
                 'pgn': game.pgn_history
             }
         }
+
 
 
 class NotificationConsumer(AsyncJsonWebsocketConsumer):
