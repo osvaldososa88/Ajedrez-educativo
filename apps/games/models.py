@@ -82,8 +82,14 @@ class Game(models.Model):
     # finalized by RatingService (applied, or determined to be non-rated).
     # Protects against double-processing of the same finished game.
     rating_processed = models.BooleanField(default=False)
+    # Denormalized convenience flag set at creation time: True when one of the
+    # players is a training bot. Used to distinguish/filter Human vs Human and
+    # Human vs Bot games without extra joins. The authoritative source of truth
+    # is the Bot.user link; this flag never changes after creation.
+    vs_bot = models.BooleanField(default=False, db_index=True)
     share_token = models.UUIDField(default=uuid.uuid4, editable=False)
     is_public = models.BooleanField(default=False)
+
 
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -161,12 +167,23 @@ class Game(models.Model):
             result_str = "1/2-1/2"
 
         return ChessEngine.generate_pgn(
-            white_name=self.white_player.username,
-            black_name=self.black_player.username,
+            # Visible names (bots show their editable display name, not the
+            # internal account username).
+            white_name=self.white_display_name,
+            black_name=self.black_display_name,
             uci_moves=moves,
             result=result_str,
             date_str=self.created_at.strftime("%Y.%m.%d") if self.created_at else None
         )
+
+    @property
+    def white_display_name(self):
+        return self.white_player.display_name
+
+    @property
+    def black_display_name(self):
+        return self.black_player.display_name
+
 
 class Notification(models.Model):
     user = models.ForeignKey(

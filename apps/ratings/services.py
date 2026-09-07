@@ -38,6 +38,17 @@ from .models import RatingChange
 logger = logging.getLogger(__name__)
 
 
+def _game_involves_bot(game) -> bool:
+    """Bot training games never affect the competitive rating."""
+    if game.vs_bot:
+        return True
+    from apps.bots.models import Bot
+    return Bot.objects.filter(
+        user_id__in=[game.white_player_id, game.black_player_id]
+    ).exists()
+
+
+
 class RatingService:
     # --- Game processing ----------------------------------------------------
 
@@ -80,7 +91,10 @@ class RatingService:
                     return {'status': 'already_processed', 'changes': []}
 
                 # Terminal game. Decide whether it is rating-eligible.
-                if not game.is_competitive or game.winner is None:
+                # Bot training games NEVER touch the competitive ELO (explicit
+                # exclusion; they are also created with is_competitive=False).
+                if not game.is_competitive or game.winner is None or _game_involves_bot(game):
+
                     # Unrated/training game, or no result (e.g. DOUBLE_FORFEIT):
                     # evaluate and mark so it is never reconsidered.
                     game.rating_processed = True

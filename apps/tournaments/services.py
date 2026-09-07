@@ -19,7 +19,10 @@ class TournamentService:
 
     @staticmethod
     def register(tournament: Tournament, user) -> TournamentParticipant:
+        if user.role == CustomUser.Role.BOT:
+            raise TournamentError("Los bots no pueden inscribirse en torneos.")
         if tournament.status not in [Tournament.Status.DRAFT, Tournament.Status.REGISTRATION_OPEN]:
+
             raise TournamentError("Las inscripciones para este torneo ya están cerradas.")
 
         existing = TournamentParticipant.objects.filter(tournament=tournament, user=user).first()

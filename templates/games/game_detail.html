@@ -12,8 +12,9 @@
             <div class="player-info">
                 <span id="top-player-color-icon">⬛</span>
                 <span id="top-player-name">
-                    {% if player_color == 'white' %}{{ game.black_player.username }}{% else %}{{ game.white_player.username }}{% endif %}
+                    {% if player_color == 'white' %}{{ game.black_player.display_name }}{% if game.black_player.is_bot_account %} 🤖{% endif %}{% else %}{{ game.white_player.display_name }}{% if game.white_player.is_bot_account %} 🤖{% endif %}{% endif %}
                 </span>
+
             </div>
             <div class="timer" id="top-timer">10:00</div>
         </div>
@@ -26,8 +27,9 @@
             <div class="player-info">
                 <span id="bottom-player-color-icon">⚪</span>
                 <span id="bottom-player-name">
-                    {% if player_color == 'white' %}{{ game.white_player.username }}{% else %}{{ game.black_player.username }}{% endif %}
+                    {% if player_color == 'white' %}{{ game.white_player.display_name }}{% if game.white_player.is_bot_account %} 🤖{% endif %}{% else %}{{ game.black_player.display_name }}{% if game.black_player.is_bot_account %} 🤖{% endif %}{% endif %}
                 </span>
+
             </div>
             <div class="timer" id="bottom-timer">10:00</div>
         </div>
@@ -65,10 +67,12 @@
                     <button id="btn-resign" class="btn btn-danger" style="flex: 1; font-size: 0.85rem;">
                         🚩 Abandonar
                     </button>
+                    {% if not game.vs_bot %}
                     <button id="btn-draw" class="btn btn-secondary" style="flex: 1; font-size: 0.85rem;">
                         🤝 Tablas
                     </button>
-                </div>
+                    {% endif %}
+             </div>
             {% endif %}
 
             <!-- Chat Button (solo para jugadores) -->
@@ -155,10 +159,17 @@
             <a href="{% url 'create_game_analysis_job' game.id %}" id="btn-analyze-modal" class="btn btn-primary">
                 🔍 Analizar Partida
             </a>
+            {% if game.vs_bot %}
+            <a href="{% url 'bots_list' %}" class="btn btn-secondary">
+                Volver a los Bots
+            </a>
+            {% else %}
             <a href="{% url 'challenges_list' %}" class="btn btn-secondary">
                 Volver a mis Desafíos
             </a>
+            {% endif %}
         </div>
+
     </div>
 </div>
 {% endblock %}

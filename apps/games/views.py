@@ -39,6 +39,11 @@ def create_challenge(request, user_id):
         receiver = get_object_or_404(CustomUser, id=user_id)
         if receiver == request.user:
             return HttpResponseForbidden("No puedes desafiarte a ti mismo.")
+        if receiver.role == CustomUser.Role.BOT:
+            return HttpResponseForbidden(
+                "No puedes desafiar a un bot; juega contra él desde la sección de Bots."
+            )
+
 
         time_control = int(request.POST.get('time_control_minutes', 10))
         increment = int(request.POST.get('time_control_increment', 0))
@@ -155,13 +160,25 @@ class GameHistoryView(LoginRequiredMixin, ListView):
     template_name = 'games/game_history.html'
     context_object_name = 'games'
 
+    # Allowed history filters: all | human | bot
+    FILTER_CHOICES = {'all', 'human', 'bot'}
+
     def get_queryset(self):
         user = self.request.user
         Game.prune_user_history(user, limit=50)
-        return Game.objects.filter(
+        queryset = Game.objects.filter(
             models.Q(white_player=user) | models.Q(black_player=user),
             status=Game.Status.FINISHED
-        ).order_by('-created_at')[:50]
+        ).select_related('white_player', 'black_player').order_by('-created_at')
+
+        self.history_filter = self.request.GET.get('filter', 'all')
+        if self.history_filter not in self.FILTER_CHOICES:
+            self.history_filter = 'all'
+        if self.history_filter == 'human':
+            queryset = queryset.filter(vs_bot=False)
+        elif self.history_filter == 'bot':
+            queryset = queryset.filter(vs_bot=True)
+        return queryset[:50]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -170,7 +187,9 @@ class GameHistoryView(LoginRequiredMixin, ListView):
         fav_game_ids = set(GameFavorite.objects.filter(user=user).values_list('game_id', flat=True))
         context['favorite_ids'] = fav_game_ids
         context['favorite_count'] = len(fav_game_ids)
+        context['history_filter'] = getattr(self, 'history_filter', 'all')
         return context
+
 
 @login_required
 def toggle_favorite_game(request, game_id):

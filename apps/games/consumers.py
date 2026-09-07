@@ -1,11 +1,34 @@
 import json
+import logging
+
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
 from apps.core.chess_engine import ChessEngine
 from .models import Game, Move, Challenge, ChatMessage, GlobalChatMessage
 from apps.ratings.services import RatingService
+from apps.bots.services import BotService
 import chess
+
+logger = logging.getLogger(__name__)
+
+
+def _process_game_finish(game):
+    """
+    Single post-terminal hook run by every finish path (mate, timeout,
+    resignation, draw, forfeit): competitive ELO + bot progression.
+    Both services are idempotent, so repeated calls are safe.
+    """
+    rating_result = RatingService.process_game_result(game.id)
+    try:
+        BotService.on_game_finished(game)
+
+    except Exception:
+        # Progression must never break the game flow; it can be repaired
+        # by re-processing (both paths are idempotent).
+        logger.exception("Bot progression failed for game %s", game.id)
+    return rating_result
+
 
 
 class GameConsumer(AsyncJsonWebsocketConsumer):
@@ -35,6 +58,11 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'type': 'init_state',
             'state': state
         })
+
+        # Bot games: if it is the bot's turn (e.g. the bot plays white, or the
+        # human left before the bot replied), the bot moves now.
+        await self.trigger_bot_move_if_needed()
+
 
     async def disconnect(self, close_code):
         if hasattr(self, 'room_group_name'):
@@ -82,6 +110,50 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'state': result['state']
             }
         )
+
+        # Bot games: if it is now the bot's turn, compute and apply its reply
+        # (a second game_update reaches everyone right after this one).
+        await self.trigger_bot_move_if_needed()
+
+    # --- Bot reply flow -------------------------------------------------------
+
+    async def trigger_bot_move_if_needed(self):
+        """
+        Runs the bot reply pipeline when it is the bot's turn:
+        DB check -> (blocking) Stockfish computation in a worker thread ->
+        apply through the same server-authoritative process_move used by humans.
+        """
+        try:
+            prep = await self.prepare_bot_move_data(self.game_id)
+            if not prep:
+                return
+            uci = await self.compute_bot_move(prep['fen'], prep['profile_id'])
+            if not uci:
+                return
+            result = await self.process_move(prep['bot_user_id'], self.game_id, uci)
+            if result.get('success'):
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'broadcast_game_update',
+                        'state': result['state']
+                    }
+                )
+        except Exception:
+            # The bot never blocks the human's game: errors are logged and the
+            # human can simply reload (the bot retries on the next trigger).
+            logger.exception("Bot move failed for game %s", self.game_id)
+
+    @database_sync_to_async
+    def prepare_bot_move_data(self, game_id):
+        """Pure DB check: is it the bot's turn? (engine runs separately)."""
+        return BotService.prepare_bot_move(game_id)
+
+    @database_sync_to_async
+    def compute_bot_move(self, fen, profile_id):
+        """Blocking Stockfish call, executed in the executor thread."""
+        return BotService.compute_uci(fen, profile_id)
+
 
     async def handle_resign(self):
         result = await self.process_resignation(self.user.id, self.game_id)
@@ -239,7 +311,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
         # If this clock update just finished the game (timeout), apply ratings
         # exactly once; subsequent reloads/reconnects hit the idempotent path.
-        rating_result = RatingService.process_game_result(game.id)
+        rating_result = _process_game_finish(game)
 
         board = ChessEngine.get_board_from_fen(game.fen_current)
         legal_moves = ChessEngine.get_legal_moves(board)
@@ -253,8 +325,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'finish_reason': game.get_finish_reason_display() if game.finish_reason else None,
             'fen': game.fen_current,
             'turn': game.turn,
-            'white_player': game.white_player.username,
-            'black_player': game.black_player.username,
+            'white_player': game.white_player.display_name,
+            'black_player': game.black_player.display_name,
+
             'white_time_left_ms': game.white_time_left_ms,
             'black_time_left_ms': game.black_time_left_ms,
             'clock_started': game.clock_started,
@@ -294,7 +367,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         if game.status == Game.Status.FINISHED:
             game.save()
             # Game timed out during clock update
-            rating_result = RatingService.process_game_result(game.id)
+            rating_result = _process_game_finish(game)
             return {
                 'success': True,
                 'state': {
@@ -345,10 +418,12 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         game.last_move_at = timezone.now()
 
         # Start the clock after the first move of the black player (ply 2)
-        # This ensures both players have joined the board and black has received white's first move
-        if current_ply == 2 and not game.clock_started:
+        # This ensures both players have joined the board and black has received white's first move.
+        # Bot training games are untimed: their clock never starts (unlimited thinking).
+        if current_ply == 2 and not game.clock_started and not game.vs_bot:
             game.clock_started = True
             game.last_move_at = timezone.now()
+
 
         # Handle game over detection
         if eval_res['is_game_over']:
@@ -373,7 +448,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         game.save()
 
         # Jaque mate / tablas: la partida acaba de terminar -> aplicar ELO una vez.
-        rating_result = RatingService.process_game_result(game.id)
+        rating_result = _process_game_finish(game)
 
         board = ChessEngine.get_board_from_fen(game.fen_current)
         legal_moves = ChessEngine.get_legal_moves(board) if game.status == Game.Status.IN_PROGRESS else []
@@ -429,7 +504,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         game.save()
 
         # Abandono: resultado definitivo -> aplicar ELO exactamente una vez.
-        rating_result = RatingService.process_game_result(game.id)
+        rating_result = _process_game_finish(game)
 
         return {
             'success': True,
@@ -468,7 +543,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         game.save()
 
         # Tablas por acuerdo: resultado definitivo -> aplicar ELO exactamente una vez.
-        rating_result = RatingService.process_game_result(game.id)
+        rating_result = _process_game_finish(game)
 
         return {
             'success': True,

@@ -28,8 +28,12 @@ class ClassmateListView(LoginRequiredMixin, ListView):
     context_object_name = 'classmates'
 
     def get_queryset(self):
-        # Return all users except the current user
-        return CustomUser.objects.exclude(id=self.request.user.id).order_by('-elo_rating', 'username')
+        # Return all users except the current user and bot accounts
+        # (bots are training opponents, not classmates/rankings entries).
+        return CustomUser.objects.exclude(id=self.request.user.id).exclude(
+            role=CustomUser.Role.BOT
+        ).order_by('-elo_rating', 'username')
+
 
 class ProfileView(LoginRequiredMixin, DetailView):
     model = CustomUser

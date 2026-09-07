@@ -38,7 +38,18 @@ def _build_hints(classification: dict, board: chess.Board) -> list:
 
 def _build_title_and_description(game: Game, move_analysis: MoveAnalysis) -> tuple:
     date_str = game.created_at.strftime('%d/%m/%Y') if game and game.created_at else ''
-    title = f"Corrige tu error — partida del {date_str} (jugada {move_analysis.ply})".strip()
+    # Bot training games mention the opponent by its editable display name, so
+    # puzzles created from them keep their educational context.
+    opponent_label = ''
+    if getattr(game, 'vs_bot', False):
+        bot_player = game.black_player if game.black_player.is_bot_account else game.white_player
+        if bot_player.is_bot_account:
+            opponent_label = f" contra {bot_player.display_name} (bot)"
+    title = (
+        f"Corrige tu error — partida del {date_str}{opponent_label} (jugada {move_analysis.ply})"
+    ).strip()
+
+
     description = (
         f"En esta posición jugaste {move_analysis.move_san}, pero había una continuación mejor. "
         "Antes de mover, pregúntate: ¿qué amenazas hay en el tablero?, ¿alguna pieza está en peligro?, "

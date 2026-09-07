@@ -21,10 +21,13 @@
     </div>
 
     <!-- Filter Buttons -->
-    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
-        <button id="filter-all-btn" class="btn btn-primary" onclick="filterGames('all')" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Todas ({{ games|length }})</button>
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <a href="{% url 'game_history' %}" class="btn {% if history_filter == 'all' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Todas</a>
+        <a href="?filter=human" class="btn {% if history_filter == 'human' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 0.4rem 1rem; font-size: 0.85rem;">👥 Contra estudiantes</a>
+        <a href="?filter=bot" class="btn {% if history_filter == 'bot' %}btn-primary{% else %}btn-secondary{% endif %}" style="padding: 0.4rem 1rem; font-size: 0.85rem;">🤖 Contra bots</a>
         <button id="filter-fav-btn" class="btn btn-secondary" onclick="filterGames('fav')" style="padding: 0.4rem 1rem; font-size: 0.85rem;">⭐ Favoritas ({{ favorite_count }})</button>
     </div>
+
 
     <!-- Games List Grid -->
     <div id="games-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
@@ -40,11 +43,12 @@
 
                 <div style="margin-bottom: 0.75rem;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.3rem;">
-                        <span style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">⚪ {{ game.white_player.username }}</span>
+                        <span style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">⚪ {{ game.white_player.display_name }}{% if game.white_player.is_bot_account %} 🤖{% endif %}</span>
                         {% if game.winner == 'WHITE' %}<span class="badge" style="background: #10b981; font-size: 0.7rem;">Ganador</span>{% endif %}
                     </div>
                     <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <span style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">⬛ {{ game.black_player.username }}</span>
+                        <span style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">⬛ {{ game.black_player.display_name }}{% if game.black_player.is_bot_account %} 🤖{% endif %}</span>
+
                         {% if game.winner == 'BLACK' %}<span class="badge" style="background: #38bdf8; font-size: 0.7rem;">Ganador</span>{% endif %}
                     </div>
                 </div>
@@ -93,19 +97,20 @@
         const cards = document.querySelectorAll('.game-card');
 
         if (type === 'fav') {
-            btnFav.className = 'btn btn-primary';
-            btnAll.className = 'btn btn-secondary';
+            if (btnFav) btnFav.className = 'btn btn-primary';
+            if (btnAll) btnAll.className = 'btn btn-secondary';
             cards.forEach(card => {
                 card.style.display = card.getAttribute('data-is-fav') === 'true' ? 'flex' : 'none';
             });
         } else {
-            btnAll.className = 'btn btn-primary';
-            btnFav.className = 'btn btn-secondary';
+            if (btnFav) btnFav.className = 'btn btn-secondary';
+            if (btnAll) btnAll.className = 'btn btn-primary';
             cards.forEach(card => {
                 card.style.display = 'flex';
             });
         }
     }
+
 
     document.querySelectorAll('.btn-fav-toggle').forEach(btn => {
         btn.addEventListener('click', async (e) => {

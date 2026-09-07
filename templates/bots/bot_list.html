@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Jugar contra Bots - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto; padding: 1.5rem 1rem;">
+
+    <div style="margin-bottom: 1.5rem;">
+        <h1 style="margin: 0; font-size: 1.8rem;">🤖 Jugar contra Bots</h1>
+        <p style="color: var(--text-secondary); margin: 0.25rem 0 0 0; font-size: 0.95rem;">
+            Entrená cuando quieras: derrotá a un bot para desbloquear al siguiente de su categoría.
+            Estas partidas <strong>no afectan tu ELO competitivo</strong> y podés analizarlas después.
+        </p>
+    </div>
+
+    <!-- Bot stats (separate from competitive stats) -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <h4 style="margin-top: 0;">📊 Tu entrenamiento contra bots</h4>
+        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.95rem;">
+            <span>🎮 Partidas: <strong>{{ bot_stats.games }}</strong></span>
+            <span style="color: #10b981;">🏆 Victorias: <strong>{{ bot_stats.wins }}</strong></span>
+            <span>🤝 Empates: <strong>{{ bot_stats.draws }}</strong></span>
+            <span style="color: #ef4444;">💀 Derrotas: <strong>{{ bot_stats.losses }}</strong></span>
+            <span>🤖 Bots derrotados: <strong>{{ bot_stats.defeated_bots }}</strong></span>
+        </div>
+    </div>
+
+    {% for section in sections %}
+    <div class="card" style="margin-bottom: 2rem; border-top: 4px solid {{ section.color }};">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <h3 style="margin: 0;">{{ section.icon }} Nivel {{ section.label }}</h3>
+            <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                {{ section.defeated_count }} / {{ section.total }} derrotados ·
+                {{ section.unlocked_count }} / {{ section.total }} desbloqueados
+            </span>
+        </div>
+
+        {% if section.next_opponent %}
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1rem 0;">
+                Tu próximo rival: <strong>{{ section.next_opponent.display_name }}</strong>
+                — {{ section.next_opponent.displayed_elo }} ELO
+            </p>
+        {% else %}
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1rem 0;">
+                ¡No hay bots activos en esta categoría por ahora!
+            </p>
+        {% endif %}
+
+        <!-- Progression path -->
+        <div style="display: flex; flex-direction: column; gap: 0;">
+            {% for item in section.bots %}
+            <div style="display: flex; justify-content: center;">
+                <a href="{% url 'bot_detail' item.bot.id %}" style="text-decoration: none; color: inherit; width: 100%; max-width: 480px;">
+                    <div class="card" style="margin: 0; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 1rem; {% if item.defeated %}border-left: 4px solid #10b981;{% elif item.unlocked %}border-left: 4px solid {{ section.color }};{% else %}opacity: 0.55; border-left: 4px solid #64748b;{% endif %}">
+                        <span style="font-size: 1.8rem;">{{ item.bot.avatar }}</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700;">{{ item.bot.display_name }}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                                {{ item.bot.displayed_elo }} ELO · {{ item.bot.profile.name }}
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            {% if item.defeated %}
+                                <span style="font-size: 1.3rem;" title="Derrotado">✅</span>
+                            {% elif item.unlocked %}
+                                <span class="btn btn-primary" style="font-size: 0.8rem; padding: 0.35rem 0.9rem; display: inline-block;">⚔️ JUGAR</span>
+                            {% else %}
+                                <span style="font-size: 1.2rem;" title="Bloqueado">🔒</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% if not forloop.last %}
+                <div style="display: flex; justify-content: center; color: var(--text-secondary); line-height: 1; padding: 2px 0;">↓</div>
+            {% endif %}
+
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ bot.display_name }} ({{ bot.get_category_display }}) - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div style="max-width: 640px; margin: 2rem auto;">
+
+    <div class="card" style="border-top: 4px solid {{ bot.category_color }};">
+        <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.25rem;">
+            <div style="width: 84px; height: 84px; background: {{ bot.category_color }}; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2.6rem;">
+                {{ bot.avatar }}
+            </div>
+            <div>
+                <h2 style="margin: 0;">{{ bot.display_name }}</h2>
+                {% if bot.nickname %}<p style="color: var(--text-secondary); margin: 0.15rem 0;">"{{ bot.nickname }}"</p>{% endif %}
+                <p style="margin: 0.35rem 0 0 0;">
+                    <span class="role-pill">{{ bot.get_category_display }}</span>
+                    <strong style="margin-left: 0.5rem;">{{ bot.displayed_elo }} ELO</strong>
+                    <span style="color: var(--text-secondary); font-size: 0.85rem; margin-left: 0.5rem;">({{ bot.profile.name }})</span>
+                </p>
+            </div>
+        </div>
+
+        {% if bot.description %}
+            <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                {{ bot.description }}
+            </div>
+        {% endif %}
+
+        {% if bot.quote %}
+            <p style="font-style: italic; color: var(--text-secondary); text-align: center; margin: 0 0 1.25rem 0;">
+                “{{ bot.quote }}”
+            </p>
+        {% endif %}
+
+        {% if unlocked %}
+            <h4 style="margin-bottom: 0.5rem;">⚔️ Elegí tu color y a jugar</h4>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <form action="{% url 'bot_play' bot.id %}" method="post" style="flex: 1; min-width: 140px;">
+                    {% csrf_token %}<input type="hidden" name="color" value="white">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">⚪ Jugar con Blancas</button>
+                </form>
+                <form action="{% url 'bot_play' bot.id %}" method="post" style="flex: 1; min-width: 140px;">
+                    {% csrf_token %}<input type="hidden" name="color" value="black">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">⬛ Jugar con Negras</button>
+                </form>
+                <form action="{% url 'bot_play' bot.id %}" method="post" style="flex: 1; min-width: 140px;">
+                    {% csrf_token %}<input type="hidden" name="color" value="random">
+                    <button type="submit" class="btn btn-secondary" style="width: 100%;">🎲 Color aleatorio</button>
+                </form>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0.75rem 0 0 0;">
+                Sin reloj: pensá con calma. El bot responde automáticamente.
+            </p>
+        {% else %}
+            <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; text-align: center;">
+                <span style="font-size: 1.5rem;">🔒</span>
+                <p style="margin: 0.5rem 0 0 0; font-weight: 600;">
+                    Derrota al bot anterior para desbloquearlo
+                </p>
+                {% if previous_bot %}
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
+                        Rival anterior: <a href="{% url 'bot_detail' previous_bot.id %}">{{ previous_bot.display_name }}</a>
+                        — {{ previous_bot.displayed_elo }} ELO
+                    </p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.85rem; color: var(--text-secondary);">
+            Tu historial contra bots: {{ stats.wins }} victorias · {{ stats.draws }} empates · {{ stats.losses }} derrotas
+        </div>
+    </div>
+
+    <p style="text-align: center; margin-top: 1rem;">
+        <a href="{% url 'bots_list' %}" class="btn btn-secondary">← Volver a los Bots</a>
+    </p>
+</div>
+{% endblock %}
