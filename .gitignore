@@ -1,0 +1,26 @@
+# --- Entorno local / desarrollo ---
+__pycache__/
+*.py[cod]
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# --- Base de datos local (se migra/crea en cada entorno; NO versionar) ---
+db.sqlite3
+*.sqlite3
+
+# --- Logs y errores ---
+*.log
+err*.txt
+test_out.txt
+test_err*.log
+
+# --- Editor / SO ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Secretos (nunca versionar) ---
+.env
+.env.*

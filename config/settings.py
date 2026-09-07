@@ -66,10 +66,29 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
+# --- Base de datos -----------------------------------------------------------
+# La base se configura por variables de entorno para que el MISMO settings.py
+# del repositorio funcione en local (SQLite, sin variables) y en el VPS
+# (PostgreSQL, con variables). Así el archivo no se edita a mano en producción
+# y los `git pull` automáticos nunca chocan con cambios locales.
+#
+# Variables reconocidas:
+#   DB_ENGINE   -> p. ej. 'django.db.backends.postgresql'
+#   DB_NAME     -> nombre de la base
+#   DB_USER     -> usuario
+#   DB_PASSWORD -> contraseña
+#   DB_HOST     -> host (localhost en el VPS suele ser suficiente)
+#   DB_PORT     -> puerto (PostgreSQL suele usar 5432)
+#
+# Sin variables se usa SQLite en 'BASE_DIR/db.sqlite3' (desarrollo/tests).
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.environ.get('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
+        'USER': os.environ.get('DB_USER', ''),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', ''),
+        'PORT': os.environ.get('DB_PORT', ''),
     }
 }
 
