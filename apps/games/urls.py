@@ -19,6 +19,6 @@ urlpatterns = [
     path('share/<uuid:share_token>/', shared_game_view, name='shared_game'),
     # HTTP Notification endpoints (fallback when WebSocket is unavailable)
     path('api/notifications/', notification_list_api, name='notification_list_api'),
-    path('api/notifications/<uuid:notification_id>/read/', notification_mark_read_api, name='notification_mark_read_api'),
+    path('api/notifications/<int:notification_id>/read/', notification_mark_read_api, name='notification_mark_read_api'),
     path('api/notifications/read-all/', notification_mark_all_read_api, name='notification_mark_all_read_api'),
 ]

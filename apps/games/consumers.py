@@ -612,7 +612,14 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         if msg_type == 'mark_read':
             notif_id = content.get('notification_id')
             if notif_id:
-                await self.mark_notification_read(notif_id)
+                updated = await self.mark_notification_read(notif_id)
+                if updated:
+                    # Notify the client that this notification is now read so the
+                    # frontend can decrement the counter without a page reload.
+                    await self.send_json({
+                        'type': 'notification_read',
+                        'notification_id': str(notif_id),
+                    })
 
     async def send_notification(self, event):
         """Handler for notification_new group send."""
@@ -650,9 +657,15 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
     def mark_notification_read(self, notif_id):
         from .models import Notification
         try:
-            Notification.objects.filter(id=notif_id, user=self.user).update(is_read=True)
+            notif_id = int(notif_id)
+        except (TypeError, ValueError):
+            notif_id = None
+        if notif_id is None:
+            return 0
+        try:
+            return Notification.objects.filter(id=notif_id, user=self.user).update(is_read=True)
         except Exception:
-            pass
+            return 0
 
 
 class GlobalChatConsumer(AsyncJsonWebsocketConsumer):

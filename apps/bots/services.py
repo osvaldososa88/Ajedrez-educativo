@@ -267,8 +267,8 @@ class BotService:
         if not human_is_winner:
             return result
 
-        from apps.games.models import Notification
-
+        from apps.games.services import send_notification
+        
         with transaction.atomic():
             progress, created = BotProgress.objects.get_or_create(
                 user=human, bot=bot,
@@ -292,22 +292,18 @@ class BotService:
                 BotProgress.objects.update_or_create(
                     user=human, bot=nxt, defaults={'unlocked': True},
                 )
-                Notification.objects.create(
-                    user=human,
-                    message=(
-                        f"🏆 ¡Le ganaste a {bot.display_name} ({bot.displayed_elo})! "
-                        f"Desbloqueaste a {nxt.display_name} ({nxt.displayed_elo})."
-                    ),
+                send_notification(
+                    human,
+                    f"🏆 ¡Le ganaste a {bot.display_name} ({bot.displayed_elo})! "
+                    f"Desbloqueaste a {nxt.display_name} ({nxt.displayed_elo}).",
                     game=game,
                 )
                 result['unlocked'] = nxt.display_name
             else:
-                Notification.objects.create(
-                    user=human,
-                    message=(
-                        f"👑 ¡Completaste todos los bots de nivel "
-                        f"{bot.get_category_display()} derrotando a {bot.display_name}!"
-                    ),
+                send_notification(
+                    human,
+                    f"👑 ¡Completaste todos los bots de nivel "
+                    f"{bot.get_category_display()} derrotando a {bot.display_name}!",
                     game=game,
                 )
         return result

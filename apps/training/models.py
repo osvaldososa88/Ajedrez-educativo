@@ -50,6 +50,25 @@ class Puzzle(models.Model):
         PRACTICE_ENDGAME = 'PRACTICE_ENDGAME', 'Practicar un Final'
         PLAY_VS_BOT = 'PLAY_VS_BOT', 'Jugar contra Bot hasta Objetivo'
 
+    class PuzzleType(models.TextChoices):
+        """
+        SEQUENCE: el alumno debe encontrar una secuencia concreta de jugadas
+        (la solución se compara contra `solution_moves`/`variations_json`).
+        OBJECTIVE: el alumno juega libremente contra un defensor automático
+        hasta cumplir un objetivo (p. ej. dar jaque mate); la solución NO es
+        una secuencia estática y pueden existir múltiples caminos válidos.
+        """
+        SEQUENCE = 'SEQUENCE', 'Encontrar la solución'
+        OBJECTIVE = 'OBJECTIVE', 'Cumplir un objetivo'
+
+    class ObjectiveType(models.TextChoices):
+        """
+        Objetivos para problemas OBJECTIVE. Diseñado para extender con
+        PROMOTE / WIN_MATERIAL / SURVIVE_MOVES / CAPTURE_PIECE / DRAW /
+        DEFEND_POSITION sin cambiar la estructura.
+        """
+        CHECKMATE = 'CHECKMATE', 'Dar jaque mate'
+
     class SideToMove(models.TextChoices):
         WHITE = 'WHITE', 'Blancas'
         BLACK = 'BLACK', 'Negras'
@@ -73,33 +92,59 @@ class Puzzle(models.Model):
     theme = models.CharField(max_length=30, choices=Theme.choices, default=Theme.FORK)
     difficulty = models.CharField(max_length=20, choices=Difficulty.choices, default=Difficulty.BEGINNER)
     objective = models.CharField(max_length=30, choices=Objective.choices, default=Objective.WIN)
+
+    # --- Tipo de problema ---------------------------------------------------
+    # SEQUENCE = la solución es una secuencia concreta (comportamiento histórico).
+    # OBJECTIVE = el alumno juega contra un defensor hasta cumplir `objective_type`.
+    puzzle_type = models.CharField(
+        max_length=15,
+        choices=PuzzleType.choices,
+        default=PuzzleType.SEQUENCE,
+        verbose_name="Tipo de problema",
+    )
+    objective_type = models.CharField(
+        max_length=20,
+        choices=ObjectiveType.choices,
+        null=True,
+        blank=True,
+        verbose_name="Objetivo (problema por objetivo)",
+    )
+
+    # --- Oponente automático (bot / Stockfish) -------------------------------
     bot_opponent = models.ForeignKey(
         'bots.Bot',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='puzzles_as_opponent',
-        verbose_name="Bot contrario"
+        verbose_name="Bot contrario",
     )
     bot_side = models.CharField(
         max_length=10,
         choices=SideToMove.choices,
         default=SideToMove.BLACK,
-        verbose_name="Color del bot"
+        verbose_name="Color del bot",
     )
     max_moves = models.PositiveIntegerField(
-        default=0,
-        verbose_name="Máximo de jugadas",
-        help_text="0 = sin límite. El problema termina al alcanzar el objetivo o agotar las jugadas."
+        default=50,
+        verbose_name="Máximo de jugadas del estudiante",
+        help_text="0 = sin límite. El problema termina al alcanzar el objetivo o agotar las jugadas del estudiante."
     )
     allow_bot_opponent = models.BooleanField(default=False, verbose_name="Bot como rival")
     bot_profile = models.ForeignKey(
         'bots.BotProfile', on_delete=models.SET_NULL, null=True, blank=True,
         verbose_name="Perfil del bot", related_name='puzzles'
     )
-    bot_side = models.CharField(
-        max_length=10, choices=SideToMove.choices, default=SideToMove.BLACK,
-        verbose_name="Lado del bot"
+
+    # --- Piezas críticas (objetivos) ----------------------------------------
+    # Lista de tokens "Color+Pieza" presentes en la posición inicial, p.ej.
+    # ['WR'] = torre blanca, ['BQ'] = dama negra. Si el defensor captura una
+    # pieza marcada como crítica, el problema OBJECTIVE falla inmediatamente.
+    critical_pieces = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="Piezas críticas",
+        help_text="Ej: WR (torre blanca), BQ (dama negra), BK (rey negro). Si el rival captura una pieza crítica, el problema falla.",
     )
 
     # Solution moves sequence stored as JSON list of UCI strings e.g. ["e2e4", "e7e5", "g1f3"]
@@ -176,9 +221,27 @@ class Puzzle(models.Model):
 class PuzzleAttempt(models.Model):
     """
     Log of student attempts on a puzzle.
+
+    For SEQUENCE puzzles one row is created per finished attempt cycle.
+    For OBJECTIVE puzzles the row acts as the live session: it stores the
+    full move log (human + defender), the number of human moves, the status
+    and the end message, so the position can be rebuilt / replayed and the
+    finished game can be analysed afterwards.
     """
+    class Status(models.TextChoices):
+        IN_PROGRESS = 'IN_PROGRESS', 'En curso'
+        COMPLETED = 'COMPLETED', 'Completado'
+        FAILED = 'FAILED', 'Fallido'
+        ABANDONED = 'ABANDONED', 'Abandonado'
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='puzzle_attempts')
     puzzle = models.ForeignKey(Puzzle, on_delete=models.CASCADE, related_name='attempts')
+
+    # Session / objective state
+    status = models.CharField(max_length=15, choices=Status.choices, default=Status.IN_PROGRESS)
+    movelog = models.JSONField(default=list, blank=True, help_text="Jugadas UCI completas del intento (humanas y del defensor), en orden.")
+    human_moves_count = models.PositiveIntegerField(default=0, help_text="Número de jugadas realizadas por el estudiante.")
+    end_message = models.TextField(blank=True, verbose_name="Mensaje de finalización")
 
     solved = models.BooleanField(default=False)
     attempts_count = models.PositiveIntegerField(default=1)

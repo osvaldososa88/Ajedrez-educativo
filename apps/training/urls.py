@@ -6,6 +6,10 @@ urlpatterns = [
     path('puzzle/<uuid:puzzle_id>/', views.PuzzleDetailView.as_view(), name='puzzle_detail'),
     path('api/puzzle/<uuid:puzzle_id>/submit/', views.submit_puzzle_move_api, name='submit_puzzle_move_api'),
     path('api/puzzle/<uuid:puzzle_id>/hint/', views.get_puzzle_hint_api, name='get_puzzle_hint_api'),
+    # Objective puzzles (por objetivo)
+    path('api/puzzle/<uuid:puzzle_id>/objective-move/', views.submit_objective_move_api, name='objective_submit_move_api'),
+    path('api/puzzle/<uuid:puzzle_id>/objective-reset/', views.reset_objective_puzzle_api, name='objective_reset_api'),
+    path('api/puzzle/<uuid:puzzle_id>/objective-abandon/', views.abandon_objective_puzzle_api, name='objective_abandon_api'),
 
     # Creation & authoring
     path('create/', views.PuzzleCreateView.as_view(), name='puzzle_create'),

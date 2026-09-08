@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'apps.ratings',
     'apps.bots',
     'apps.analysis',
-
+    'apps.notifications',
 
     'apps.training',
     'apps.classrooms',

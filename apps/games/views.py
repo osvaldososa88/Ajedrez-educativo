@@ -6,10 +6,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView, View
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.utils import timezone
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 from apps.accounts.models import CustomUser
 from .models import Game, Challenge, Move, Notification, GlobalChatMessage
+from .services import send_notification
 import chess
 
 class ChallengeListView(LoginRequiredMixin, ListView):
@@ -88,31 +87,11 @@ def accept_challenge(request, challenge_id):
     challenge.game = game
     challenge.save()
 
-    # Create notification for the challenge sender (so they know the game has started)
-    notification = Notification.objects.create(
-        user=challenge.sender,
-        message=f"¡{challenge.receiver.username} aceptó tu desafío! La partida ha comenzado.",
-        game=game
+    send_notification(
+        challenge.sender,
+        f"¡{challenge.receiver.username} aceptó tu desafío! La partida ha comenzado.",
+        game=game,
     )
-
-    # Send real-time notification via WebSocket if the sender is online
-    try:
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            f'notifications_{challenge.sender.id}',
-            {
-                'type': 'send_notification',
-                'notification': {
-                    'id': str(notification.id),
-                    'message': notification.message,
-                    'game_id': str(game.id),
-                    'is_read': False,
-                    'created_at': notification.created_at.isoformat()
-                }
-            }
-        )
-    except Exception:
-        pass  # If WebSocket notification fails, the saved DB notification persists
 
     return redirect('game_detail', game_id=game.id)
 
