@@ -48,6 +48,7 @@ class Puzzle(models.Model):
         RECOGNIZE_IDEA = 'RECOGNIZE_IDEA', 'Reconocer una Idea'
         PRACTICE_OPENING = 'PRACTICE_OPENING', 'Practicar una Apertura'
         PRACTICE_ENDGAME = 'PRACTICE_ENDGAME', 'Practicar un Final'
+        PLAY_VS_BOT = 'PLAY_VS_BOT', 'Jugar contra Bot hasta Objetivo'
 
     class SideToMove(models.TextChoices):
         WHITE = 'WHITE', 'Blancas'
@@ -72,6 +73,34 @@ class Puzzle(models.Model):
     theme = models.CharField(max_length=30, choices=Theme.choices, default=Theme.FORK)
     difficulty = models.CharField(max_length=20, choices=Difficulty.choices, default=Difficulty.BEGINNER)
     objective = models.CharField(max_length=30, choices=Objective.choices, default=Objective.WIN)
+    bot_opponent = models.ForeignKey(
+        'bots.Bot',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='puzzles_as_opponent',
+        verbose_name="Bot contrario"
+    )
+    bot_side = models.CharField(
+        max_length=10,
+        choices=SideToMove.choices,
+        default=SideToMove.BLACK,
+        verbose_name="Color del bot"
+    )
+    max_moves = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Máximo de jugadas",
+        help_text="0 = sin límite. El problema termina al alcanzar el objetivo o agotar las jugadas."
+    )
+    allow_bot_opponent = models.BooleanField(default=False, verbose_name="Bot como rival")
+    bot_profile = models.ForeignKey(
+        'bots.BotProfile', on_delete=models.SET_NULL, null=True, blank=True,
+        verbose_name="Perfil del bot", related_name='puzzles'
+    )
+    bot_side = models.CharField(
+        max_length=10, choices=SideToMove.choices, default=SideToMove.BLACK,
+        verbose_name="Lado del bot"
+    )
 
     # Solution moves sequence stored as JSON list of UCI strings e.g. ["e2e4", "e7e5", "g1f3"]
     # blank=True: a puzzle may be saved as DRAFT while still being authored, before a solution exists.

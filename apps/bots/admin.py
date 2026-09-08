@@ -7,10 +7,10 @@ from .models import Bot, BotProfile, BotProgress
 class BotProfileAdmin(admin.ModelAdmin):
     list_display = (
         'name', 'engine_depth', 'move_time_ms', 'skill_level',
-        'multipv', 'error_probability', 'uci_elo',
+        'multipv', 'error_probability', 'uci_elo', 'visual_delay_ms',
     )
     search_fields = ('name',)
-    list_editable = ('engine_depth', 'skill_level', 'error_probability')
+    list_editable = ('engine_depth', 'skill_level', 'error_probability', 'visual_delay_ms')
 
 
 @admin.register(Bot)

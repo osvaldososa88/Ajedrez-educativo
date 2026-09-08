@@ -45,6 +45,24 @@ class BotService:
             return game.white_player
         return None
 
+    @staticmethod
+    def bot_for_game(game: Game):
+        """The Bot object playing in a bot game (None if not a bot game)."""
+        if not game.vs_bot:
+            return None
+        from apps.bots.models import Bot
+        if game.white_player.is_bot_account:
+            try:
+                return game.white_player.bot_profile
+            except Bot.DoesNotExist:
+                return None
+        if game.black_player.is_bot_account:
+            try:
+                return game.black_player.bot_profile
+            except Bot.DoesNotExist:
+                return None
+        return None
+
     # --- Progression -----------------------------------------------------------
 
     @staticmethod

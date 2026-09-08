@@ -1,11 +1,16 @@
-// Notificaciones en tiempo real via WebSocket
+// Notificaciones en tiempo real via WebSocket con fallback HTTP
 
 let notificationSocket = null;
 let unreadCount = 0;
+let wsFailed = false;
 
 function connectNotifications() {
     if (!document.body.dataset.userId) return;
-    if (!window.WebSocket) return;
+    if (!window.WebSocket) {
+        wsFailed = true;
+        fetchNotificationsHTTP();
+        return;
+    }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/notifications/`;
@@ -14,11 +19,24 @@ function connectNotifications() {
 
     notificationSocket.onopen = () => {
         console.log('Canal de notificaciones conectado');
+        wsFailed = false;
     };
 
     notificationSocket.onclose = () => {
-        // Intentar reconectar después de 3 segundos
-        setTimeout(connectNotifications, 3000);
+        if (!wsFailed) {
+            wsFailed = true;
+            fetchNotificationsHTTP();
+        }
+        setTimeout(connectNotifications, 10000);
+    };
+
+    notificationSocket.onerror = () => {
+        wsFailed = true;
+        if (notificationSocket) {
+            notificationSocket.close();
+            notificationSocket = null;
+        }
+        fetchNotificationsHTTP();
     };
 
     notificationSocket.onmessage = (event) => {
@@ -26,20 +44,29 @@ function connectNotifications() {
 
         if (data.type === 'unread_notifications') {
             renderUnreadBadge(data.notifications.length);
+            renderNotificationDropdown(data.notifications);
         } else if (data.type === 'notification') {
             handleNewNotification(data.notification);
         } else if (data.type === 'notification_read') {
-            // Actualizar badge
             const count = Math.max(0, unreadCount - 1);
             renderUnreadBadge(count);
         }
     };
 }
 
+function fetchNotificationsHTTP() {
+    fetch('/games/api/notifications/')
+        .then(r => r.json())
+        .then(data => {
+            renderUnreadBadge(data.unread_count);
+            renderNotificationDropdown(data.notifications);
+        })
+        .catch(() => {});
+}
+
 function renderUnreadBadge(count) {
     unreadCount = count;
     const badge = document.getElementById('notif-badge');
-    const bell = document.getElementById('notif-bell');
     if (badge) {
         if (count > 0) {
             badge.textContent = count > 9 ? '9+' : count;
@@ -48,25 +75,74 @@ function renderUnreadBadge(count) {
             badge.style.display = 'none';
         }
     }
-    if (bell) {
-        const dropdown = document.getElementById('notif-dropdown');
-        if (dropdown) {
-            dropdown.innerHTML = '';
-            if (unreadCount === 0) {
-                dropdown.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">No tienes notificaciones.</div>';
-            }
-        }
+}
+
+function renderNotificationDropdown(notifications) {
+    const dropdown = document.getElementById('notif-dropdown');
+    if (!dropdown) return;
+    dropdown.innerHTML = '';
+    if (!notifications || notifications.length === 0) {
+        dropdown.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">No tienes notificaciones.</div>';
+        return;
+    }
+    notifications.forEach(n => {
+        const item = document.createElement('a');
+        item.href = n.game_id ? `/games/game/${n.game_id}/` : '#';
+        item.className = 'notif-item';
+        item.style.cssText = 'display:flex;align-items:center;gap:0.5rem;padding:0.6rem 0.85rem;border-radius:6px;text-decoration:none;color:var(--text-primary);font-size:0.85rem;transition:background-color 0.15s ease;';
+        item.addEventListener('click', () => markNotificationRead(n.id));
+        item.innerHTML = `<span>🔔</span><span>${n.message}</span>`;
+        dropdown.appendChild(item);
+    });
+}
+
+function markNotificationRead(notificationId) {
+    if (notificationSocket && notificationSocket.readyState === WebSocket.OPEN) {
+        notificationSocket.send(JSON.stringify({ type: 'mark_read', notification_id: notificationId }));
+    } else {
+        fetch(`/games/api/notifications/${notificationId}/read/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        })
+        .then(r => r.json())
+        .then(data => renderUnreadBadge(data.unread_count))
+        .catch(() => {});
     }
 }
 
+function markAllNotificationsRead() {
+    fetch('/games/api/notifications/read-all/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    })
+    .then(r => r.json())
+    .then(data => {
+        renderUnreadBadge(0);
+        renderNotificationDropdown([]);
+    })
+    .catch(() => {});
+}
+
+function getCookie(name) {
+    let v = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let c of cookies) {
+            c = c.trim();
+            if (c.substring(0, name.length + 1) === (name + '=')) {
+                v = decodeURIComponent(c.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return v;
+}
+
 function handleNewNotification(notification) {
-    // Actualizar contador
     renderUnreadBadge(unreadCount + 1);
 
-    // Agregar a la lista del dropdown
     const dropdown = document.getElementById('notif-dropdown');
     if (dropdown) {
-        // Quitar mensaje vacío
         const emptyEl = dropdown.querySelector('div[style*="text-align: center"]');
         if (emptyEl) emptyEl.remove();
 
@@ -74,16 +150,11 @@ function handleNewNotification(notification) {
         item.href = notification.game_id ? `/games/game/${notification.game_id}/` : '#';
         item.className = 'notif-item';
         item.style.cssText = 'display:flex;align-items:center;gap:0.5rem;padding:0.6rem 0.85rem;border-radius:6px;text-decoration:none;color:var(--text-primary);font-size:0.85rem;transition:background-color 0.15s ease;';
-        item.addEventListener('click', () => {
-            if (notificationSocket && notificationSocket.readyState === WebSocket.OPEN) {
-                notificationSocket.send(JSON.stringify({ type: 'mark_read', notification_id: notification.id }));
-            }
-        });
+        item.addEventListener('click', () => markNotificationRead(notification.id));
         item.innerHTML = `<span>🔔</span><span>${notification.message}</span>`;
         dropdown.prepend(item);
     }
 
-    // Mostrar toast
     showNotificationToast(notification);
 }
 

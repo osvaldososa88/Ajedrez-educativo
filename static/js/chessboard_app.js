@@ -139,9 +139,20 @@ class ChessboardApp {
         this.renderBoard();
 
         const uci = this.lastMoveUci(state);
+        const isBotMove = state.vs_bot && uci && uci !== this.lastAnimatedUci;
+        const visualDelay = (isBotMove && state.visual_delay_ms > 0) ? state.visual_delay_ms : 0;
+
         if (window.ChessUI && prevFen && state.fen && prevFen !== state.fen && uci && uci !== this.lastAnimatedUci) {
-            ChessUI.animateMovedPiece(this.boardEl, uci);
-            this.lastAnimatedUci = uci;
+            // For bot moves, wait the visual delay before animating (feels more natural)
+            const animate = () => {
+                ChessUI.animateMovedPiece(this.boardEl, uci);
+                this.lastAnimatedUci = uci;
+            };
+            if (visualDelay > 0) {
+                setTimeout(animate, visualDelay);
+            } else {
+                animate();
+            }
         }
 
         this.updateSidebar();

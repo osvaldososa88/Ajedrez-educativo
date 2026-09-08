@@ -234,3 +234,52 @@ def shared_game_view(request, share_token):
     if analysis_job:
         return redirect('analysis_job_detail', job_id=analysis_job.id)
     return redirect('game_detail', game_id=game.id)
+
+
+# ============================================================
+# HTTP Notification Endpoints (fallback when WebSocket fails)
+# ============================================================
+
+@login_required
+def notification_list_api(request):
+    """Return unread notifications for the current user (HTTP fallback)."""
+    notifications = Notification.objects.filter(
+        user=request.user,
+        is_read=False
+    ).order_by('-created_at')[:20]
+    return JsonResponse({
+        'unread_count': len(notifications),
+        'notifications': [
+            {
+                'id': str(n.id),
+                'message': n.message,
+                'game_id': str(n.game_id) if n.game_id else None,
+                'is_read': n.is_read,
+                'created_at': n.created_at.isoformat(),
+            }
+            for n in notifications
+        ]
+    })
+
+
+@login_required
+def notification_mark_read_api(request, notification_id):
+    """Mark a single notification as read."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    updated = Notification.objects.filter(id=notification_id, user=request.user).update(is_read=True)
+    if not updated:
+        return JsonResponse({'error': 'Notificación no encontrada'}, status=404)
+    return JsonResponse({
+        'status': 'ok',
+        'unread_count': Notification.objects.filter(user=request.user, is_read=False).count()
+    })
+
+
+@login_required
+def notification_mark_all_read_api(request):
+    """Mark all notifications as read for the current user."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    count = Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({'status': 'ok', 'marked': count, 'unread_count': 0})

@@ -65,7 +65,6 @@ def _run_analysis_job(job_id: str):
             return
 
         board = game.board()
-        prev_score = 0
         move_summary_list = []
 
         for idx, (move, move_san) in enumerate(moves_list, start=1):
@@ -110,8 +109,19 @@ def _run_analysis_job(job_id: str):
                     'pv_san': pos_analysis.pv_san
                 }
 
-            current_score = pos_analysis.score_cp if pos_analysis.score_cp is not None else 0
-            cp_loss = max(0, prev_score - current_score) if (idx % 2 != 0) else max(0, current_score - prev_score)
+            # Calculate cp_loss using eval_before (fresh). All scores are from White's perspective.
+            # For Black moves, we invert the perspective.
+            score_before = eval_before.get('score_cp') if eval_before.get('score_cp') is not None else 0
+            score_after = eval_after.get('score_cp') if eval_after.get('score_cp') is not None else 0
+
+            is_white_move = (idx % 2 != 0)  # Odd ply = White move
+            if is_white_move:
+                # White move: positive score = good for white. Loss = score decreased.
+                cp_loss = max(0, score_before - score_after)
+            else:
+                # Black move: positive score = bad for white = good for black.
+                # Loss for black = score increased (white's advantage grew).
+                cp_loss = max(0, score_after - score_before)
 
             # Pedagogical review analysis
             review_data = ReviewEngine.analyze_move_pedagogically(
@@ -121,7 +131,8 @@ def _run_analysis_job(job_id: str):
                 fen_after=fen_after,
                 eval_before=eval_before,
                 eval_after=eval_after,
-                cp_loss=cp_loss
+                cp_loss=cp_loss,
+                is_white_move=is_white_move
             )
 
             quality = review_data['classification']
@@ -146,7 +157,6 @@ def _run_analysis_job(job_id: str):
                 'cp_loss': cp_loss
             })
 
-            prev_score = current_score
 
             # Update progress percent
             progress = int((idx / total_moves) * 90) + 5

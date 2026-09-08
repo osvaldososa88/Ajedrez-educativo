@@ -28,3 +28,17 @@ class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = CustomUser
         fields = ('username', 'email', 'bio')
+
+
+class ProfileEditForm(forms.ModelForm):
+    """Form for users to edit their own profile. Role is NOT editable here."""
+
+    class Meta:
+        model = CustomUser
+        fields = ('first_name', 'last_name', 'email', 'bio')
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-input'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-input'}),
+            'email': forms.EmailInput(attrs={'class': 'form-input'}),
+            'bio': forms.Textarea(attrs={'class': 'form-input', 'rows': 4}),
+        }

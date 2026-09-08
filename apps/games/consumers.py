@@ -318,6 +318,14 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
 
         moves_history = list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username'))
 
+        # Visual delay for bot moves (purely cosmetic, does NOT affect engine thinking)
+        visual_delay_ms = 0
+        if game.vs_bot:
+            from apps.bots.services import BotService
+            bot = BotService.bot_for_game(game)
+            if bot and bot.profile:
+                visual_delay_ms = bot.profile.visual_delay_ms
+
         return {
             'game_id': str(game.id),
             'status': game.status,
@@ -335,7 +343,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'is_check': board.is_check(),
             'moves_history': moves_history,
             'rating_changes': rating_result['changes'],
-            'pgn': game.generate_pgn()
+            'pgn': game.generate_pgn(),
+            'vs_bot': game.vs_bot,
+            'visual_delay_ms': visual_delay_ms
         }
 
 

@@ -44,6 +44,14 @@ class BotProfile(models.Model):
         verbose_name="UCI Elo (opcional)",
     )
 
+    # Visual delay: how long the UI waits before showing the bot's move.
+    # This is purely cosmetic — it does NOT affect engine thinking time.
+    visual_delay_ms = models.PositiveIntegerField(
+        default=800,
+        help_text="Delay visual antes de mostrar la jugada del bot (ms). Solo afecta la UX, no el cálculo.",
+        verbose_name="Delay visual (ms)",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Perfil - Ajedrez Escolar{% endblock %}
+
+{% block content %}
+<div style="max-width: 520px; margin: 2rem auto;">
+    <div class="card">
+        <h2 style="margin-bottom: 1.5rem;">Mi Perfil</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div style="background: rgba(34,197,94,0.15); border: 1px solid #22c55e; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; color: #86efac; font-size: 0.9rem;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Usuario</label>
+                <input type="text" value="{{ user.username }}" class="form-input" disabled style="opacity: 0.7;">
+                <small style="color: var(--text-secondary);">El nombre de usuario no se puede cambiar.</small>
+            </div>
+
+            {% for field in form %}
+                <div class="form-group">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div style="color: #fca5a5; font-size: 0.8rem; margin-top: 0.25rem;">{{ field.errors.0 }}</div>
+                    {% endif %}
+                    {% if field.help_text %}
+                        <div style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.25rem;">{{ field.help_text }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Guardar Cambios</button>
+                <a href="{% url 'profile' %}" class="btn btn-secondary" style="flex: 1; text-align: center;">Cancelar</a>
+            </div>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center;">
+            <a href="{% url 'password_change' %}" style="color: var(--accent-color); font-size: 0.9rem;">Cambiar contraseña</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
