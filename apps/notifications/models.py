@@ -45,6 +45,7 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
 
     class Meta:
+        app_label = 'notifications'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['user', 'is_read']),

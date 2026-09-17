@@ -369,14 +369,6 @@ class Bot(models.Model):
 
         prof.save()
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        if self.profile_id:
-            try:
-                self.update_profile_from_elo()
-            except Exception:
-                pass
-
     @property
     def category_color(self):
         return {
@@ -425,10 +417,15 @@ class Bot(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+        if self.profile_id:
+            try:
+                self.update_profile_from_elo()
+            except Exception:
+                pass
         # Keep the linked account's rating in sync with the difficulty label so
         # any generic ELO display matches the bot card. It is never changed by
         # playing games (RatingService skips bot games).
-        if self.user.elo_rating != self.displayed_elo:
+        if hasattr(self, 'user') and self.user and self.user.elo_rating != self.displayed_elo:
             self.user.elo_rating = self.displayed_elo
             self.user.save(update_fields=['elo_rating'])
 
