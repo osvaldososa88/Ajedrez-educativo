@@ -77,27 +77,27 @@ class ChessboardApp {
                     statusEl.classList.remove('offline');
                 }
 
-                // Heartbeat ping every 25 seconds to keep Nginx/Daphne connection alive
+                // Heartbeat ping every 5 seconds to keep Nginx/Daphne connection alive
                 if (this.pingInterval) clearInterval(this.pingInterval);
                 this.pingInterval = setInterval(() => {
                     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
                         this.socket.send(JSON.stringify({ type: 'ping' }));
                     }
-                }, 25000);
+                }, 5000);
             };
 
             this.socket.onclose = () => {
                 if (this.pingInterval) clearInterval(this.pingInterval);
                 const statusEl = document.getElementById('connection-status');
                 if (statusEl) {
-                    statusEl.textContent = 'Reconectando...';
+                    statusEl.textContent = '⚠️ Reconectando...';
                     statusEl.classList.add('offline');
                     statusEl.classList.remove('online');
                 }
 
-                // Auto-reconnect with backoff (1s, 2s, 3s...)
+                // Fast auto-reconnect with short backoff (500ms, 1s, 2s...)
                 this.reconnectAttempts++;
-                const delay = Math.min(10000, 1000 * Math.pow(1.5, this.reconnectAttempts));
+                const delay = Math.min(3000, 500 * Math.pow(1.3, this.reconnectAttempts));
                 setTimeout(() => connect(), delay);
             };
 
@@ -133,9 +133,16 @@ class ChessboardApp {
         };
 
         connect();
-    }
-
     initEvents() {
+        const takebackBtn = document.getElementById('btn-takeback');
+        if (takebackBtn) {
+            takebackBtn.addEventListener('click', () => {
+                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                    this.socket.send(JSON.stringify({ type: 'takeback' }));
+                }
+            });
+        }
+
         const resignBtn = document.getElementById('btn-resign');
         if (resignBtn) {
             resignBtn.addEventListener('click', () => {
@@ -442,10 +449,47 @@ class ChessboardApp {
             }
             historyEl.scrollTop = historyEl.scrollHeight;
         }
+        // Update takebacks / hearts UI for bot games
+        if (this.gameState && this.gameState.vs_bot) {
+            const heartsEl = document.getElementById('hearts-display');
+            const takebacksCountEl = document.getElementById('takebacks-count');
+            const takebackBtn = document.getElementById('btn-takeback');
+            const remaining = (this.gameState.takebacks_left !== undefined) ? this.gameState.takebacks_left : 7;
+            const maxTakebacks = (this.gameState.max_takebacks !== undefined) ? this.gameState.max_takebacks : 7;
+
+            if (heartsEl) {
+                let heartsHtml = '';
+                for (let i = 0; i < maxTakebacks; i++) {
+                    if (i < remaining) {
+                        heartsHtml += '❤️';
+                    } else {
+                        heartsHtml += '🖤';
+                    }
+                }
+                heartsEl.innerHTML = heartsHtml || '💔 Sin deslices';
+            }
+            if (takebacksCountEl) takebacksCountEl.textContent = remaining;
+            if (takebackBtn) {
+                takebackBtn.disabled = (remaining <= 0 || this.gameState.status !== 'IN_PROGRESS');
+            }
+        }
     }
 
     updateTimers() {
         if (this.timerInterval) clearInterval(this.timerInterval);
+
+        const bottomTimer = document.getElementById('bottom-timer');
+        const topTimer = document.getElementById('top-timer');
+
+        if (this.gameState && this.gameState.vs_bot) {
+            if (bottomTimer && topTimer) {
+                bottomTimer.textContent = '♾️ Sin tiempo';
+                topTimer.textContent = '♾️ Sin tiempo';
+                bottomTimer.classList.remove('active', 'low');
+                topTimer.classList.remove('active', 'low');
+            }
+            return;
+        }
 
         const formatTime = (ms) => {
             const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -455,8 +499,6 @@ class ChessboardApp {
         };
 
         const isWhite = (PLAYER_COLOR === 'white');
-        const bottomTimer = document.getElementById('bottom-timer');
-        const topTimer = document.getElementById('top-timer');
 
         if (bottomTimer && topTimer) {
             let whiteTime = this.gameState.white_time_left_ms;

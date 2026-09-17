@@ -87,6 +87,8 @@ class Game(models.Model):
     # Human vs Bot games without extra joins. The authoritative source of truth
     # is the Bot.user link; this flag never changes after creation.
     vs_bot = models.BooleanField(default=False, db_index=True)
+    takebacks_left = models.PositiveSmallIntegerField(default=7, verbose_name="Deshacer jugadas restantes")
+    max_takebacks = models.PositiveSmallIntegerField(default=7, verbose_name="Límite máximo de deshacer jugadas")
     share_token = models.UUIDField(default=uuid.uuid4, editable=False)
     is_public = models.BooleanField(default=False)
 
