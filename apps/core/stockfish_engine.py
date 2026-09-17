@@ -25,7 +25,35 @@ class StockfishEngine:
         configured_path = getattr(settings, 'STOCKFISH_PATH', None)
         if configured_path and os.path.exists(configured_path):
             return configured_path
-        return shutil.which('stockfish') or shutil.which('stockfish.exe')
+
+        env_path = os.environ.get('STOCKFISH_PATH', None)
+        if env_path and os.path.exists(env_path):
+            return env_path
+
+        which_path = shutil.which('stockfish') or shutil.which('stockfish.exe')
+        if which_path and os.path.exists(which_path):
+            return which_path
+
+        linux_paths = [
+            '/usr/games/stockfish',
+            '/usr/bin/stockfish',
+            '/usr/local/bin/stockfish',
+            '/snap/bin/stockfish',
+        ]
+        for lp in linux_paths:
+            if os.path.exists(lp):
+                return lp
+
+        base_dir = getattr(settings, 'BASE_DIR', None)
+        if base_dir:
+            project_stockfish_dir = base_dir / 'stockfish'
+            if project_stockfish_dir.exists() and project_stockfish_dir.is_dir():
+                for candidate_name in ['stockfish', 'stockfish.exe']:
+                    candidate_file = project_stockfish_dir / candidate_name
+                    if candidate_file.exists():
+                        return str(candidate_file)
+
+        return None
 
     @classmethod
     def evaluate_position(cls, fen: str, depth: int = 15, time_limit: float = 0.5) -> Dict[str, Any]:

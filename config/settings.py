@@ -118,14 +118,45 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'classmates'
 LOGOUT_REDIRECT_URL = 'login'
 
-# Stockfish Path (optional override)
-# Prioridad: 1) variable de entorno STOCKFISH_PATH, 2) binario local del proyecto.
-_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_LOCAL_STOCKFISH = os.path.join(_BASE_DIR, 'stockfish', 'stockfish.exe')
-STOCKFISH_PATH = (
-    os.environ.get('STOCKFISH_PATH', None)
-    or (_LOCAL_STOCKFISH if os.path.exists(_LOCAL_STOCKFISH) else None)
-)
+import shutil
+
+# Stockfish Path (Multiplatform auto-discovery for Linux VPS & Windows)
+def _resolve_stockfish_path():
+    env_path = os.environ.get('STOCKFISH_PATH', None)
+    if env_path and os.path.exists(env_path):
+        return env_path
+
+    # System PATH lookup
+    which_path = shutil.which('stockfish') or shutil.which('stockfish.exe')
+    if which_path and os.path.exists(which_path):
+        return which_path
+
+    # Standard Linux package locations (Ubuntu/Debian apt install stockfish places it in /usr/games/stockfish)
+    linux_paths = [
+        '/usr/games/stockfish',
+        '/usr/bin/stockfish',
+        '/usr/local/bin/stockfish',
+        '/snap/bin/stockfish',
+    ]
+    for lp in linux_paths:
+        if os.path.exists(lp):
+            return lp
+
+    # Local project binaries inside BASE_DIR/stockfish/
+    project_stockfish_dir = BASE_DIR / 'stockfish'
+    if project_stockfish_dir.exists() and project_stockfish_dir.is_dir():
+        for candidate_name in ['stockfish', 'stockfish.exe']:
+            candidate_file = project_stockfish_dir / candidate_name
+            if candidate_file.exists():
+                return str(candidate_file)
+
+        for item in project_stockfish_dir.iterdir():
+            if item.is_file() and not item.name.endswith('.zip') and not item.name.endswith('.txt'):
+                return str(item)
+
+    return None
+
+STOCKFISH_PATH = _resolve_stockfish_path()
 
 # Channels configuration
 REDIS_URL = os.environ.get('REDIS_URL', None)
