@@ -24,7 +24,7 @@ def send_notification(user, message, game=None):
     is unavailable the DB row still persists and will be delivered by the
     HTTP fallback in notifications.js.
     """
-    from .models import Notification
+    from apps.notifications.models import Notification
     from asgiref.sync import async_to_sync
     from channels.layers import get_channel_layer
 

@@ -6,7 +6,7 @@
 <div class="card" style="margin-bottom: 1.5rem;">
     <h2>{% if puzzle %}✏️ Editar Problema{% else %}✏️ Crear Nuevo Problema{% endif %}</h2>
     <p style="color: var(--text-secondary); margin-top: 0.5rem;">
-        Coloca piezas, define el objetivo, la solución y guarda como borrador. Podrás enviarlo a revisión luego.
+        Coloca piezas, define el objetivo y guarda como borrador.
     </p>
 </div>
 
@@ -19,160 +19,196 @@
 </div>
 {% endif %}
 
-<div class="game-container">
-    <div class="board-wrapper">
-        <div style="display:flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
-            <button type="button" id="btn-reset-start" class="btn btn-secondary" style="font-size:0.8rem;">Posición Inicial</button>
-            <button type="button" id="btn-clear-board" class="btn btn-secondary" style="font-size:0.8rem;">Tablero Vacío</button>
-            <button type="button" id="btn-load-fen" class="btn btn-secondary" style="font-size:0.8rem;">Cargar FEN del cuadro</button>
+<form id="puzzle-form" method="post" action="{% if puzzle %}{% url 'puzzle_edit' puzzle.id %}{% else %}{% url 'puzzle_create' %}{% endif %}">
+    {% csrf_token %}
+    <input type="hidden" name="initial_fen" id="initial_fen" value="{% if puzzle %}{{ puzzle.initial_fen }}{% endif %}">
+    <input type="hidden" name="solution_moves" id="solution_moves" value="[]">
+    <input type="hidden" name="variations_json" id="variations_json" value="{}">
+    <input type="hidden" name="hints" id="hints" value="[]">
+
+    <div class="game-container">
+        <div class="board-wrapper">
+            <div style="display:flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                <button type="button" id="btn-reset-start" class="btn btn-secondary" style="font-size:0.8rem;">Posición Inicial</button>
+                <button type="button" id="btn-clear-board" class="btn btn-secondary" style="font-size:0.8rem;">Tablero Vacío</button>
+                <button type="button" id="btn-load-fen" class="btn btn-secondary" style="font-size:0.8rem;">Cargar FEN</button>
+            </div>
+            <div class="chessboard" id="chessboard"></div>
+            <div id="piece-palette" style="display:grid; grid-template-columns: repeat(6, 1fr); gap: 0.4rem; margin-top: 1rem;"></div>
+            <div class="form-group" style="margin-top: 1rem;">
+                <label class="form-label" for="fen-display">FEN</label>
+                <input type="text" id="fen-display" class="form-input" style="font-family: monospace; font-size: 0.8rem;">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="side_to_move">Lado que mueve</label>
+                <select id="side_to_move" name="side_to_move" class="form-input">
+                    {% for value, label in sides %}
+                    <option value="{{ value }}" {% if puzzle.side_to_move == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
+        <div class="sidebar">
+            <div class="form-group">
+                <label class="form-label" for="title">Título del problema</label>
+                <input type="text" id="title" name="title" class="form-input" placeholder="Ej: Mate en 2" value="{{ puzzle.title|default:'' }}" required>
+            </div>
 
-        <div class="chessboard" id="chessboard"></div>
+            <div class="form-group">
+                <label class="form-label" for="description">Descripción / Instrucción</label>
+                <textarea id="description" name="description" class="form-input" rows="2" placeholder="Instrucciones para el estudiante...">{{ puzzle.description|default:'' }}</textarea>
+            </div>
 
-        <div id="piece-palette" style="display:grid; grid-template-columns: repeat(6, 1fr); gap: 0.4rem; margin-top: 1rem;">
-            <!-- Filled dynamically by JS -->
-        </div>
+            <div class="form-group">
+                <label class="form-label" for="category">Categoría</label>
+                <select id="category" name="category" class="form-input">
+                    {% for value, label in categories %}
+                    <option value="{{ value }}" {% if puzzle.category == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <div class="form-group" style="margin-top: 1rem;">
-            <label class="form-label" for="fen-display">FEN</label>
-            <input type="text" id="fen-display" class="form-input" style="font-family: monospace; font-size: 0.8rem;">
+            <div class="form-group">
+                <label class="form-label" for="theme">Tema</label>
+                <select id="theme" name="theme" class="form-input">
+                    {% for value, label in themes %}
+                    <option value="{{ value }}" {% if puzzle.theme == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="difficulty">Dificultad</label>
+                <select id="difficulty" name="difficulty" class="form-input">
+                    {% for value, label in difficulties %}
+                    <option value="{{ value }}" {% if puzzle.difficulty == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="objective">Objetivo</label>
+                <select id="objective" name="objective" class="form-input">
+                    {% for value, label in objectives %}
+                    <option value="{{ value }}" {% if puzzle.objective == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="puzzle_type">Tipo de problema</label>
+                <div class="puzzle-type-selector">
+                    <button type="button" class="puzzle-type-btn active" data-type="SEQUENCE">
+                        <span class="type-icon">📝</span>
+                        <span class="type-title">Problema Secuencial</span>
+                        <span class="type-desc">Secuencia exacta</span>
+                    </button>
+                    <button type="button" class="puzzle-type-btn" data-type="OBJECTIVE">
+                        <span class="type-icon">🎯</span>
+                        <span class="type-title">Problema Abierto</span>
+                        <span class="type-desc">Juego libre</span>
+                    </button>
+                </div>
+                <input type="hidden" id="puzzle_type" name="puzzle_type" value="{{ puzzle.puzzle_type|default:'SEQUENCE' }}">
+                <small id="puzzle-type-description" style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.25rem;">
+                    El estudiante debe encontrar la secuencia exacta de jugadas.
+                </small>
+            </div>
+
+            <!-- Sección de objetivo (solo para problemas por objetivo) -->
+            <div id="objective-section" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label" for="objective_type">Tipo de objetivo</label>
+                    <select id="objective_type" name="objective_type" class="form-input">
+                        {% for value, label in objective_types %}
+                        <option value="{{ value }}" {% if puzzle.objective_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" id="bot-profile-group" style="display: none;">
+                    <label class="form-label" for="bot_profile">Perfil del Bot</label>
+                    <select id="bot_profile" name="bot_profile" class="form-input">
+                        <option value="">-- Seleccionar perfil --</option>
+                        {% for bot in available_bots %}
+                        <option value="{{ bot.profile.id }}" {% if puzzle.bot_profile_id == bot.profile.id %}selected{% endif %}>{{ bot.display_name }} ({{ bot.profile.name }})</option>
+                        {% endfor %}
+                    </select>
+                    <small style="color: var(--text-secondary); font-size: 0.75rem;">El bot jugará con la máxima capacidad de Stockfish.</small>
+                </div>
+
+                <div class="form-group" id="max-moves-group" style="display: none;">
+                    <label class="form-label" for="max_moves">Máximo de movimientos del estudiante</label>
+                    <input type="number" id="max_moves" name="max_moves" class="form-input" min="0" max="200" value="{{ puzzle.max_moves|default:50 }}">
+                    <small style="color: var(--text-secondary); font-size: 0.75rem;">0 = sin límite</small>
+                </div>
+            </div>
+
+            <!-- Sección de secuencia (solo para problemas secuenciales) -->
+            <div id="sequence-section" style="display: none;">
+                <div class="card" style="margin-top: 1rem; border: 1px solid rgba(59,130,246,0.3);">
+                    <h4 style="color: var(--primary-color);">📝 Secuencia de Solución</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.75rem;">
+                        Define la secuencia exacta que el estudiante debe encontrar. Puede haber variantes aceptadas.
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label">Agregar jugada solución (UCI)</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="solution-move-input" class="form-input" placeholder="Ej: e2e4" style="flex: 1;">
+                            <button type="button" id="btn-add-solution-move" class="btn btn-primary">+</button>
+                        </div>
+                    </div>
+                    <div id="solution-list"></div>
+                </div>
+
+                <div class="card" style="margin-top: 1rem; border: 1px solid rgba(16,185,129,0.3);">
+                    <h4 style="color: var(--success-color);">✓ Variantes Aceptadas</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.75rem;">
+                        Agrega movimientos alternativos que también se considerarán correctos.
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label">Ply y movimiento</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="number" id="variation-ply-input" class="form-input" placeholder="Ply" min="0" style="width: 60px;">
+                            <input type="text" id="variation-move-input" class="form-input" placeholder="Ej: d2d4" style="flex: 1;">
+                            <button type="button" id="btn-add-variation" class="btn btn-primary">+</button>
+                        </div>
+                    </div>
+                    <div id="variation-list"></div>
+                </div>
+
+                <div class="card" style="margin-top: 1rem; border: 1px solid rgba(245,158,11,0.3);">
+                    <h4 style="color: var(--warning-color);">💡 Pistas</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.75rem;">
+                        Agrega pistas que el estudiante puede solicitar durante el problema.
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label">Texto de la pista</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="hint-input" class="form-input" placeholder="Ej: Piensa en el centro..." style="flex: 1;">
+                            <button type="button" id="btn-add-hint" class="btn btn-primary">+</button>
+                        </div>
+                    </div>
+                    <div id="hint-list"></div>
+                </div>
+            </div>
+
+            <div class="form-group" style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                <button type="submit" id="btn-save-draft" class="btn btn-primary" style="flex: 1;">Guardar Borrador</button>
+            </div>
         </div>
     </div>
+</form>
 
-    <div class="game-sidebar">
-        <form id="puzzle-form" method="post">
-            {% csrf_token %}
-            <div class="card">
-                <div class="form-group">
-                    <label class="form-label" for="title">Título</label>
-                    <input type="text" id="title" name="title" class="form-input" value="{{ puzzle.title|default:'' }}" required maxlength="200">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="description">Descripción / Instrucción</label>
-                    <textarea id="description" name="description" class="form-input" rows="3">{{ puzzle.description|default:'' }}</textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="side_to_move">¿Quién Juega?</label>
-                    <select id="side_to_move" name="side_to_move" class="form-select">
-                        {% for value, label in sides %}
-                            <option value="{{ value }}" {% if puzzle.side_to_move == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="category">Categoría</label>
-                    <select id="category" name="category" class="form-select">
-                        {% for value, label in categories %}
-                            <option value="{{ value }}" {% if puzzle.category == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="theme">Tema</label>
-                    <select id="theme" name="theme" class="form-select">
-                        {% for value, label in themes %}
-                            <option value="{{ value }}" {% if puzzle.theme == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="difficulty">Dificultad</label>
-                    <select id="difficulty" name="difficulty" class="form-select">
-                        {% for value, label in difficulties %}
-                            <option value="{{ value }}" {% if puzzle.difficulty == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="objective">Objetivo</label>
-                    <select id="objective" name="objective" class="form-select">
-                        {% for value, label in objectives %}
-                            <option value="{{ value }}" {% if puzzle.objective == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-
-            <div class="card" style="margin-top: 1rem;">
-                <h4>Solución (secuencia UCI)</h4>
-                <p style="font-size:0.8rem; color: var(--text-secondary);">Ej: e2e4. Añade cada jugada en orden empezando por el bando que juega.</p>
-                <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem;">
-                    <input type="text" id="solution-move-input" class="form-input" placeholder="e2e4" maxlength="5">
-                    <button type="button" id="btn-add-solution-move" class="btn btn-secondary">Añadir</button>
-                </div>
-                <ol id="solution-move-list" style="margin-top: 0.75rem; padding-left: 1.25rem;"></ol>
-            </div>
-
-            <div class="card" style="margin-top: 1rem;">
-                <h4>Variantes Aceptadas</h4>
-                <p style="font-size:0.8rem; color: var(--text-secondary);">Jugadas alternativas válidas en un ply concreto de la solución.</p>
-                <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
-                    <input type="number" id="variation-ply-input" class="form-input" style="max-width: 90px;" min="0" placeholder="Ply #">
-                    <input type="text" id="variation-move-input" class="form-input" placeholder="e2e4" maxlength="5">
-                    <button type="button" id="btn-add-variation" class="btn btn-secondary">Añadir</button>
-                </div>
-                <ul id="variation-list" style="margin-top: 0.75rem; padding-left: 1.25rem;"></ul>
-            </div>
-
-            <div class="card" style="margin-top: 1rem;">
-                <h4>Pistas</h4>
-                <div style="display:flex; gap: 0.5rem; margin-top: 0.5rem;">
-                    <input type="text" id="hint-input" class="form-input" placeholder="Busca un jaque...">
-                    <button type="button" id="btn-add-hint" class="btn btn-secondary">Añadir</button>
-                </div>
-                <ol id="hint-list" style="margin-top: 0.75rem; padding-left: 1.25rem;"></ol>
-            </div>
-
-            <div class="card" style="margin-top: 1rem;">
-                <h4>🤖 Bot Contrario (opcional)</h4>
-                <p style="font-size:0.8rem; color: var(--text-secondary);">Configura un bot para que el estudiante juegue contra él hasta alcanzar el objetivo (ideal para practicar finales).</p>
-                <div class="form-group">
-                    <label class="form-label" for="allow_bot_opponent">¿Activar bot contrario?</label>
-                    <select id="allow_bot_opponent" name="allow_bot_opponent" class="form-select">
-                        <option value="no" {% if not puzzle.allow_bot_opponent %}selected{% endif %}>No (problema táctico estático)</option>
-                        <option value="yes" {% if puzzle.allow_bot_opponent %}selected{% endif %}>Sí (jugar contra bot)</option>
-                    </select>
-                </div>
-                <div id="bot-config-section" style="display: {% if puzzle.allow_bot_opponent %}block{% else %}none{% endif %}; margin-top: 0.75rem;">
-                    <div class="form-group">
-                        <label class="form-label" for="bot_opponent">Bot</label>
-                        <select id="bot_opponent" name="bot_opponent" class="form-select">
-                            <option value="">-- Seleccionar bot --</option>
-                            {% for bot in available_bots %}
-                                <option value="{{ bot.id }}" {% if puzzle.bot_opponent_id == bot.id %}selected{% endif %}>
-                                    {{ bot.display_name }} ({{ bot.get_category_display }}, {{ bot.elo }} ELO)
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="bot_side">Color del bot</label>
-                        <select id="bot_side" name="bot_side" class="form-select">
-                            <option value="BLACK" {% if puzzle.bot_side == 'BLACK' %}selected{% endif %}>Negras</option>
-                            <option value="WHITE" {% if puzzle.bot_side == 'WHITE' %}selected{% endif %}>Blancas</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="max_moves">Máximo de jugadas (0 = sin límite)</label>
-                        <input type="number" id="max_moves" name="max_moves" class="form-input" value="{{ puzzle.max_moves|default:0 }}" min="0" max="200">
-                    </div>
-                </div>
-            </div>
-
-            <input type="hidden" name="initial_fen" id="initial_fen">
-            <input type="hidden" name="solution_moves" id="solution_moves">
-            <input type="hidden" name="variations_json" id="variations_json">
-            <input type="hidden" name="hints" id="hints">
-
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">💾 Guardar como Borrador</button>
-        </form>
-    </div>
-</div>
-
+<!-- Elementos ocultos para datos iniciales -->
 {% if puzzle %}
-{{ puzzle.solution_moves|json_script:"initial-solution-moves" }}
-{{ puzzle.variations_json|json_script:"initial-variations" }}
-{{ puzzle.hints|json_script:"initial-hints" }}
+<div id="initial-solution-moves" style="display:none;">{{ puzzle.solution_moves|default:"[]"|safe }}</div>
+<div id="initial-variations" style="display:none;">{{ puzzle.variations_json|default:"{}"|safe }}</div>
+<div id="initial-hints" style="display:none;">{{ puzzle.hints|default:"[]"|safe }}</div>
+{% else %}
+<div id="initial-solution-moves" style="display:none;">[]</div>
+<div id="initial-variations" style="display:none;">{}</div>
+<div id="initial-hints" style="display:none;">[]</div>
 {% endif %}
 {% endblock %}
 
@@ -181,6 +217,8 @@
 <script>
     const INITIAL_FEN = {% if puzzle %}"{{ puzzle.initial_fen }}"{% else %}null{% endif %};
     const HAS_EXISTING_PUZZLE = {% if puzzle %}true{% else %}false{% endif %};
+    const PUZZLE_TYPE = "{{ puzzle.puzzle_type|default:'SEQUENCE' }}";
+    const OBJECTIVE_TYPE = "{{ puzzle.objective_type|default:'' }}";
 </script>
 <script src="{% static 'js/training_creator.js' %}"></script>
 {% endblock %}

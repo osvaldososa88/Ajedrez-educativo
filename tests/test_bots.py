@@ -227,7 +227,7 @@ class TestUnlockProgression:
 
         assert result['handled'] and result['first_defeat']
         assert 'unlocked' not in result  # no next bot
-        from apps.games.models import Notification
+        from apps.notifications.models import Notification
         assert Notification.objects.filter(user=user).exists()
 
     def test_replay_victory_is_idempotent(self):
@@ -237,7 +237,7 @@ class TestUnlockProgression:
 
         game1 = make_finished_bot_game(primero, user, winner_human=True)
         BotService.on_game_finished(game1)
-        from apps.games.models import Notification
+        from apps.notifications.models import Notification
         notifications_after_first = Notification.objects.filter(user=user).count()
 
         # Same game processed again (double click / reload): nothing new.
@@ -465,25 +465,88 @@ class TestSeedCommandAndEngine:
         assert Bot.objects.count() == 90
         assert BotProfile.objects.count() == 12
 
-    def test_choose_candidate_uses_best_or_controlled_error(self):
+    def test_controlled_error_selection_respects_max_cp_loss(self):
         import chess
         from apps.bots.engine import BotEngineManager
+        from apps.bots.models import BotProfile
 
-        board = chess.Board()
-        moves = [chess.Move.from_uci(u) for u in ('e2e4', 'd2d4', 'g1f3')]
+        # Create profile with max_cp_loss = 100
+        profile = BotProfile.objects.create(
+            name='ProfileMaxCP',
+            best_move_prob=0.0,
+            alt_move_prob=0.0,
+            minor_error_prob=0.0,
+            blunder_prob=1.0,  # Try to force blunder
+            max_cp_loss=100,   # But cap at 100 cp loss!
+            multipv=4,
+        )
 
-        profile = make_profile(error_p=0.0)
-        assert BotEngineManager._choose_candidate(moves, profile) == moves[0]
+        pv_lines = [
+            'info depth 10 multipv 1 score cp 200 pv e2e4 e7e5',
+            'info depth 10 multipv 2 score cp 170 pv g1f3 b8c6',  # loss 30
+            'info depth 10 multipv 3 score cp 120 pv d2d4 e7e5',  # loss 80
+            'info depth 10 multipv 4 score cp -300 pv f2f4 d7d5', # loss 500 (> max_cp_loss 100!)
+        ]
 
-        # error_p=1 -> always a runner-up (never the best, never an absurd move).
-        profile_lucky = make_profile(name='ErrorTotal', error_p=1.0, multipv=3)
-        for _ in range(10):
-            assert BotEngineManager._choose_candidate(moves, profile_lucky) in moves[1:]
+        # Selected move must NEVER be f2f4 because its loss is 500 > 100 max_cp_loss
+        for _ in range(20):
+            selected = BotEngineManager.select_controlled_move('e2e4', pv_lines, profile)
+            assert selected in ['e2e4', 'g1f3', 'd2d4']
+            assert selected != 'f2f4'
 
     def test_emergency_move_is_legal_without_engine(self):
         import chess
         move_uci = BotEngineManager._emergency_move(chess.Board())
         assert move_uci in [m.uci() for m in chess.Board().legal_moves]
+
+
+@pytest.mark.django_db
+class TestOpeningsAndBookService:
+    def test_opening_creation_and_line_validation(self):
+        from apps.bots.models import Opening, OpeningLine
+
+        sicilian = Opening.objects.create(name='Defensa Siciliana', eco='B20')
+        line = OpeningLine.objects.create(
+            opening=sicilian,
+            name='Línea Principal',
+            moves_san='1.e4 c5 2.Nf3 d6',
+            moves_uci=['e2e4', 'c7c5', 'g1f3', 'd7d6'],
+            bot_color=OpeningLine.BotColor.BLACK,
+        )
+        assert line.opening == sicilian
+        assert line.moves_uci == ['e2e4', 'c7c5', 'g1f3', 'd7d6']
+
+    def test_opening_book_service_matching_and_deviation(self):
+        import chess
+        from apps.bots.models import Opening, OpeningLine, Bot
+        from apps.bots.opening_service import OpeningBookService
+
+        sicilian = Opening.objects.create(name='Defensa Siciliana', eco='B20')
+        line = OpeningLine.objects.create(
+            opening=sicilian,
+            name='Línea Principal',
+            moves_san='1.e4 c5 2.Nf3 d6',
+            moves_uci=['e2e4', 'c7c5', 'g1f3', 'd7d6'],
+            bot_color=OpeningLine.BotColor.BLACK,
+        )
+
+        bot = make_bot('BotSiciliana', order=1)
+        bot.opening_mode = Bot.OpeningMode.SPECIFIC_OPENING
+        bot.specific_opening_black = sicilian
+        bot.specific_opening_white = sicilian
+        bot.save()
+
+        # 1. White plays e2e4 (history = ['e2e4']). Bot's turn (Black).
+        board = chess.Board()
+        board.push_san('e4')
+        move = OpeningBookService.get_opening_move(bot, ['e2e4'], board)
+        assert move == 'c7c5'
+
+        # 2. Deviation test: White plays d2d4 instead of e2e4 (history = ['d2d4']).
+        board_dev = chess.Board()
+        board_dev.push_san('d4')
+        move_dev = OpeningBookService.get_opening_move(bot, ['d2d4'], board_dev)
+        assert move_dev is None  # Deviated -> pass control to Stockfish
 
 
 # ---------------------------------------------------------------------------
@@ -511,7 +574,7 @@ class TestBotWebsocketReply:
             return game.moves.count(), game.turn, game.clock_started
 
 
-        def fake_compute_uci(fen, profile_id):
+        def fake_compute_uci(fen, profile_id, *args, **kwargs):
             # Deterministic legal reply for the mocked engine.
             return 'e7e5'
 
@@ -560,7 +623,7 @@ class TestBotWebsocketReply:
             game = BotService.start_game(human, bot, color='black')
             return human, game
 
-        def fake_compute_uci(fen, profile_id):
+        def fake_compute_uci(fen, profile_id, *args, **kwargs):
             return 'e2e4'
 
         monkeypatch.setattr(BotService, 'compute_uci', staticmethod(fake_compute_uci))

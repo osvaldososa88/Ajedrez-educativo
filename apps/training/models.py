@@ -68,6 +68,7 @@ class Puzzle(models.Model):
         DEFEND_POSITION sin cambiar la estructura.
         """
         CHECKMATE = 'CHECKMATE', 'Dar jaque mate'
+        PLAY_VS_BOT = 'PLAY_VS_BOT', 'Jugar contra Bot hasta Objetivo'
 
     class SideToMove(models.TextChoices):
         WHITE = 'WHITE', 'Blancas'

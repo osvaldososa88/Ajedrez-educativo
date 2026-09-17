@@ -343,10 +343,78 @@ class PuzzleCreatorApp {
 
         document.getElementById('puzzle-form').addEventListener('submit', (e) => {
             document.getElementById('initial_fen').value = this.currentFen();
-            document.getElementById('solution_moves').value = JSON.stringify(this.solutionMoves);
-            document.getElementById('variations_json').value = JSON.stringify(this.variations);
-            document.getElementById('hints').value = JSON.stringify(this.hints);
+            
+            const objectiveSelect = document.getElementById('objective');
+            const objectiveValue = objectiveSelect ? objectiveSelect.value : '';
+            const isPlayVsBot = objectiveValue === 'PLAY_VS_BOT';
+            
+            // For PLAY_VS_BOT, don't send solution_moves, variations, or hints
+            if (isPlayVsBot) {
+                document.getElementById('solution_moves').value = '[]';
+                document.getElementById('variations_json').value = '{}';
+                document.getElementById('hints').value = '[]';
+            } else {
+                document.getElementById('solution_moves').value = JSON.stringify(this.solutionMoves);
+                document.getElementById('variations_json').value = JSON.stringify(this.variations);
+                document.getElementById('hints').value = JSON.stringify(this.hints);
+            }
         });
+
+        // Toggle sections based on puzzle type buttons
+        const puzzleTypeButtons = document.querySelectorAll('.puzzle-type-btn');
+        const objectiveTypeSelect = document.getElementById('objective_type');
+        const objectiveSelect = document.getElementById('objective');
+        const puzzleTypeInput = document.getElementById('puzzle_type');
+        const puzzleTypeDescription = document.getElementById('puzzle-type-description');
+
+        const updateSectionVisibility = () => {
+            const puzzleType = puzzleTypeInput ? puzzleTypeInput.value : 'SEQUENCE';
+            const objectiveType = objectiveTypeSelect ? objectiveTypeSelect.value : '';
+            const objectiveValue = objectiveSelect ? objectiveSelect.value : '';
+            const isPlayVsBot = objectiveValue === 'PLAY_VS_BOT' || objectiveType === 'PLAY_VS_BOT';
+            const isObjective = puzzleType === 'OBJECTIVE';
+
+            // Update button styles - let CSS handle the visual state
+            puzzleTypeButtons.forEach(btn => {
+                if (btn.dataset.type === puzzleType) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Update description text
+            if (puzzleTypeDescription) {
+                if (puzzleType === 'SEQUENCE') {
+                    puzzleTypeDescription.textContent = 'El estudiante debe encontrar la secuencia exacta de jugadas.';
+                } else {
+                    puzzleTypeDescription.textContent = 'El estudiante juega libremente hasta alcanzar el objetivo.';
+                }
+            }
+
+            // Objective section - show only for OBJECTIVE puzzles
+            const objectiveSection = document.getElementById('objective-section');
+            if (objectiveSection) objectiveSection.style.display = isObjective ? 'block' : 'none';
+
+            // Sequence section - show only for SEQUENCE puzzles
+            const sequenceSection = document.getElementById('sequence-section');
+            if (sequenceSection) sequenceSection.style.display = (!isObjective) ? 'block' : 'none';
+        };
+
+        // Handle button clicks
+        puzzleTypeButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                puzzleTypeInput.value = btn.dataset.type;
+                updateSectionVisibility();
+            });
+        });
+
+        if (objectiveTypeSelect) objectiveTypeSelect.addEventListener('change', updateSectionVisibility);
+        if (objectiveSelect) objectiveSelect.addEventListener('change', updateSectionVisibility);
+
+        // Initialize visibility on load
+        updateSectionVisibility();
     }
 }
 

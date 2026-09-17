@@ -39,6 +39,31 @@ class BotProfile(models.Model):
         help_text="Probabilidad de jugar un candidato secundario en vez del mejor (0-1)",
         verbose_name="Probabilidad de error",
     )
+    best_move_prob = models.FloatField(
+        default=0.75,
+        help_text="Probabilidad de jugar el mejor movimiento (0-1)",
+        verbose_name="Prob. Mejor Jugada",
+    )
+    alt_move_prob = models.FloatField(
+        default=0.20,
+        help_text="Probabilidad de jugar una alternativa cercana 1-50 cp (0-1)",
+        verbose_name="Prob. Alternativa",
+    )
+    minor_error_prob = models.FloatField(
+        default=0.04,
+        help_text="Probabilidad de cometer un error menor 51-150 cp (0-1)",
+        verbose_name="Prob. Error Menor",
+    )
+    blunder_prob = models.FloatField(
+        default=0.01,
+        help_text="Probabilidad de cometer un error grave >150 cp acotado por max_cp_loss (0-1)",
+        verbose_name="Prob. Error Grave",
+    )
+    max_cp_loss = models.PositiveIntegerField(
+        default=300,
+        help_text="Pérdida máxima de centipeones permitida en cualquier error (ej. 300 = 3 peones)",
+        verbose_name="Límite Máx. Pérdida Centipeones",
+    )
     uci_elo = models.PositiveSmallIntegerField(
         null=True, blank=True, help_text="Límite UCI_Elo de Stockfish (1320-3190). Vacío = desactivado",
         verbose_name="UCI Elo (opcional)",
@@ -50,6 +75,11 @@ class BotProfile(models.Model):
         default=800,
         help_text="Delay visual antes de mostrar la jugada del bot (ms). Solo afecta la UX, no el cálculo.",
         verbose_name="Delay visual (ms)",
+    )
+    animation_speed_ms = models.PositiveIntegerField(
+        default=220,
+        help_text="Velocidad de la animación de deslizamiento de la pieza (ms). Configurable desde Admin.",
+        verbose_name="Velocidad de Animación (ms)",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -74,6 +104,95 @@ class BotProfile(models.Model):
             raise ValidationError({'multipv': 'MultiPV debe ser al menos 1.'})
         if self.uci_elo is not None and not (1320 <= self.uci_elo <= 3190):
             raise ValidationError({'uci_elo': 'UCI Elo de Stockfish admite 1320-3190 (o vacío).'})
+        
+        # Validation for probabilities
+        total_prob = round(self.best_move_prob + self.alt_move_prob + self.minor_error_prob + self.blunder_prob, 4)
+        if not (0.99 <= total_prob <= 1.01):
+            raise ValidationError({'best_move_prob': f'La suma de las probabilidades debe ser 1.0 (actual: {total_prob}).'})
+        for field, name in [('best_move_prob', 'Prob. Mejor Jugada'), ('alt_move_prob', 'Prob. Alternativa'), ('minor_error_prob', 'Prob. Error Menor'), ('blunder_prob', 'Prob. Error Grave')]:
+            val = getattr(self, field, 0)
+            if val is None or not (0.0 <= val <= 1.0):
+                raise ValidationError({field: f'{name} debe estar entre 0.0 y 1.0.'})
+
+
+class Opening(models.Model):
+    """
+    Chess Opening definition (e.g. Sicilian Defense, Ruy Lopez).
+    """
+    name = models.CharField(max_length=100, unique=True, verbose_name="Nombre de la Apertura")
+    eco = models.CharField(max_length=10, blank=True, verbose_name="Código ECO (ej. B20)")
+    description = models.TextField(blank=True, verbose_name="Descripción educativa")
+    initial_fen = models.CharField(
+        max_length=100,
+        default="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        verbose_name="Posición FEN Inicial"
+    )
+    is_active = models.BooleanField(default=True, verbose_name="Activa")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = "Apertura"
+        verbose_name_plural = "Aperturas"
+
+    def __str__(self):
+        return f"{self.name} ({self.eco})" if self.eco else self.name
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        import chess
+        try:
+            b = chess.Board(self.initial_fen)
+            if not b.is_valid():
+                raise ValidationError({'initial_fen': 'El FEN no es una posición válida.'})
+        except ValueError:
+            raise ValidationError({'initial_fen': 'Formato FEN inválido.'})
+
+
+class OpeningLine(models.Model):
+    """
+    A specific variation / line of an opening.
+    """
+    class BotColor(models.TextChoices):
+        ANY = 'ANY', 'Cualquier Color'
+        WHITE = 'WHITE', 'Blancas'
+        BLACK = 'BLACK', 'Negras'
+
+    opening = models.ForeignKey(Opening, on_delete=models.CASCADE, related_name='lines', verbose_name="Apertura")
+    name = models.CharField(max_length=100, verbose_name="Nombre de la línea / Variante")
+    moves_san = models.TextField(help_text="Secuencia en notación SAN (ej. 1.e4 c5 2.Nf3 d6 3.d4 cxd4)", verbose_name="Movimientos (SAN)")
+    moves_uci = models.JSONField(default=list, help_text="Lista de movimientos UCI (ej. [\"e2e4\", \"c7c5\", \"g1f3\"])", verbose_name="Movimientos (UCI)")
+    bot_color = models.CharField(max_length=10, choices=BotColor.choices, default=BotColor.ANY, verbose_name="Color asignado al Bot")
+    priority = models.IntegerField(default=1, verbose_name="Prioridad")
+    is_active = models.BooleanField(default=True, verbose_name="Activa")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['opening', '-priority', 'id']
+        verbose_name = "Línea de Apertura"
+        verbose_name_plural = "Líneas de Apertura"
+
+    def __str__(self):
+        return f"{self.opening.name} - {self.name}"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        import chess
+        if not self.moves_uci or not isinstance(self.moves_uci, list):
+            raise ValidationError({'moves_uci': 'Debe ser una lista de jugadas UCI no vacía.'})
+
+        board = chess.Board(self.opening.initial_fen)
+        for idx, uci in enumerate(self.moves_uci):
+            try:
+                move = chess.Move.from_uci(uci)
+            except ValueError:
+                raise ValidationError({'moves_uci': f"Jugada #{idx+1} ('{uci}') formato UCI inválido."})
+            if move not in board.legal_moves:
+                raise ValidationError({'moves_uci': f"Jugada #{idx+1} ('{uci}') es ilegal en la secuencia."})
+            board.push(move)
 
 
 class Bot(models.Model):
@@ -89,7 +208,11 @@ class Bot(models.Model):
         BEGINNER = 'BEGINNER', 'Principiante'
         INTERMEDIATE = 'INTERMEDIATE', 'Intermedio'
         ADVANCED = 'ADVANCED', 'Avanzado'
-        # Futuro: EXPERTO, bots especiales, bots de profesores, eventos...
+
+    class OpeningMode(models.TextChoices):
+        PURE_STOCKFISH = 'PURE_STOCKFISH', 'Stockfish Puro'
+        SPECIFIC_OPENING = 'SPECIFIC_OPENING', 'Apertura Determinada'
+        REPERTOIRE = 'REPERTOIRE', 'Repertorio'
 
     class Meta:
         ordering = ['category', 'order', 'pk']
@@ -130,6 +253,35 @@ class Bot(models.Model):
         BotProfile, on_delete=models.PROTECT, related_name='bots', verbose_name="Perfil de fuerza",
     )
 
+    opening_mode = models.CharField(
+        max_length=20,
+        choices=OpeningMode.choices,
+        default=OpeningMode.PURE_STOCKFISH,
+        verbose_name="Modo de Apertura",
+    )
+    specific_opening_white = models.ForeignKey(
+        Opening,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bots_specific_white',
+        verbose_name="Apertura con Blancas",
+    )
+    specific_opening_black = models.ForeignKey(
+        Opening,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bots_specific_black',
+        verbose_name="Apertura con Negras",
+    )
+    repertoire_openings = models.ManyToManyField(
+        Opening,
+        blank=True,
+        related_name='bots_repertoire',
+        verbose_name="Repertorio de Aperturas",
+    )
+
     is_active = models.BooleanField(
         default=True,
         help_text="Los bots inactivos no son seleccionables; la progresión salta al siguiente bot activo.",
@@ -142,6 +294,89 @@ class Bot(models.Model):
     def __str__(self):
         return f"{self.display_name} ({self.get_category_display()} · {self.displayed_elo})"
 
+    def update_profile_from_elo(self):
+        """Sincroniza dinámicamente los parámetros de Stockfish del BotProfile según el ELO mostrado del Bot."""
+        if not self.profile_id:
+            return
+
+        elo = self.displayed_elo
+        prof = self.profile
+
+        if elo < 400:
+            prof.skill_level = 0
+            prof.engine_depth = 1
+            prof.best_move_prob = 0.20
+            prof.alt_move_prob = 0.30
+            prof.minor_error_prob = 0.30
+            prof.blunder_prob = 0.20
+            prof.max_cp_loss = 600
+        elif elo < 700:
+            prof.skill_level = 2
+            prof.engine_depth = 2
+            prof.best_move_prob = 0.35
+            prof.alt_move_prob = 0.35
+            prof.minor_error_prob = 0.20
+            prof.blunder_prob = 0.10
+            prof.max_cp_loss = 400
+        elif elo < 1000:
+            prof.skill_level = 5
+            prof.engine_depth = 3
+            prof.best_move_prob = 0.50
+            prof.alt_move_prob = 0.30
+            prof.minor_error_prob = 0.15
+            prof.blunder_prob = 0.05
+            prof.max_cp_loss = 300
+        elif elo < 1300:
+            prof.skill_level = 8
+            prof.engine_depth = 5
+            prof.best_move_prob = 0.65
+            prof.alt_move_prob = 0.25
+            prof.minor_error_prob = 0.08
+            prof.blunder_prob = 0.02
+            prof.max_cp_loss = 200
+        elif elo < 1600:
+            prof.skill_level = 12
+            prof.engine_depth = 8
+            prof.best_move_prob = 0.80
+            prof.alt_move_prob = 0.15
+            prof.minor_error_prob = 0.04
+            prof.blunder_prob = 0.01
+            prof.max_cp_loss = 150
+        elif elo < 1900:
+            prof.skill_level = 16
+            prof.engine_depth = 12
+            prof.best_move_prob = 0.90
+            prof.alt_move_prob = 0.08
+            prof.minor_error_prob = 0.02
+            prof.blunder_prob = 0.00
+            prof.max_cp_loss = 80
+        elif elo < 2200:
+            prof.skill_level = 20
+            prof.engine_depth = 16
+            prof.best_move_prob = 0.97
+            prof.alt_move_prob = 0.03
+            prof.minor_error_prob = 0.00
+            prof.blunder_prob = 0.00
+            prof.max_cp_loss = 40
+        else: # 2200+
+            prof.skill_level = 20
+            prof.engine_depth = 20
+            prof.best_move_prob = 1.00
+            prof.alt_move_prob = 0.00
+            prof.minor_error_prob = 0.00
+            prof.blunder_prob = 0.00
+            prof.max_cp_loss = 0
+
+        prof.save()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.profile_id:
+            try:
+                self.update_profile_from_elo()
+            except Exception:
+                pass
+
     @property
     def category_color(self):
         return {
@@ -149,6 +384,44 @@ class Bot(models.Model):
             self.Category.INTERMEDIATE: '#f59e0b',
             self.Category.ADVANCED: '#ef4444',
         }.get(self.category, '#64748b')
+
+    def get_openings_summary(self):
+        """Devuelve las aperturas de Blancas y Negras configuradas para el bot."""
+        from .models import OpeningLine
+        white_lines = []
+        black_lines = []
+
+        if self.specific_opening_white and self.specific_opening_white.is_active:
+            lines = list(self.specific_opening_white.lines.filter(is_active=True))
+            if lines:
+                for line in lines:
+                    white_lines.append(f"{self.specific_opening_white.name}: {line.name} ({line.moves_san})" if line.moves_san else f"{self.specific_opening_white.name}: {line.name}")
+            else:
+                white_lines.append(self.specific_opening_white.name)
+
+        if self.specific_opening_black and self.specific_opening_black.is_active:
+            lines = list(self.specific_opening_black.lines.filter(is_active=True))
+            if lines:
+                for line in lines:
+                    black_lines.append(f"{self.specific_opening_black.name}: {line.name} ({line.moves_san})" if line.moves_san else f"{self.specific_opening_black.name}: {line.name}")
+            else:
+                black_lines.append(self.specific_opening_black.name)
+
+        if self.opening_mode == self.OpeningMode.REPERTOIRE or (not white_lines and not black_lines):
+            for op in self.repertoire_openings.filter(is_active=True):
+                for line in op.lines.filter(is_active=True):
+                    info = f"{op.name}: {line.name}" if line.name and line.name != op.name else op.name
+                    if line.moves_san:
+                        info += f" ({line.moves_san})"
+                    if line.bot_color in [OpeningLine.BotColor.WHITE, OpeningLine.BotColor.ANY] and info not in white_lines:
+                        white_lines.append(info)
+                    if line.bot_color in [OpeningLine.BotColor.BLACK, OpeningLine.BotColor.ANY] and info not in black_lines:
+                        black_lines.append(info)
+
+        return {
+            'white': ' / '.join(white_lines) if white_lines else 'Stockfish adaptativo (Control del centro)',
+            'black': ' / '.join(black_lines) if black_lines else 'Stockfish adaptativo (Estructura sólida)',
+        }
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

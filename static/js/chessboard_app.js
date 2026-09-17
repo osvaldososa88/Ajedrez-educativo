@@ -11,6 +11,7 @@ class ChessboardApp {
         this.pendingMove = null;
         this.timerInterval = null;
         this.lastAnimatedUci = null;
+        this.historyIndex = null;
 
         // Initialize chat if available
         if (window.initChat) {
@@ -20,10 +21,37 @@ class ChessboardApp {
         if (window.ChessUI) {
             const promoColor = (typeof PLAYER_COLOR !== 'undefined' && PLAYER_COLOR === 'black') ? 'black' : 'white';
             ChessUI.paintPromotionChoices(document.getElementById('promotion-modal'), promoColor);
+            ChessUI.createBoardNavigator(document.getElementById('board-nav-container'), {
+                onNavigate: (action) => this.handleNavigate(action)
+            });
+            if (this.boardEl) {
+                const initialFen = (typeof INITIAL_FEN !== 'undefined' && INITIAL_FEN)
+                    ? INITIAL_FEN
+                    : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+                ChessUI.renderFEN(this.boardEl, initialFen);
+            }
         }
 
         this.initWebSocket();
         this.initEvents();
+    }
+
+    handleNavigate(action) {
+        if (!this.gameState) return;
+        const historyLength = (this.gameState.moves_history || []).length;
+        if (this.historyIndex === null) {
+            this.historyIndex = historyLength;
+        }
+        if (action === 'first') {
+            this.historyIndex = 0;
+        } else if (action === 'prev') {
+            this.historyIndex = Math.max(0, this.historyIndex - 1);
+        } else if (action === 'next') {
+            this.historyIndex = Math.min(historyLength, this.historyIndex + 1);
+        } else if (action === 'last') {
+            this.historyIndex = historyLength;
+        }
+        this.renderBoard();
     }
 
     initWebSocket() {
@@ -135,7 +163,14 @@ class ChessboardApp {
 
     updateGameState(state) {
         const prevFen = this.gameState && this.gameState.fen;
+        const prevHistoryLen = (this.gameState && this.gameState.moves_history) ? this.gameState.moves_history.length : 0;
         this.gameState = state;
+
+        const newHistoryLen = (state.moves_history || []).length;
+        if (this.historyIndex === null || this.historyIndex === prevHistoryLen) {
+            this.historyIndex = newHistoryLen;
+        }
+
         this.renderBoard();
 
         const uci = this.lastMoveUci(state);
@@ -170,7 +205,21 @@ class ChessboardApp {
         if (!this.boardEl || !this.gameState || !window.ChessUI) return;
 
         this.boardEl.innerHTML = '';
-        const grid = ChessUI.parseFenPlacement(this.gameState.fen);
+        const historyLen = (this.gameState.moves_history || []).length;
+        const currentIdx = (this.historyIndex !== null) ? this.historyIndex : historyLen;
+        const isBrowsingHistory = (currentIdx < historyLen);
+
+        // Determine FEN to render
+        let fenToRender = this.gameState.fen;
+        if (isBrowsingHistory) {
+            if (currentIdx === 0) {
+                fenToRender = this.gameState.initial_fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+            } else if (this.gameState.moves_history[currentIdx - 1] && this.gameState.moves_history[currentIdx - 1].fen_after) {
+                fenToRender = this.gameState.moves_history[currentIdx - 1].fen_after;
+            }
+        }
+
+        const grid = ChessUI.parseFenPlacement(fenToRender);
         const isFlipped = (PLAYER_COLOR === 'black');
 
         for (let r = 0; r < 8; r++) {
@@ -198,7 +247,7 @@ class ChessboardApp {
                 if (piece) {
                     squareEl.appendChild(ChessUI.createPieceElement(piece, {
                         onDragStart: (e) => {
-                            if (this.gameState && this.gameState.status === 'IN_PROGRESS') {
+                            if (this.gameState && this.gameState.status === 'IN_PROGRESS' && !isBrowsingHistory) {
                                 e.dataTransfer.setData('text/plain', squareName);
                                 e.dataTransfer.effectAllowed = 'move';
                                 this.selectedSquare = squareName;
@@ -209,40 +258,44 @@ class ChessboardApp {
                     }));
                 }
 
-                squareEl.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                });
+                if (!isBrowsingHistory) {
+                    squareEl.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                    });
 
-                squareEl.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    const fromSq = e.dataTransfer.getData('text/plain') || this.selectedSquare;
-                    if (fromSq && fromSq !== squareName) {
-                        this.selectedSquare = fromSq;
-                        this.handleSquareClick(squareName);
-                    }
-                });
+                    squareEl.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        const fromSq = e.dataTransfer.getData('text/plain') || this.selectedSquare;
+                        if (fromSq && fromSq !== squareName) {
+                            this.selectedSquare = fromSq;
+                            this.handleSquareClick(squareName);
+                        }
+                    });
 
-                squareEl.addEventListener('click', () => this.handleSquareClick(squareName));
+                    squareEl.addEventListener('click', () => this.handleSquareClick(squareName));
+                }
                 this.boardEl.appendChild(squareEl);
             }
         }
 
-        ChessUI.applyLastMove(this.boardEl, this.lastMoveUci(this.gameState));
-        ChessUI.applyCheck(this.boardEl, grid, this.gameState.fen, {
-            isCheck: !!this.gameState.is_check,
-            isCheckmate: this.isCheckmate(this.gameState)
-        });
+        if (!isBrowsingHistory) {
+            ChessUI.applyLastMove(this.boardEl, this.lastMoveUci(this.gameState));
+            ChessUI.applyCheck(this.boardEl, grid, this.gameState.fen, {
+                isCheck: !!this.gameState.is_check,
+                isCheckmate: this.isCheckmate(this.gameState)
+            });
 
-        if (this.selectedSquare) {
-            const sqEl = this.boardEl.querySelector(`[data-square="${this.selectedSquare}"]`);
-            if (sqEl) sqEl.classList.add('selected');
-            ChessUI.applyLegalHints(
-                this.boardEl,
-                this.selectedSquare,
-                this.gameState.legal_moves || [],
-                grid
-            );
+            if (this.selectedSquare) {
+                const sqEl = this.boardEl.querySelector(`[data-square="${this.selectedSquare}"]`);
+                if (sqEl) sqEl.classList.add('selected');
+                ChessUI.applyLegalHints(
+                    this.boardEl,
+                    this.selectedSquare,
+                    this.gameState.legal_moves || [],
+                    grid
+                );
+            }
         }
     }
 

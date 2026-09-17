@@ -100,6 +100,101 @@ class Command(BaseCommand):
                 )
                 profiles_created += int(created)
 
+        # --- Seed Openings & Opening Lines ---
+        from apps.bots.models import Opening, OpeningLine
+
+        openings_def = [
+            {
+                'name': 'Apertura Italiana',
+                'eco': 'C50',
+                'description': 'Desarrollo rápido del alfil a c4 apuntando al peón f7.',
+                'line_name': 'Línea Principal Italiana',
+                'moves_san': '1.e4 e5 2.Nf3 Nc6 3.Bc4',
+                'moves_uci': ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1c4'],
+                'color': OpeningLine.BotColor.WHITE,
+            },
+            {
+                'name': 'Defensa Caro-Kann',
+                'eco': 'B10',
+                'description': 'Estructura sólida de peones preparando d5.',
+                'line_name': 'Variante Caro-Kann',
+                'moves_san': '1.e4 c6 2.d4 d5',
+                'moves_uci': ['e2e4', 'c7c6', 'd2d4', 'd7d5'],
+                'color': OpeningLine.BotColor.BLACK,
+            },
+            {
+                'name': 'Defensa Siciliana',
+                'eco': 'B20',
+                'description': 'Lucha asimétrica por el centro con c5.',
+                'line_name': 'Variante Abierta',
+                'moves_san': '1.e4 c5 2.Nf3 d6 3.d4 cxd4',
+                'moves_uci': ['e2e4', 'c7c5', 'g1f3', 'd7d6', 'd2d4', 'c5d4'],
+                'color': OpeningLine.BotColor.BLACK,
+            },
+            {
+                'name': 'Apertura Ruy López',
+                'eco': 'C60',
+                'description': 'Presión inmediata sobre el caballo de c6.',
+                'line_name': 'Línea Ruy López',
+                'moves_san': '1.e4 e5 2.Nf3 Nc6 3.Bb5',
+                'moves_uci': ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5'],
+                'color': OpeningLine.BotColor.WHITE,
+            },
+            {
+                'name': 'Gambito de Dama',
+                'eco': 'D06',
+                'description': 'Control posicional del centro con d4 y c4.',
+                'line_name': 'Línea Gambito de Dama',
+                'moves_san': '1.d4 d5 2.c4',
+                'moves_uci': ['d2d4', 'd7d5', 'c2c4'],
+                'color': OpeningLine.BotColor.WHITE,
+            },
+            {
+                'name': 'Defensa Francesa',
+                'eco': 'C00',
+                'description': 'Respuesta sólida con e6 y d5 contra e4.',
+                'line_name': 'Línea Francesa',
+                'moves_san': '1.e4 e6 2.d4 d5',
+                'moves_uci': ['e2e4', 'e7e6', 'd2d4', 'd7d5'],
+                'color': OpeningLine.BotColor.BLACK,
+            },
+            {
+                'name': 'Defensa Holandesa',
+                'eco': 'A80',
+                'description': 'Respuesta agresiva contra 1.d4 buscando control en e4.',
+                'line_name': 'Línea Holandesa',
+                'moves_san': '1.d4 f5',
+                'moves_uci': ['d2d4', 'f7f5'],
+                'color': OpeningLine.BotColor.BLACK,
+            },
+            {
+                'name': 'Sistema Colle',
+                'eco': 'D05',
+                'description': 'Estructura sólida de Blancas con d4, Nf3 y e3.',
+                'line_name': 'Línea Sistema Colle',
+                'moves_san': '1.d4 d5 2.Nf3 Nf6 3.e3',
+                'moves_uci': ['d2d4', 'd7d5', 'g1f3', 'g8f6', 'e2e3'],
+                'color': OpeningLine.BotColor.WHITE,
+            },
+        ]
+
+        created_openings = {}
+        for odef in openings_def:
+            op, _ = Opening.objects.update_or_create(
+                name=odef['name'],
+                defaults={'eco': odef['eco'], 'description': odef['description']}
+            )
+            OpeningLine.objects.update_or_create(
+                opening=op,
+                name=odef['line_name'],
+                defaults={
+                    'moves_san': odef['moves_san'],
+                    'moves_uci': odef['moves_uci'],
+                    'bot_color': odef['color'],
+                }
+            )
+            created_openings[odef['name']] = op
+
         for category, setup in CATEGORY_SETUP.items():
             profiles = list(BotProfile.objects.filter(
                 name__in=[t[0] for t in PROFILE_TEMPLATES[category]]
@@ -109,7 +204,6 @@ class Command(BaseCommand):
                     f'No hay perfiles para la categoría {category}; ejecutá el comando de nuevo.'
                 ))
                 continue
-
 
             for order in range(1, BOTS_PER_CATEGORY + 1):
                 display_name = setup['names'].get(order) or f"Bot {order}"
@@ -129,10 +223,44 @@ class Command(BaseCommand):
                 bot.displayed_elo = elo
                 bot.profile = profile
                 bot.quote = quote
+                bot.opening_mode = Bot.OpeningMode.SPECIFIC_OPENING
                 bot.description = bot.description or (
                     f"Rival de entrenamiento de nivel {bot.get_category_display().lower()}."
                 )
+
+                if category == Bot.Category.BEGINNER:
+                    bot.specific_opening_white = created_openings['Apertura Italiana']
+                    bot.specific_opening_black = created_openings['Defensa Caro-Kann']
+                elif category == Bot.Category.INTERMEDIATE:
+                    bot.specific_opening_white = created_openings['Apertura Ruy López']
+                    bot.specific_opening_black = created_openings['Defensa Francesa']
+                else:
+                    bot.specific_opening_white = created_openings['Gambito de Dama']
+                    bot.specific_opening_black = created_openings['Defensa Holandesa']
+
                 bot.save()
+
+                # Assign appropriate openings according to difficulty tier
+                if category == Bot.Category.BEGINNER:
+                    bot.repertoire_openings.set([
+                        created_openings['Apertura Italiana'],
+                        created_openings['Defensa Caro-Kann'],
+                        created_openings['Sistema Colle']
+                    ])
+                elif category == Bot.Category.INTERMEDIATE:
+                    bot.repertoire_openings.set([
+                        created_openings['Apertura Ruy López'],
+                        created_openings['Defensa Francesa'],
+                        created_openings['Defensa Siciliana'],
+                        created_openings['Defensa Holandesa']
+                    ])
+                else:
+                    bot.repertoire_openings.set([
+                        created_openings['Gambito de Dama'],
+                        created_openings['Defensa Siciliana'],
+                        created_openings['Sistema Colle'],
+                        created_openings['Defensa Holandesa']
+                    ])
 
         self.stdout.write(self.style.SUCCESS(
             f"Perfiles creados: {profiles_created}. "

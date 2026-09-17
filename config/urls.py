@@ -18,6 +18,7 @@ urlpatterns = [
     path('tournaments/', include('apps.tournaments.urls')),
     path('bots/', include('apps.bots.urls')),
     path('personalization/', include('apps.personalization.urls')),
+    path('notifications/', include('apps.notifications.urls')),
 
     path('', include('apps.core.urls')),
 ]

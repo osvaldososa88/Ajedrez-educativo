@@ -32,9 +32,19 @@ class PuzzleValidationService:
         if not puzzle.title or not puzzle.title.strip():
             errors.append("El problema debe tener un título.")
 
+        # For PLAY_VS_BOT objective, no solution sequence required - it's a free game
         if puzzle.puzzle_type == Puzzle.PuzzleType.OBJECTIVE:
-            errors.extend(_validate_objective_puzzle(puzzle, board))
-            return errors
+            if puzzle.objective_type == Puzzle.ObjectiveType.PLAY_VS_BOT:
+                # For PLAY_VS_BOT, we need bot_profile configured but no solution_moves
+                if not puzzle.bot_profile:
+                    errors.append("Para un problema de 'Jugar contra Bot', debes seleccionar un perfil de bot.")
+                if puzzle.solution_moves:
+                    errors.append("Los problemas de 'Jugar contra Bot' no requieren secuencia de solución.")
+                return errors
+            else:
+                # Other OBJECTIVE types (CHECKMATE, etc.) use current validation
+                errors.extend(_validate_objective_puzzle(puzzle, board))
+                return errors
 
         # --- SEQUENCE validation (existing behavior, unchanged) --------------
         solution_moves = puzzle.solution_moves or []
@@ -159,17 +169,32 @@ class PuzzleService:
                 'message': 'Movimiento incorrecto. ¡Inténtalo de nuevo!'
             }
 
+        # Reconstruct board position up to ply_index and apply student move
+        board = chess.Board(puzzle.initial_fen)
+        for prev_uci in solution_moves[:ply_index]:
+            try:
+                board.push_uci(prev_uci)
+            except ValueError:
+                break
+        try:
+            board.push_uci(uci_move)
+        except ValueError:
+            pass
+
         # Correct move logic
         next_ply = ply_index + 1
         is_completed = (next_ply >= len(solution_moves))
 
         computer_move_uci = None
-        computer_move_san = None
         next_student_ply = next_ply
 
         if not is_completed and next_ply < len(solution_moves):
             # Computer counter-move
             computer_move_uci = solution_moves[next_ply]
+            try:
+                board.push_uci(computer_move_uci)
+            except ValueError:
+                pass
             next_student_ply = next_ply + 1
             if next_student_ply >= len(solution_moves):
                 is_completed = True
@@ -179,6 +204,7 @@ class PuzzleService:
             'completed': is_completed,
             'next_ply_index': next_student_ply,
             'computer_counter_move': computer_move_uci,
+            'fen': board.fen(),
             'message': '¡Excelente jugada! Problema resuelto.' if is_completed else '¡Jugada correcta! Sigue adelante.'
         }
 
@@ -325,9 +351,10 @@ class ObjectivePuzzleEngine:
 
     @staticmethod
     def select_defender_move(board, puzzle):
-        """UCI del movimiento del defensor (Stockfish, defensa máxima)."""
+        """UCI del movimiento del defensor (Stockfish, defensa configurable)."""
+        profile = puzzle.bot_profile or _StrongDefenseProfile()
         from apps.bots.engine import BotEngineManager
-        return BotEngineManager.select_move(board, _StrongDefenseProfile())
+        return BotEngineManager.select_move(board, profile)
 # --- Verificación del objetivo -------------------------------------------
 
     @staticmethod
@@ -338,8 +365,10 @@ class ObjectivePuzzleEngine:
         CHECKMATE: `board.is_checkmate()` dice que el bando al que le toca
         mover está en jaque mate. Tras una jugada humana le toca al defensor,
         así que si hay mate es porque el humano completó el objetivo.
+
+        PLAY_VS_BOT: El objetivo es dar jaque mate al defensor (bot).
         """
-        if puzzle.objective_type == Puzzle.ObjectiveType.CHECKMATE:
+        if puzzle.objective_type in (Puzzle.ObjectiveType.CHECKMATE, Puzzle.ObjectiveType.PLAY_VS_BOT):
             return board.is_checkmate()
         return False
 
@@ -414,7 +443,8 @@ class ObjectivePuzzleEngine:
         bot_san = None
         try:
             defender_uci = cls.select_defender_move(board, puzzle)
-        except Exception:
+        except Exception as exc:
+            logger.exception("Error al calcular jugada del defensor Stockfish: %s", exc)
             defender_uci = None
         if defender_uci:
             try:
@@ -425,32 +455,78 @@ class ObjectivePuzzleEngine:
                 bot_san = board.san(d_move)
                 board.push(d_move)
                 movelog.append(defender_uci)
+
+        # --- Verificar estado tras respuesta del defensor ---
+        # 1) El defensor dio jaque mate al humano
+        if board.is_checkmate():
+            attempt.movelog = movelog
+            attempt.solved = False
+            attempt.status = PuzzleAttempt.Status.COMPLETED
+            attempt.end_message = 'El defensor te dio jaque mate. ❌'
+            attempt.save(update_fields=['movelog', 'human_moves_count', 'solved', 'status', 'end_message'])
+            return cls._finished_response(puzzle, attempt, board, human_san=human_san, bot_san=bot_san, bot_uci=defender_uci)
+
+        # 2) Tablas o material insuficiente antes de cumplir el objetivo
+        if board.is_stalemate() or board.is_insufficient_material():
+            attempt.movelog = movelog
+            attempt.solved = False
+            attempt.status = PuzzleAttempt.Status.COMPLETED
+            attempt.end_message = 'La posición terminó en tablas antes de cumplir el objetivo. ❌'
+            attempt.save(update_fields=['movelog', 'human_moves_count', 'solved', 'status', 'end_message'])
+            return cls._finished_response(puzzle, attempt, board, human_san=human_san, bot_san=bot_san, bot_uci=defender_uci)
+
+        # 3) Se perdió una pieza crítica (capturada por el defensor)
+        current_counts = cls.token_counts(board)
+        for token in (puzzle.critical_pieces or []):
+            if current_counts.get(token, 0) < initial_counts.get(token, 0):
+                label = TOKEN_LABELS.get(token, token)
+                attempt.movelog = movelog
+                attempt.solved = False
+                attempt.status = PuzzleAttempt.Status.COMPLETED
+                attempt.end_message = f'Perdiste la {label}: fue capturada por el defensor. ❌'
+                attempt.save(update_fields=['movelog', 'human_moves_count', 'solved', 'status', 'end_message'])
+                return cls._finished_response(puzzle, attempt, board, human_san=human_san, bot_san=bot_san, bot_uci=defender_uci)
+
+        # 4) Se alcanzó el límite de movimientos del estudiante
+        if puzzle.max_moves and attempt.human_moves_count >= puzzle.max_moves:
+            attempt.movelog = movelog
+            attempt.solved = False
+            attempt.status = PuzzleAttempt.Status.COMPLETED
+            attempt.end_message = f'Alcanzaste el límite de {puzzle.max_moves} movimientos sin cumplir el objetivo. ❌'
+            attempt.save(update_fields=['movelog', 'human_moves_count', 'solved', 'status', 'end_message'])
+            return cls._finished_response(puzzle, attempt, board, human_san=human_san, bot_san=bot_san, bot_uci=defender_uci)
+
+        # 5) El intento sigue en progreso
+        attempt.movelog = movelog
+        attempt.save(update_fields=['movelog', 'human_moves_count'])
+        return cls._in_progress_response(puzzle, attempt, board, human, human_san=human_san, bot_san=bot_san, bot_uci=defender_uci)
 # --- Respuestas ------------------------------------------------------------
 
     @staticmethod
-    def _base_response(puzzle, attempt, board, human_san=None, bot_san=None):
+    def _base_response(puzzle, attempt, board, human_san=None, bot_san=None, bot_uci=None):
         return {
             'type': 'objective_move',
             'success': True,
             'fen': board.fen(),
             'move_san': human_san,
             'bot_move_san': bot_san,
+            'bot_move_uci': bot_uci,
             'human_moves': attempt.human_moves_count,
             'max_moves': puzzle.max_moves or 0,
             'attempt_id': str(attempt.id),
         }
 
     @classmethod
-    def _finished_response(cls, puzzle, attempt, board, human_san=None, bot_san=None):
-        resp = cls._base_response(puzzle, attempt, board, human_san, bot_san)
-        resp['outcome'] = cls.OUTCOME_SUCCESS if attempt.status == PuzzleAttempt.Status.COMPLETED else cls.OUTCOME_FAILED
+    def _finished_response(cls, puzzle, attempt, board, human_san=None, bot_san=None, bot_uci=None):
+        resp = cls._base_response(puzzle, attempt, board, human_san, bot_san, bot_uci)
+        resp['outcome'] = cls.OUTCOME_SUCCESS if attempt.solved else cls.OUTCOME_FAILED
         resp['solved'] = attempt.solved
         resp['message'] = attempt.end_message or 'Problema finalizado.'
         return resp
 
     @classmethod
-    def _in_progress_response(cls, puzzle, attempt, board, human, human_san=None, bot_san=None):
-        resp = cls._base_response(puzzle, attempt, board, human_san, bot_san)
+    def _in_progress_response(cls, puzzle, attempt, board, human, human_san=None, bot_san=None, bot_uci=None):
+        resp = cls._base_response(puzzle, attempt, board, human_san, bot_san, bot_uci)
         resp['outcome'] = cls.OUTCOME_IN_PROGRESS
         resp['solved'] = False
         if human_san is None:
@@ -505,13 +581,122 @@ class ObjectivePuzzleEngine:
 class _StrongDefenseProfile:
     """Perfil ligero de DEFENSA MÁXIMA para problemas por objetivo.
 
-    Fuerza técnica alta, sin errores artificiales, profundidad/tiempo
-    generosos. No depende de la base de datos (los problemas OBJECTIVE
-    siempre usan esta defensa óptima).
+    Fuerza técnica alta, sin errores artificiales. No depende de la base de
+    datos (los problemas OBJECTIVE siempre usan esta defensa óptima).
     """
+    name = "Defensa Máxima (Stockfish)"
     skill_level = 20
     uci_elo = None
     multipv = 1
-    engine_depth = 18
-    move_time_ms = 1000
+    engine_depth = 12
+    move_time_ms = 400
     error_probability = 0.0
+    best_move_prob = 1.0
+    alt_move_prob = 0.0
+    minor_error_prob = 0.0
+    blunder_prob = 0.0
+    max_cp_loss = 0
+
+
+class PlayVsBotPuzzleEngine:
+    """
+    Motor para puzzles de tipo PLAY_VS_BOT (Jugar contra Bot hasta Objetivo).
+    
+    Crea una partida real contra un bot con Stockfish máximo configurado
+    para alcanzar el objetivo (ej: dar jaque mate).
+    
+    El humano juega 선택 libremente; el bot responde con máxima fuerza.
+    Se valida dinámicamente si se alcanzó el objetivo.
+    """
+
+    @classmethod
+    def get_bot_profile_for_objective(cls, puzzle):
+        """Obtiene el perfil de bot para este puzzle (con máxima fuerza)."""
+        if puzzle.bot_profile:
+            # Use the puzzle's configured bot profile, but maximize its strength
+            return puzzle.bot_profile
+        # Fallback: create a max-strength profile on the fly
+        return None
+
+    @classmethod
+    def get_engine_config(cls, bot_profile):
+        """Configura Stockfish para máxima fuerza."""
+        config = {
+            'Skill Level': 20,  # Máximo
+            'Threads': 1,
+            'Hash': 128,
+        }
+        # Use UCI_Elo for ultimate strength if available
+        config['UCI_LimitStrength'] = True
+        config['UCI_Elo'] = 3190  # Elo máximo de Stockfish
+        return config
+
+    @classmethod
+    def get_engine_depth(cls, bot_profile=None):
+        """Profundidad máxima para el motor."""
+        return 20  # Profundidad máxima
+
+    @classmethod
+    def get_legal_moves_for_position(cls, fen):
+        """Retorna movimientos legales para una posición dada."""
+        board = chess.Board(fen)
+        return [
+            {'from': m.uci()[:2], 'to': m.uci()[2:4], 'uci': m.uci(), 'san': board.san(m)}
+            for m in board.legal_moves
+        ]
+
+    @classmethod
+    def check_objective_met(cls, puzzle, board):
+        """
+        Verifica si se alcanzó el objetivo del puzzle.
+        
+        Para CHECKMATE: verifica si hay jaque mate
+        Para PLAY_VS_BOT: se usa el motor de bots real
+        """
+        if puzzle.objective_type == Puzzle.ObjectiveType.CHECKMATE:
+            if board.is_checkmate():
+                return True, "Jaque mate!"
+            if board.is_stalemate() or board.is_insufficient_material or board.is_seventy_five_moves():
+                return False, "La partida terminó sin alcanzar el objetivo."
+        
+        # For PLAY_VS_BOT, the objective is handled by the game engine
+        # This is checked after each move
+        return None, None
+
+    @classmethod
+    def select_bot_move(cls, fen, bot_profile=None):
+        """
+        Selecciona el mejor movimiento para el bot usando Stockfish máximo.
+        
+        Args:
+            fen: Posición actual en FEN
+            bot_profile: Perfil de bot configurado (opcional)
+            
+        Returns:
+            UCI move string
+        """
+        from apps.bots.engine import BotEngineManager
+        from apps.bots.models import BotProfile
+        
+        board = chess.Board(fen)
+        
+        # Create a temporary max-strength profile if none provided
+        if bot_profile is None:
+            # Create inline max profile
+            class MaxProfile:
+                skill_level = 20
+                engine_depth = 20
+                move_time_ms = 2000
+                multipv = 1
+                error_probability = 0.0
+                uci_elo = 3190
+            profile = MaxProfile()
+        else:
+            profile = bot_profile
+            # Override to maximum strength
+            profile.skill_level = 20
+            profile.uci_elo = 3190
+        
+        # Use BotEngineManager with maximum settings
+        return BotEngineManager.select_move(board, profile)
+

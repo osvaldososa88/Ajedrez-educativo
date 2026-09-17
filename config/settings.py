@@ -89,6 +89,9 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': os.environ.get('DB_HOST', ''),
         'PORT': os.environ.get('DB_PORT', ''),
+        'OPTIONS': {
+            'timeout': 30,
+        } if not os.environ.get('DB_ENGINE') or 'sqlite' in os.environ.get('DB_ENGINE', '') else {},
     }
 }
 
@@ -116,7 +119,13 @@ LOGIN_REDIRECT_URL = 'classmates'
 LOGOUT_REDIRECT_URL = 'login'
 
 # Stockfish Path (optional override)
-STOCKFISH_PATH = os.environ.get('STOCKFISH_PATH', None)
+# Prioridad: 1) variable de entorno STOCKFISH_PATH, 2) binario local del proyecto.
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_LOCAL_STOCKFISH = os.path.join(_BASE_DIR, 'stockfish', 'stockfish.exe')
+STOCKFISH_PATH = (
+    os.environ.get('STOCKFISH_PATH', None)
+    or (_LOCAL_STOCKFISH if os.path.exists(_LOCAL_STOCKFISH) else None)
+)
 
 # Channels configuration
 REDIS_URL = os.environ.get('REDIS_URL', None)

@@ -12,7 +12,10 @@ class PuzzleSolverApp {
         if (!this.boardEl) return;
 
         this.fen = PUZZLE_FEN;
+        this.fenHistory = [PUZZLE_FEN];
+        this.historyIndex = 0;
         this.sideToMove = PUZZLE_SIDE_TO_MOVE; // 'white' or 'black'
+        this.puzzleType = PUZZLE_TYPE || 'SEQUENCE'; // 'SEQUENCE' or 'OBJECTIVE'
         this.plyIndex = 0;
         this.attemptsCount = 0;
         this.hintsUsed = 0;
@@ -20,6 +23,8 @@ class PuzzleSolverApp {
         this.selectedSquare = null;
         this.solved = false;
         this.pendingMove = null;
+        this.legalMoves = null;
+        this.attemptId = null;  // Will be set after first move
 
         this.renderBoard();
         this.initEvents();
@@ -28,7 +33,66 @@ class PuzzleSolverApp {
                 document.getElementById('promotion-modal'),
                 this.sideToMove === 'black' ? 'black' : 'white'
             );
+            ChessUI.createBoardNavigator(document.getElementById('board-nav-container'), {
+                onNavigate: (action) => this.handleNavigate(action)
+            });
         }
+        // Fetch legal moves for the initial position
+        this.fetchLegalMoves();
+        // OBJETIVO: reanudar desde el estado REAL del intento en curso para
+        // evitar desincronización (jugadas ilegales). Los puzzles SEQUENCE
+        // no tienen estado de sesión y siguen usando el FEN inicial.
+        if (this.puzzleType === 'OBJECTIVE' && typeof STATE_URL !== 'undefined') {
+            this.fetchObjectiveState();
+        }
+    }
+
+    pushFen(newFen) {
+        if (!this.fenHistory) this.fenHistory = [];
+        if (!newFen) return;
+        if (this.fenHistory.length === 0 || this.fenHistory[this.fenHistory.length - 1] !== newFen) {
+            this.fenHistory.push(newFen);
+        }
+        this.historyIndex = this.fenHistory.length - 1;
+        this.fen = newFen;
+    }
+
+    handleNavigate(action) {
+        if (!this.fenHistory || this.fenHistory.length === 0) return;
+        if (action === 'first') {
+            this.historyIndex = 0;
+        } else if (action === 'prev') {
+            this.historyIndex = Math.max(0, this.historyIndex - 1);
+        } else if (action === 'next') {
+            this.historyIndex = Math.min(this.fenHistory.length - 1, this.historyIndex + 1);
+        } else if (action === 'last') {
+            this.historyIndex = this.fenHistory.length - 1;
+        }
+        this.renderBoard();
+    }
+
+    fetchObjectiveState() {
+        fetch(STATE_URL, {
+            method: 'GET',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) return;
+                if (data.fen) {
+                    this.pushFen(data.fen);
+                }
+                this.attemptId = data.attempt_id || null;
+                this.plyIndex = data.human_moves || 0;
+                const counter = document.getElementById('move-counter');
+                if (counter) {
+                    const maxStr = data.max_moves && data.max_moves > 0 ? data.max_moves : '∞';
+                    counter.textContent = `Movimientos: ${data.human_moves || 0} / ${maxStr}`;
+                }
+                this.renderBoard();
+                this.fetchLegalMoves();
+            })
+            .catch(() => { /* El tablero inicial sigue siendo una posición válida */ });
     }
 
     parseFen(fen) {
@@ -38,8 +102,10 @@ class PuzzleSolverApp {
     renderBoard() {
         this.boardEl.innerHTML = '';
         if (!window.ChessUI) return;
-        const grid = this.parseFen(this.fen);
+        const currentFen = (this.fenHistory && this.fenHistory[this.historyIndex]) ? this.fenHistory[this.historyIndex] : this.fen;
+        const grid = this.parseFen(currentFen);
         const isFlipped = (this.sideToMove === 'black');
+        const isBrowsingHistory = (this.fenHistory && this.historyIndex < this.fenHistory.length - 1);
 
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
@@ -66,7 +132,7 @@ class PuzzleSolverApp {
                 if (piece) {
                     squareEl.appendChild(ChessUI.createPieceElement(piece, {
                         onDragStart: (e) => {
-                            if (!this.solved) {
+                            if (!this.solved && !isBrowsingHistory) {
                                 e.dataTransfer.setData('text/plain', squareName);
                                 e.dataTransfer.effectAllowed = 'move';
                                 this.selectedSquare = squareName;
@@ -76,28 +142,81 @@ class PuzzleSolverApp {
                     }));
                 }
 
-                squareEl.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                });
+                if (!isBrowsingHistory) {
+                    squareEl.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                    });
 
-                squareEl.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    const fromSq = e.dataTransfer.getData('text/plain') || this.selectedSquare;
-                    if (fromSq && fromSq !== squareName) {
-                        this.selectedSquare = fromSq;
-                        this.handleSquareClick(squareName);
-                    }
-                });
+                    squareEl.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        const fromSq = e.dataTransfer.getData('text/plain') || this.selectedSquare;
+                        if (fromSq && fromSq !== squareName) {
+                            this.selectedSquare = fromSq;
+                            this.handleSquareClick(squareName);
+                        }
+                    });
 
-                squareEl.addEventListener('click', () => this.handleSquareClick(squareName));
+                    squareEl.addEventListener('click', () => this.handleSquareClick(squareName));
+                }
                 this.boardEl.appendChild(squareEl);
             }
         }
 
-        if (this.selectedSquare) {
+        if (this.selectedSquare && !isBrowsingHistory) {
             const sqEl = this.boardEl.querySelector(`[data-square="${this.selectedSquare}"]`);
             if (sqEl) sqEl.classList.add('selected');
+        }
+        if (!isBrowsingHistory) {
+            this.showLegalIndicators();
+        }
+    }
+
+    showLegalIndicators() {
+        if (!window.ChessUI || !this.boardEl) return;
+        // Clear previous indicators (but not selected square)
+        this.boardEl.querySelectorAll('.legal-move, .legal-capture').forEach(el => {
+            el.classList.remove('legal-move', 'legal-capture');
+        });
+        if (!this.selectedSquare || !this.legalMoves || this.solved) return;
+
+        const legalMovesForSquare = this.legalMoves.filter(m => m.from === this.selectedSquare);
+        if (legalMovesForSquare.length === 0) return;
+
+        const currentFen = (this.fenHistory && this.historyIndex < this.fenHistory.length) ? this.fenHistory[this.historyIndex] : this.fen;
+        const grid = this.parseFen(currentFen);
+
+        legalMovesForSquare.forEach(m => {
+            const targetEl = this.boardEl.querySelector(`[data-square="${m.to}"]`);
+            if (!targetEl) return;
+            // Check if target square has a piece (for capture indicator)
+            const file = m.to.charCodeAt(0) - 97;
+            const rank = 8 - parseInt(m.to[1], 10);
+            const occupant = grid[rank] && grid[rank][file];
+            if (occupant) {
+                targetEl.classList.add('legal-capture');
+            } else {
+                targetEl.classList.add('legal-move');
+            }
+        });
+    }
+
+    async fetchLegalMoves() {
+        if (!window.ChessUI || !this.boardEl) return;
+        try {
+            const currentFen = (this.fenHistory && this.historyIndex < this.fenHistory.length) ? this.fenHistory[this.historyIndex] : this.fen;
+            const url = `${LEGAL_MOVES_URL}${LEGAL_MOVES_URL.includes('?') ? '&' : '?'}ply_index=${this.plyIndex}&fen=${encodeURIComponent(currentFen)}`;
+            const resp = await fetch(url, {
+                method: 'GET',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            if (resp.ok) {
+                const data = await resp.json();
+                this.legalMoves = data.moves || [];
+                this.showLegalIndicators();
+            }
+        } catch (e) {
+            console.debug('Could not fetch legal moves:', e);
         }
     }
 
@@ -105,23 +224,27 @@ class PuzzleSolverApp {
         if (this.solved) return;
 
         if (!this.selectedSquare) {
+            // First selection - select a piece and show its legal moves
             this.selectedSquare = squareName;
+            this.fetchLegalMoves();
             this.renderBoard();
             return;
         }
 
         if (this.selectedSquare === squareName) {
+            // Deselect - clear legal indicators
             this.selectedSquare = null;
+            this.legalMoves = null;
             this.renderBoard();
             return;
         }
 
         const fromSq = this.selectedSquare;
         this.selectedSquare = null;
+        this.legalMoves = null;
 
         // Detect promotion (pawn reaching last rank)
         const isPromotionRank = squareName.endsWith('8') || squareName.endsWith('1');
-        const grid = this.parseFen(this.fen);
         const pieceAtFrom = this.getPieceAt(fromSq);
         const isPawn = pieceAtFrom && pieceAtFrom.toLowerCase() === 'p';
 
@@ -138,8 +261,9 @@ class PuzzleSolverApp {
     getPieceAt(squareName) {
         const file = squareName.charCodeAt(0) - 97;
         const rank = 8 - parseInt(squareName[1]);
-        const grid = this.parseFen(this.fen);
-        return grid[rank][file];
+        const currentFen = (this.fenHistory && this.historyIndex < this.fenHistory.length) ? this.fenHistory[this.historyIndex] : this.fen;
+        const grid = this.parseFen(currentFen);
+        return grid[rank] ? grid[rank][file] : null;
     }
 
     initEvents() {
@@ -176,6 +300,82 @@ class PuzzleSolverApp {
                 });
             });
         }
+
+        // Reset and Abandon buttons for OBJECTIVE puzzles
+        const resetBtn = document.getElementById('btn-reset-puzzle');
+        if (resetBtn && typeof RESET_URL !== 'undefined') {
+            resetBtn.addEventListener('click', () => this.resetPuzzle());
+        }
+
+        const abandonBtn = document.getElementById('btn-abandon-puzzle');
+        if (abandonBtn && typeof ABANDON_URL !== 'undefined') {
+            abandonBtn.addEventListener('click', () => this.abandonPuzzle());
+        }
+    }
+
+    resetPuzzle() {
+        if (!confirm('¿Reiniciar el problema? Se perderá el progreso actual.')) return;
+        
+        fetch(RESET_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    this.showFeedback(data.error, 'error');
+                    return;
+                }
+                // Reset game state completely
+                this.fenHistory = [data.fen];
+                this.historyIndex = 0;
+                this.fen = data.fen;
+                this.plyIndex = 0;
+                this.attemptsCount = 0;
+                this.hintsUsed = 0;
+                this.startTime = Date.now();
+                this.selectedSquare = null;
+                this.solved = false;
+                this.pendingMove = null;
+                this.legalMoves = null;
+                this.attemptId = null;  // Clear attempt ID so a new one is created
+                
+                this.renderBoard();
+                this.fetchLegalMoves();
+                this.showFeedback(data.message || 'Problema reiniciado. ¡Inténtalo de nuevo!', 'success');
+                
+                // Hide feedback message after 3 seconds
+                setTimeout(() => {
+                    const feedbackEl = document.getElementById('puzzle-feedback');
+                    if (feedbackEl) feedbackEl.style.display = 'none';
+                }, 3000);
+            })
+            .catch(() => this.showFeedback('Error al reiniciar. Inténtalo de nuevo.', 'error'));
+    }
+
+    abandonPuzzle() {
+        if (!confirm('¿Abandonar el problema? Se contará como no resuelto.')) return;
+        
+        fetch(ABANDON_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    this.showFeedback(data.error, 'error');
+                    return;
+                }
+                this.solved = true;
+                this.showFeedback(data.message || 'Problema abandonado.', 'error');
+            })
+            .catch(() => this.showFeedback('Error al abandonar. Inténtalo de nuevo.', 'error'));
     }
 
     paintStars(value) {
@@ -238,35 +438,122 @@ class PuzzleSolverApp {
                 attempts_count: this.attemptsCount
             })
         })
-            .then(res => res.json())
-            .then(data => this.handleMoveResult(data))
-            .catch(() => this.showFeedback('Error de conexión. Inténtalo de nuevo.', 'error'));
+            .then(async res => {
+                if (!res.ok) {
+                    let errMsg = `Error del servidor (${res.status})`;
+                    try {
+                        const errData = await res.json();
+                        if (errData && errData.error) errMsg = errData.error;
+                    } catch (e) {}
+                    throw new Error(errMsg);
+                }
+                return res.json();
+            })
+            .then(data => {
+                try {
+                    this.handleMoveResult(data, uci);
+                } catch (err) {
+                    console.error('Error handling move result:', err);
+                }
+            })
+            .catch(err => {
+                console.error('Submit move error:', err);
+                this.showFeedback(err.message || 'Error de conexión. Inténtalo de nuevo.', 'error');
+            });
     }
 
-    handleMoveResult(result) {
-        const feedbackEl = document.getElementById('puzzle-feedback');
+    handleMoveResult(result, uci) {
+        // Handle OBJECTIVE puzzle responses
+        if (result.type === 'objective_move') {
+            if (!result.success) {
+                this.showFeedback(result.message || 'Jugada no válida.', 'error');
+                if (this.puzzleType === 'OBJECTIVE' && typeof STATE_URL !== 'undefined') {
+                    this.fetchObjectiveState();
+                } else {
+                    this.renderBoard();
+                }
+                return;
+            }
 
+            // Update FEN from server response
+            if (result.fen) {
+                this.pushFen(result.fen);
+            }
+
+            // Update attempt ID and move counter
+            if (result.attempt_id) {
+                this.attemptId = result.attempt_id;
+            }
+
+            if (result.human_moves !== undefined) {
+                this.plyIndex = result.human_moves;
+                const counter = document.getElementById('move-counter');
+                if (counter) {
+                    const maxStr = result.max_moves && result.max_moves > 0 ? result.max_moves : '∞';
+                    counter.textContent = `Movimientos: ${result.human_moves} / ${maxStr}`;
+                }
+            }
+
+            if ((result.outcome === 'success' && result.solved === true) || result.solved === true) {
+                // Puzzle won - checkmate achieved
+                this.solved = true;
+                const msg = result.message || '🏆 ¡Jaque Mate! ¡Excelente trabajo, has resuelto el problema!';
+                this.showFeedback(msg, 'success');
+                this.showVictoryModal(msg);
+            } else if (result.outcome === 'failed') {
+                // Puzzle lost - defender gave checkmate or other failure
+                this.solved = true;
+                this.showFeedback(result.message || 'Problema finalizado.', 'error');
+            } else {
+                // Puzzle still in progress
+                this.showFeedback(result.message || 'Jugada aplicada. El defensor ha respondido.', 'success');
+            }
+
+            this.renderBoard();
+            this.fetchLegalMoves();
+
+            const botMoveUci = result.bot_move_uci || result.computer_counter_move;
+            if (botMoveUci && window.ChessUI) {
+                ChessUI.animateMovedPiece(this.boardEl, botMoveUci);
+                ChessUI.applyLastMove(this.boardEl, botMoveUci);
+            }
+            return;
+        }
+
+        // Handle SEQUENCE puzzle responses
         if (!result.is_correct) {
             this.showFeedback(result.message || 'Movimiento incorrecto.', 'error');
             this.renderBoard();
             return;
         }
 
+        // Update position FEN from authoritative server response
+        if (result.fen) {
+            this.pushFen(result.fen);
+        } else if (result.computer_counter_move) {
+            // Fallback for custom servers without FEN in response
+            this.applyUciToFen(result.computer_counter_move);
+            this.pushFen(this.fen);
+        }
+
         // Apply student's move locally by advancing ply; server is authoritative on correctness.
         this.plyIndex = result.next_ply_index !== undefined ? result.next_ply_index : this.plyIndex + 1;
 
-        if (result.computer_counter_move) {
-            this.applyUciToFen(result.computer_counter_move);
-        }
-
         if (result.completed) {
             this.solved = true;
-            this.showFeedback(result.message || '¡Problema resuelto!', 'success');
+            const msg = result.message || '🏆 ¡Problema resuelto! ¡Excelente trabajo!';
+            this.showFeedback(msg, 'success');
+            this.showVictoryModal(msg);
         } else {
             this.showFeedback(result.message || '¡Jugada correcta!', 'success');
         }
 
         this.renderBoard();
+        this.fetchLegalMoves();
+
+        if (result.computer_counter_move && window.ChessUI) {
+            ChessUI.animateMovedPiece(this.boardEl, result.computer_counter_move);
+        }
     }
 
     // Lightweight local FEN update to reflect the computer's reply move without a full board engine.
@@ -317,6 +604,14 @@ class PuzzleSolverApp {
                 if (hintBox) hintBox.style.display = 'block';
             })
             .catch(() => this.showFeedback('No se pudo obtener la pista.', 'error'));
+    }
+
+    showVictoryModal(message) {
+        const modal = document.getElementById('victory-modal');
+        if (!modal) return;
+        const msgEl = document.getElementById('victory-message');
+        if (msgEl) msgEl.textContent = message;
+        modal.style.display = 'flex';
     }
 
     showFeedback(message, type) {

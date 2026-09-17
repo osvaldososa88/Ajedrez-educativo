@@ -1,4 +1,5 @@
 import random
+import uuid
 from django.db import models
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -7,7 +8,8 @@ from django.views.generic import ListView, DetailView, View
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.utils import timezone
 from apps.accounts.models import CustomUser
-from .models import Game, Challenge, Move, Notification, GlobalChatMessage
+from .models import Game, Challenge, Move, GlobalChatMessage
+from apps.notifications.models import Notification
 from .services import send_notification
 import chess
 
@@ -246,6 +248,12 @@ def notification_mark_read_api(request, notification_id):
     """Mark a single notification as read."""
     if request.method != 'POST':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
+    # Django's <uuid:> URL converter already gives us a UUID object
+    if isinstance(notification_id, str):
+        try:
+            notification_id = uuid.UUID(notification_id)
+        except (ValueError, TypeError):
+            return JsonResponse({'error': 'Notificación no encontrada'}, status=404)
     updated = Notification.objects.filter(id=notification_id, user=request.user).update(is_read=True)
     if not updated:
         return JsonResponse({'error': 'Notificación no encontrada'}, status=404)

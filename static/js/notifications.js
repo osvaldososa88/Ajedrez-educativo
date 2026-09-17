@@ -82,18 +82,41 @@ function renderNotificationDropdown(notifications) {
     if (!dropdown) return;
     dropdown.innerHTML = '';
     if (!notifications || notifications.length === 0) {
-        dropdown.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">No tienes notificaciones.</div>';
+        dropdown.innerHTML = `
+            <div style="padding: 1.5rem 1rem; text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 0.75rem; opacity: 0.5;">🔔</div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;">Estás al día</div>
+                <div style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.25rem; opacity: 0.7;">No tienes notificaciones nuevas</div>
+            </div>
+        `;
         return;
     }
+    // There are notifications - render them
     notifications.forEach(n => {
         const item = document.createElement('a');
         item.href = n.game_id ? `/games/game/${n.game_id}/` : '#';
         item.className = 'notif-item';
-        item.style.cssText = 'display:flex;align-items:center;gap:0.5rem;padding:0.6rem 0.85rem;border-radius:6px;text-decoration:none;color:var(--text-primary);font-size:0.85rem;transition:background-color 0.15s ease;';
+        item.style.cssText = 'display:flex;align-items:flex-start;gap:0.6rem;padding:0.6rem 0.85rem;border-radius:6px;text-decoration:none;color:var(--text-primary);font-size:0.85rem;transition:background-color 0.15s ease;';
         item.addEventListener('click', () => markNotificationRead(n.id));
-        item.innerHTML = `<span>🔔</span><span>${n.message}</span>`;
+        const timeStr = n.created_at ? new Date(n.created_at).toLocaleString('es-ES', {
+            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+        }) : '';
+        item.innerHTML = `
+            <span style="font-size:1.1rem;flex-shrink:0;">🔔</span>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:0.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${timeStr}</div>
+                <div style="word-break:break-word;">${n.message}</div>
+            </div>
+            ${n.is_read ? '' : '<span style="width:6px;height:6px;border-radius:50%;background:var(--accent-color);flex-shrink:0;margin-top:0.3rem;"></span>'}
+        `;
         dropdown.appendChild(item);
     });
+    // Show "Marcar todo como leído" at bottom
+    const footer = document.createElement('div');
+    footer.style.cssText = 'padding:0.5rem 0.85rem;border-top:1px solid var(--border-color);margin-top:0.25rem;';
+    footer.innerHTML = `<button id="mark-all-read-btn" style="width:100%;background:none;border:none;color:var(--accent-color);font-size:0.8rem;cursor:pointer;padding:0.3rem;">Marcar todas como leídas</button>`;
+    dropdown.appendChild(footer);
+    document.getElementById('mark-all-read-btn')?.addEventListener('click', () => markAllNotificationsRead());
 }
 
 function markNotificationRead(notificationId) {
@@ -143,16 +166,36 @@ function handleNewNotification(notification) {
 
     const dropdown = document.getElementById('notif-dropdown');
     if (dropdown) {
+        // Remove empty state if present
         const emptyEl = dropdown.querySelector('div[style*="text-align: center"]');
         if (emptyEl) emptyEl.remove();
 
         const item = document.createElement('a');
         item.href = notification.game_id ? `/games/game/${notification.game_id}/` : '#';
         item.className = 'notif-item';
-        item.style.cssText = 'display:flex;align-items:center;gap:0.5rem;padding:0.6rem 0.85rem;border-radius:6px;text-decoration:none;color:var(--text-primary);font-size:0.85rem;transition:background-color 0.15s ease;';
+        item.style.cssText = 'display:flex;align-items:flex-start;gap:0.6rem;padding:0.6rem 0.85rem;border-radius:6px;text-decoration:none;color:var(--text-primary);font-size:0.85rem;transition:background-color 0.15s ease;';
         item.addEventListener('click', () => markNotificationRead(notification.id));
-        item.innerHTML = `<span>🔔</span><span>${notification.message}</span>`;
+        const timeStr = notification.created_at ? new Date(notification.created_at).toLocaleString('es-ES', {
+            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+        }) : '';
+        item.innerHTML = `
+            <span style="font-size:1.1rem;flex-shrink:0;">🔔</span>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:0.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${timeStr}</div>
+                <div style="word-break:break-word;">${notification.message}</div>
+            </div>
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--accent-color);flex-shrink:0;margin-top:0.3rem;"></span>
+        `;
         dropdown.prepend(item);
+
+        // Ensure footer with "marcar todo" exists
+        if (!document.getElementById('mark-all-read-btn')) {
+            const footer = document.createElement('div');
+            footer.style.cssText = 'padding:0.5rem 0.85rem;border-top:1px solid var(--border-color);margin-top:0.25rem;';
+            footer.innerHTML = `<button id="mark-all-read-btn" style="width:100%;background:none;border:none;color:var(--accent-color);font-size:0.8rem;cursor:pointer;padding:0.3rem;">Marcar todas como leídas</button>`;
+            dropdown.appendChild(footer);
+            document.getElementById('mark-all-read-btn')?.addEventListener('click', () => markAllNotificationsRead());
+        }
     }
 
     showNotificationToast(notification);

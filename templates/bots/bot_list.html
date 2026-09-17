@@ -58,6 +58,11 @@
                             <div style="font-size: 0.8rem; color: var(--text-secondary);">
                                 {{ item.bot.displayed_elo }} ELO · {{ item.bot.profile.name }}
                             </div>
+                            {% with ops=item.bot.get_openings_summary %}
+                            <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 280px;">
+                                📖 ⚪ {{ ops.white }}
+                            </div>
+                            {% endwith %}
                         </div>
                         <div style="text-align: center;">
                             {% if item.defeated %}

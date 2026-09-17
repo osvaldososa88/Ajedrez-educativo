@@ -1,4 +1,5 @@
 import json
+import logging
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,6 +11,8 @@ from django.utils import timezone
 from django.contrib import messages
 from .models import Puzzle, PuzzleAttempt, UserTrainingStats, PuzzleFavorite, PuzzleRating
 from .services import PuzzleService, PuzzleValidationService
+
+logger = logging.getLogger(__name__)
 
 
 def _is_moderator(user):
@@ -152,6 +155,9 @@ def _puzzle_form_payload(request):
         except json.JSONDecodeError:
             return default
 
+    # Parse bot_profile_id
+    bot_profile_id = request.POST.get('bot_profile', '') or None
+
     return {
         'title': request.POST.get('title', '').strip(),
         'description': request.POST.get('description', '').strip(),
@@ -167,6 +173,9 @@ def _puzzle_form_payload(request):
         'solution_moves': parse_json_field('solution_moves', []),
         'variations_json': parse_json_field('variations_json', {}),
         'hints': parse_json_field('hints', []),
+        'max_moves': int(request.POST.get('max_moves', 50) or 50),
+        'allow_bot_opponent': bool(request.POST.get('bot_profile')),
+        'bot_profile_id': bot_profile_id,
     }
 
 
@@ -400,6 +409,65 @@ def rate_puzzle_api(request, puzzle_id):
 
 
 @login_required
+def get_puzzle_legal_moves_api(request, puzzle_id):
+    """
+    Returns legal moves for the current position in a puzzle.
+    Used to show legal move indicators on the board without revealing the solution.
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    try:
+        puzzle = Puzzle.objects.get(id=puzzle_id)
+    except (Puzzle.DoesNotExist, ValueError):
+        return JsonResponse({'error': 'Problema no encontrado.'}, status=404)
+
+    # Allow passing custom FEN from client, or resolve from attempt movelog if OBJECTIVE
+    position_fen = request.GET.get('fen', '').strip()
+
+    if not position_fen:
+        if puzzle.puzzle_type == Puzzle.PuzzleType.OBJECTIVE:
+            attempt = (
+                PuzzleAttempt.objects.filter(user=request.user, puzzle=puzzle)
+                .order_by('-completed_at')
+                .first()
+            )
+            if attempt and attempt.status == PuzzleAttempt.Status.IN_PROGRESS:
+                from .services import ObjectivePuzzleEngine
+                try:
+                    board_obj = ObjectivePuzzleEngine.build_board(puzzle, attempt.movelog or [])
+                    position_fen = board_obj.fen()
+                except ValueError:
+                    position_fen = puzzle.initial_fen
+
+        if not position_fen:
+            position_fen = puzzle.initial_fen
+
+    import chess
+    try:
+        board = chess.Board(position_fen)
+    except ValueError:
+        board = chess.Board(puzzle.initial_fen)
+
+    legal_moves = []
+    for move in board.legal_moves:
+        legal_moves.append({
+            'from': move.uci()[:2],
+            'to': move.uci()[2:4],
+            'uci': move.uci(),
+            'san': board.san(move),
+            'is_capture': board.is_capture(move),
+            'is_check': board.gives_check(move),
+        })
+
+    return JsonResponse({
+        'moves': legal_moves,
+        'fen': board.fen(),
+        'turn': 'white' if board.turn == chess.WHITE else 'black',
+    })
+
+
+@login_required
 def submit_puzzle_move_api(request, puzzle_id):
     """
     AJAX endpoint for move verification during puzzle execution.
@@ -428,14 +496,17 @@ def submit_puzzle_move_api(request, puzzle_id):
     if result['completed'] or not result['is_correct']:
         # Log attempt if finished or if student completed attempt cycle
         solved = result['is_correct'] and result['completed']
-        PuzzleService.record_attempt(
-            user=request.user,
-            puzzle=puzzle,
-            solved=solved,
-            time_taken_seconds=time_taken,
-            hints_used=hints_used,
-            attempts_count=attempts_count
-        )
+        try:
+            PuzzleService.record_attempt(
+                user=request.user,
+                puzzle=puzzle,
+                solved=solved,
+                time_taken_seconds=time_taken,
+                hints_used=hints_used,
+                attempts_count=attempts_count
+            )
+        except Exception as e:
+            logger.exception("Error recording puzzle attempt: %s", e)
 
     return JsonResponse(result)
 
@@ -476,6 +547,57 @@ def _get_objective_attempt(user, puzzle):
 
 
 @login_required
+def objective_state_api(request, puzzle_id):
+    """Devuelve el estado REAL del problema OBJECTIVE para el usuario.
+
+    Si hay un intento IN_PROGRESS con movimientos, devuelve la posición
+    actual (replay del movelog). Si no hay intento en curso, devuelve el
+    FEN inicial. Así el cliente nunca muestra una posición desincronizada
+    (causa de 'jugada ilegal' al reanudar).
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    try:
+        puzzle = Puzzle.objects.get(id=puzzle_id)
+    except (Puzzle.DoesNotExist, ValueError):
+        return JsonResponse({'error': 'Problema no encontrado.'}, status=404)
+
+    if puzzle.puzzle_type != Puzzle.PuzzleType.OBJECTIVE:
+        return JsonResponse({'error': 'Este problema no es de tipo objetivo.'}, status=400)
+
+    attempt = (
+        PuzzleAttempt.objects.filter(user=request.user, puzzle=puzzle)
+        .order_by('-completed_at')
+        .first()
+    )
+    in_progress = attempt is not None and attempt.status == PuzzleAttempt.Status.IN_PROGRESS
+
+    fen = puzzle.initial_fen
+    human_moves = 0
+    attempt_id = None
+
+    if in_progress:
+        from .services import ObjectivePuzzleEngine
+        try:
+            board = ObjectivePuzzleEngine.build_board(puzzle, attempt.movelog or [])
+            fen = board.fen()
+        except ValueError:
+            fen = puzzle.initial_fen  # movelog corrupto: empezar de cero
+        human_moves = attempt.human_moves_count
+        attempt_id = str(attempt.id)
+
+    return JsonResponse({
+        'type': 'objective_state',
+        'fen': fen,
+        'human_moves': human_moves,
+        'max_moves': puzzle.max_moves or 0,
+        'attempt_id': attempt_id,
+        'completed': (attempt is not None and attempt.status != PuzzleAttempt.Status.IN_PROGRESS) or False,
+    })
+
+
+@login_required
 def submit_objective_move_api(request, puzzle_id):
     """Procesa una jugada del estudiante en un problema OBJECTIVE.
 
@@ -506,23 +628,31 @@ def submit_objective_move_api(request, puzzle_id):
     if not uci_move:
         return JsonResponse({'error': 'Debe especificar la jugada UCI'}, status=400)
 
-    from django.db import transaction
     from .services import ObjectivePuzzleEngine, update_training_stats
 
-    with transaction.atomic():
-        attempt = PuzzleAttempt.objects.select_for_update().get(id=_get_objective_attempt(request.user, puzzle).id)
-        result = ObjectivePuzzleEngine.apply_human_move(puzzle, attempt, uci_move)
+    attempt = _get_objective_attempt(request.user, puzzle)
+    result = ObjectivePuzzleEngine.apply_human_move(puzzle, attempt, uci_move)
 
-        # Estadísticas y análisis al terminar (una sola vez).
-        if attempt.status != PuzzleAttempt.Status.IN_PROGRESS:
+    # Estadísticas y análisis al terminar (una sola vez).
+    if attempt.status != PuzzleAttempt.Status.IN_PROGRESS:
+        try:
             update_training_stats(request.user, puzzle, attempt.solved, time_taken)
+        except Exception as e:
+            logger.exception("Error updating training stats: %s", e)
+
+        try:
             job = ObjectivePuzzleEngine.create_analysis_job(request.user, puzzle, attempt)
             result['analysis_job_id'] = str(job.id)
+        except Exception as e:
+            logger.exception("Error creating analysis job for objective puzzle: %s", e)
 
     # Iniciar el análisis asíncrono del intento finalizado (fuera del lock).
     if 'analysis_job_id' in result:
-        from apps.analysis.services import start_async_analysis_job
-        start_async_analysis_job(result['analysis_job_id'])
+        try:
+            from apps.analysis.services import start_async_analysis_job
+            start_async_analysis_job(result['analysis_job_id'])
+        except Exception as e:
+            logger.exception("Error starting async analysis job: %s", e)
 
     return JsonResponse(result)
 
@@ -539,8 +669,9 @@ def reset_objective_puzzle_api(request, puzzle_id):
     except (Puzzle.DoesNotExist, ValueError):
         return JsonResponse({'error': 'Problema no encontrado.'}, status=404)
 
+    # Delete ALL attempts for this user and puzzle to allow a fresh start
     PuzzleAttempt.objects.filter(
-        user=request.user, puzzle=puzzle, status=PuzzleAttempt.Status.IN_PROGRESS
+        user=request.user, puzzle=puzzle
     ).delete()
 
     return JsonResponse({

@@ -259,3 +259,153 @@ def test_draft_puzzle_detail_visible_for_teacher(client):
 def test_training_dashboard_requires_login(client):
     response = client.get(reverse('training_dashboard'))
     assert response.status_code == 302
+# ============================================================================
+# PROBLEMAS POR OBJETIVO (OBJECTIVE)
+# Validación dinámica: NO se exige secuencia fija; se evalúa el estado del
+# tablero (dar jaque mate, etc.). El estudiante puede llegar por distintos
+# caminos y sin límite artificial de movimientos si así se configura.
+# ============================================================================
+
+from apps.training.services import ObjectivePuzzleEngine  # noqa: E402
+
+
+def make_objective_checkmate_puzzle(author=None, status=Puzzle.Status.PUBLISHED, max_moves=0):
+    """Problema abierto con mate en 1: blancas mueven y b1b7 (o b1b8) da mate.
+
+    Posición: k a8, K c7, Q b1. La dama da mate moviendo a b7/b8
+    (controla a7, b8 y el rey cubre el resto de escapes).
+    """
+    return Puzzle.objects.create(
+        title="Jaque mate abierto",
+        description="Da jaque mate. Hay varios caminos válidos.",
+        author=author,
+        initial_fen="k7/2K5/8/8/8/8/8/1Q6 w - - 0 1",
+        side_to_move=Puzzle.SideToMove.WHITE,
+        category=Puzzle.Category.TACTICS,
+        theme=Puzzle.Theme.MATE,
+        difficulty=Puzzle.Difficulty.BEGINNER,
+        objective=Puzzle.Objective.WIN,
+        puzzle_type=Puzzle.PuzzleType.OBJECTIVE,
+        objective_type=Puzzle.ObjectiveType.CHECKMATE,
+        max_moves=max_moves,
+        status=status,
+    )
+
+
+@pytest.mark.django_db
+def test_objective_puzzle_no_solution_sequence_required():
+    """Un problema por objetivo NO exige `solution_moves` (no hay secuencia)."""
+    puzzle = make_objective_checkmate_puzzle()
+    assert puzzle.solution_moves == []  # sin secuencia fija
+    # La validación de publicación acepta problemas OBJECTIVE sin secuencia.
+    errors = __import__('apps.training.services', fromlist=['PuzzleValidationService']).PuzzleValidationService.validate_for_submission(puzzle)
+    assert errors == []
+
+
+@pytest.mark.django_db
+def test_objective_normal_move_stays_in_progress():
+    """Una jugada que NO da mate NO resuelve el problema."""
+    user = make_user('obj_normal')
+    puzzle = make_objective_checkmate_puzzle()
+    attempt = PuzzleAttempt.objects.create(user=user, puzzle=puzzle)
+
+    result = ObjectivePuzzleEngine.apply_human_move(puzzle, attempt, "c7d8")
+    assert result['outcome'] == ObjectivePuzzleEngine.OUTCOME_IN_PROGRESS
+    assert result['solved'] is False
+    assert attempt.status == PuzzleAttempt.Status.IN_PROGRESS
+
+@pytest.mark.django_db
+def test_objective_checkmate_move_marks_solved():
+    """Dar jaque mate al defensor resuelve el problema (dinámicamente)."""
+    user = make_user('obj_mate')
+    puzzle = make_objective_checkmate_puzzle()
+    attempt = PuzzleAttempt.objects.create(user=user, puzzle=puzzle)
+
+    result = ObjectivePuzzleEngine.apply_human_move(puzzle, attempt, "b1b7")
+    assert result['outcome'] == ObjectivePuzzleEngine.OUTCOME_SUCCESS
+    assert result['solved'] is True
+    assert attempt.status == PuzzleAttempt.Status.COMPLETED
+    assert attempt.solved is True
+    assert 'jaque mate' in attempt.end_message.lower()
+
+
+@pytest.mark.django_db
+def test_objective_different_valid_solutions_accepted():
+    """No importa el camino: dos mates distintos resuelven igual."""
+    user = make_user('obj_variantes')
+    puzzle = make_objective_checkmate_puzzle()
+
+    # Camino A
+    PuzzleAttempt.objects.filter(user=user, puzzle=puzzle).delete()
+    att_a = PuzzleAttempt.objects.create(user=user, puzzle=puzzle)
+    ra = ObjectivePuzzleEngine.apply_human_move(puzzle, att_a, "b1b8")
+    assert ra['outcome'] == ObjectivePuzzleEngine.OUTCOME_SUCCESS
+
+    # Camino B (otra jugada que también da mate)
+    PuzzleAttempt.objects.filter(user=user, puzzle=puzzle).delete()
+    att_b = PuzzleAttempt.objects.create(user=user, puzzle=puzzle)
+    rb = ObjectivePuzzleEngine.apply_human_move(puzzle, att_b, "b1b7")
+    assert rb['outcome'] == ObjectivePuzzleEngine.OUTCOME_SUCCESS
+
+
+@pytest.mark.django_db
+def test_objective_no_move_limit_when_max_moves_zero():
+    """Con max_moves=0 NO hay límite artificial de movimientos."""
+    user = make_user('obj_sinlimite')
+    puzzle = make_objective_checkmate_puzzle(max_moves=0)
+    attempt = PuzzleAttempt.objects.create(user=user, puzzle=puzzle)
+
+    # Varias jugadas legales (sin dar mate) desde la posición resultante:
+    # el problema sigue en progreso y no hay límite artificial.
+    current_board = chess.Board(puzzle.initial_fen)
+    for _ in range(3):
+        legales = [m.uci() for m in current_board.legal_moves]
+        # elegir una jugada humana que no dé mate
+        uci = None
+        for cand in legales:
+            nb = current_board.copy()
+            nb.push(chess.Move.from_uci(cand))
+            if not nb.is_checkmate():
+                uci = cand
+                break
+        assert uci is not None, 'no hay jugadas no-mate disponibles'
+        result = ObjectivePuzzleEngine.apply_human_move(puzzle, attempt, uci)
+        assert result['outcome'] == ObjectivePuzzleEngine.OUTCOME_IN_PROGRESS, uci
+        # sincronizar con la posición que devolvió el servidor (humano + defensor)
+        current_board = chess.Board(result['fen'])
+    assert attempt.human_moves_count == 3
+    assert result['max_moves'] == 0
+
+
+@pytest.mark.django_db
+def test_objective_move_limit_is_respected_when_set():
+    """Si el creador configura un límite, se respeta tras agotarlo."""
+    user = make_user('obj_limite')
+    puzzle = make_objective_checkmate_puzzle(max_moves=1)
+    attempt = PuzzleAttempt.objects.create(user=user, puzzle=puzzle)
+
+    result = ObjectivePuzzleEngine.apply_human_move(puzzle, attempt, "c7d8")
+    assert result['outcome'] == ObjectivePuzzleEngine.OUTCOME_FAILED
+    assert result['solved'] is False
+    assert attempt.status == PuzzleAttempt.Status.COMPLETED
+    assert 'límite' in attempt.end_message.lower()
+
+
+@pytest.mark.django_db
+def test_objective_reset_allows_retry():
+    """Tras reiniciar (borrar intentos) se puede volver a intentar limpio."""
+    user = make_user('obj_reset')
+    puzzle = make_objective_checkmate_puzzle()
+
+    # Primer intento: mate -> resuelto
+    att = PuzzleAttempt.objects.create(user=user, puzzle=puzzle)
+    r = ObjectivePuzzleEngine.apply_human_move(puzzle, att, "b1b7")
+    assert r['outcome'] == ObjectivePuzzleEngine.OUTCOME_SUCCESS
+
+    # Reset: se eliminan los intentos -> nuevo intento desde el inicio
+    PuzzleAttempt.objects.filter(user=user, puzzle=puzzle).delete()
+    att2 = PuzzleAttempt.objects.create(user=user, puzzle=puzzle)
+    r2 = ObjectivePuzzleEngine.apply_human_move(puzzle, att2, "c7d8")
+    assert r2['outcome'] == ObjectivePuzzleEngine.OUTCOME_IN_PROGRESS
+    assert att2.human_moves_count == 1
+    assert att2.status == PuzzleAttempt.Status.IN_PROGRESS

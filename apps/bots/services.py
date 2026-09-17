@@ -222,14 +222,33 @@ class BotService:
             # Bot deactivated mid-game: the game simply waits (documented).
             return None
 
-        return {'bot_user_id': bot_user.id, 'fen': game.fen_current, 'profile_id': bot.profile_id}
+        game_moves_uci = list(game.moves.order_by('ply').values_list('uci', flat=True))
+        return {
+            'bot_user_id': bot_user.id,
+            'fen': game.fen_current,
+            'profile_id': bot.profile_id,
+            'bot_id': bot.id,
+            'moves_uci': game_moves_uci,
+        }
 
     @staticmethod
-    def compute_uci(fen: str, profile_id: int) -> str:
+    def compute_uci(fen: str, profile_id: int, bot_id: int = None, moves_uci: list = None) -> str:
         """Blocking engine call. Run inside a worker thread (GameConsumer)."""
         from apps.core.chess_engine import ChessEngine
+        from apps.bots.opening_service import OpeningBookService
         board = ChessEngine.get_board_from_fen(fen)
+
         profile = BotProfile.objects.get(pk=profile_id)
+        if bot_id:
+            try:
+                bot = Bot.objects.get(pk=bot_id)
+                profile.displayed_elo = bot.displayed_elo
+                opening_move = OpeningBookService.get_opening_move(bot, moves_uci or [], board)
+                if opening_move:
+                    return opening_move
+            except Bot.DoesNotExist:
+                pass
+
         return BotEngineManager.select_move(board, profile)
 
     # --- Finish handling ---------------------------------------------------------

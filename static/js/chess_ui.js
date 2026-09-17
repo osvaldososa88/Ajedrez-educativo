@@ -161,7 +161,7 @@
                 });
         },
 
-        animateMovedPiece(boardEl, uci) {
+        animateMovedPiece(boardEl, uci, durationMs = 220) {
             const squares = this.squaresFromUci(uci);
             if (!squares || !boardEl) return;
             const fromEl = boardEl.querySelector(`[data-square="${squares.from}"]`);
@@ -176,6 +176,7 @@
             if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
 
             piece.classList.add('piece-animating');
+            piece.style.transition = `transform ${durationMs}ms ease-out`;
             piece.style.transform = `translate(${dx}px, ${dy}px)`;
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
@@ -184,11 +185,12 @@
             });
             const clear = () => {
                 piece.classList.remove('piece-animating');
+                piece.style.transition = '';
                 piece.style.transform = '';
                 piece.removeEventListener('transitionend', clear);
             };
             piece.addEventListener('transitionend', clear);
-            setTimeout(clear, 220);
+            setTimeout(clear, durationMs + 20);
         },
 
         renderFEN(container, fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1') {
@@ -211,6 +213,36 @@
                     container.appendChild(sq);
                 }
             }
+        },
+
+        createBoardNavigator(containerEl, { onNavigate }) {
+            if (!containerEl) return;
+            containerEl.innerHTML = `
+                <div class="board-nav-controls" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 0.5rem; width: 100%;">
+                    <button type="button" class="btn btn-secondary nav-btn-start" title="Inicio (Posición inicial)" style="padding: 0.35rem 0.75rem; font-size: 0.9rem;">⏮</button>
+                    <button type="button" class="btn btn-secondary nav-btn-prev" title="Anterior (Flecha izquierda)" style="padding: 0.35rem 0.75rem; font-size: 0.9rem;">◀</button>
+                    <button type="button" class="btn btn-secondary nav-btn-next" title="Siguiente (Flecha derecha)" style="padding: 0.35rem 0.75rem; font-size: 0.9rem;">▶</button>
+                    <button type="button" class="btn btn-primary nav-btn-end" title="Actual (Posición en vivo)" style="padding: 0.35rem 0.75rem; font-size: 0.9rem;">⏭</button>
+                </div>
+            `;
+            const btnStart = containerEl.querySelector('.nav-btn-start');
+            const btnPrev = containerEl.querySelector('.nav-btn-prev');
+            const btnNext = containerEl.querySelector('.nav-btn-next');
+            const btnEnd = containerEl.querySelector('.nav-btn-end');
+
+            btnStart.addEventListener('click', () => onNavigate('first'));
+            btnPrev.addEventListener('click', () => onNavigate('prev'));
+            btnNext.addEventListener('click', () => onNavigate('next'));
+            btnEnd.addEventListener('click', () => onNavigate('last'));
+
+            document.addEventListener('keydown', (e) => {
+                if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+                if (e.key === 'ArrowLeft') {
+                    onNavigate('prev');
+                } else if (e.key === 'ArrowRight') {
+                    onNavigate('next');
+                }
+            });
         }
     };
 

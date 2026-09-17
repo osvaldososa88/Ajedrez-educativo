@@ -54,7 +54,10 @@
                         <span id="notif-badge" class="notif-badge" style="display:none;">0</span>
                     </button>
                     <div id="notif-dropdown" class="notif-dropdown">
-                        <div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">Cargando...</div>
+                        <div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🔔</div>
+                            <div>Estás al día</div>
+                        </div>
                     </div>
                 </div>
 
@@ -64,6 +67,12 @@
                         ⚙️
                     </button>
                     <div id="settings-menu" class="settings-menu">
+                        <a href="{% url 'profile' %}" class="settings-item">
+                            👤 Mi Perfil
+                        </a>
+                        <a href="{% url 'password_change' %}" class="settings-item">
+                            🔑 Cambiar Contraseña
+                        </a>
                         <a href="{% url 'personalization_appearance' %}" class="settings-item">
                             🎨 Apariencia
                         </a>

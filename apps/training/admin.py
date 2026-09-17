@@ -4,23 +4,60 @@ from .models import Puzzle, PuzzleAttempt, UserTrainingStats, PuzzleFavorite, Pu
 @admin.register(Puzzle)
 class PuzzleAdmin(admin.ModelAdmin):
     list_display = ('title', 'category', 'theme', 'difficulty', 'objective', 'status', 'author', 'moderated_by', 'created_at')
-    list_filter = ('category', 'theme', 'difficulty', 'objective', 'status')
+    list_filter = ('category', 'theme', 'difficulty', 'objective', 'status', 'puzzle_type', 'objective_type')
     search_fields = ('title', 'description')
     actions = ['approve_puzzles', 'reject_puzzles', 'archive_puzzles']
+    
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'description', 'author', 'status')
+        }),
+        ('Configuración del Problema', {
+            'fields': ('initial_fen', 'side_to_move', 'category', 'theme', 'difficulty', 'objective', 'puzzle_type', 'objective_type')
+        }),
+        ('Opciones Específicas', {
+            'fields': ('bot_profile', 'bot_opponent', 'bot_side', 'max_moves', 'allow_bot_opponent', 'critical_pieces'),
+            'classes': ('collapse',),
+            'description': 'Configuración para problemas OBJECTIVE y bot opponents'
+        }),
+        ('Solución (solo tipos secuenciales)', {
+            'fields': ('solution_moves', 'variations_json', 'hints'),
+            'classes': ('collapse',),
+            'description': 'Usado cuando puzzle_type = SEQUENCE'
+        }),
+        ('Moderación', {
+            'fields': ('moderated_by', 'moderation_notes', 'reviewed_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
-    @admin.action(description='Aprobar y publicar problemas seleccionados')
-    def approve_puzzles(self, request, queryset):
-        from django.utils import timezone
-        queryset.update(status=Puzzle.Status.PUBLISHED, moderated_by=request.user, reviewed_at=timezone.now())
+    def get_fieldsets(self, request, obj=None):
+        if obj is None:
+            return self.fieldsets
+            
+        if obj.puzzle_type == Puzzle.PuzzleType.SEQUENCE:
+            return (
+                (None, {
+                    'fields': ('title', 'description', 'author', 'status')
+                }),
+                ('Configuración del Problema', {
+                    'fields': ('initial_fen', 'side_to_move', 'category', 'theme', 'difficulty', 'objective', 'puzzle_type', 'objective_type')
+                }),
+                ('Solución (tipo secuencial)', {
+                    'fields': ('solution_moves', 'variations_json', 'hints')
+                }),
+                ('Moderación', {
+                    'fields': ('moderated_by', 'moderation_notes', 'reviewed_at'),
+                    'classes': ('collapse',)
+                }),
+            )
+        else:
+            return self.fieldsets
 
-    @admin.action(description='Rechazar problemas seleccionados')
-    def reject_puzzles(self, request, queryset):
-        from django.utils import timezone
-        queryset.update(status=Puzzle.Status.REJECTED, moderated_by=request.user, reviewed_at=timezone.now())
-
-    @admin.action(description='Archivar problemas seleccionados')
-    def archive_puzzles(self, request, queryset):
-        queryset.update(status=Puzzle.Status.ARCHIVED)
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ()
+        return ('reviewed_at',)
 
 @admin.register(PuzzleAttempt)
 class PuzzleAttemptAdmin(admin.ModelAdmin):

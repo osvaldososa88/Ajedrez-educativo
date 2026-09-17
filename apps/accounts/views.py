@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, update_session_auth_hash
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, PasswordChangeView
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, DetailView, UpdateView
+from django.views.generic import CreateView, ListView, DetailView, UpdateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.auth.forms import PasswordChangeForm
@@ -68,7 +68,8 @@ class ProfileEditView(LoginRequiredMixin, UpdateView):
         return redirect('profile')
 
 
-class PasswordChangeViewCustom(LoginRequiredMixin, CreateView):
+class PasswordChangeViewCustom(LoginRequiredMixin, FormView):
+    """Vista personalizada para cambiar contraseña sin usar 'instance'."""
     template_name = 'accounts/password_change.html'
     form_class = PasswordChangeForm
 
@@ -82,4 +83,7 @@ class PasswordChangeViewCustom(LoginRequiredMixin, CreateView):
         update_session_auth_hash(self.request, form.user)
         messages.success(self.request, "Tu contraseña fue cambiada exitosamente.")
         return redirect('profile')
+
+    def get_success_url(self):
+        return reverse_lazy('profile')
 

@@ -27,6 +27,17 @@
             </div>
         {% endif %}
 
+        <!-- Repertorio de Aperturas del Bot -->
+        {% with openings=bot.get_openings_summary %}
+        <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
+            <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-color); font-size: 0.95rem;">📖 Repertorio de Aperturas</h4>
+            <div style="font-size: 0.88rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                <div>⚪ <strong>Con Blancas:</strong> <span style="color: var(--text-primary);">{{ openings.white }}</span></div>
+                <div>⬛ <strong>Con Negras:</strong> <span style="color: var(--text-primary);">{{ openings.black }}</span></div>
+            </div>
+        </div>
+        {% endwith %}
+
         {% if bot.quote %}
             <p style="font-style: italic; color: var(--text-secondary); text-align: center; margin: 0 0 1.25rem 0;">
                 “{{ bot.quote }}”

@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
@@ -127,7 +128,12 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             prep = await self.prepare_bot_move_data(self.game_id)
             if not prep:
                 return
-            uci = await self.compute_bot_move(prep['fen'], prep['profile_id'])
+            uci = await self.compute_bot_move(
+                prep['fen'],
+                prep['profile_id'],
+                prep.get('bot_id'),
+                prep.get('moves_uci')
+            )
             if not uci:
                 return
             result = await self.process_move(prep['bot_user_id'], self.game_id, uci)
@@ -150,9 +156,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         return BotService.prepare_bot_move(game_id)
 
     @database_sync_to_async
-    def compute_bot_move(self, fen, profile_id):
+    def compute_bot_move(self, fen, profile_id, bot_id=None, moves_uci=None):
         """Blocking Stockfish call, executed in the executor thread."""
-        return BotService.compute_uci(fen, profile_id)
+        return BotService.compute_uci(fen, profile_id, bot_id=bot_id, moves_uci=moves_uci)
 
 
     async def handle_resign(self):
@@ -316,7 +322,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         board = ChessEngine.get_board_from_fen(game.fen_current)
         legal_moves = ChessEngine.get_legal_moves(board)
 
-        moves_history = list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username'))
+        moves_history = list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username', 'fen_after'))
 
         # Visual delay for bot moves (purely cosmetic, does NOT affect engine thinking)
         visual_delay_ms = 0
@@ -391,7 +397,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                     'white_time_left_ms': game.white_time_left_ms,
                     'black_time_left_ms': game.black_time_left_ms,
                     'legal_moves': [],
-                    'moves_history': list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username')),
+                    'moves_history': list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username', 'fen_after')),
                     'rating_changes': rating_result['changes'],
                     'pgn': game.generate_pgn()
                 }
@@ -463,7 +469,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
         board = ChessEngine.get_board_from_fen(game.fen_current)
         legal_moves = ChessEngine.get_legal_moves(board) if game.status == Game.Status.IN_PROGRESS else []
 
-        moves_history = list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username'))
+        moves_history = list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username', 'fen_after'))
 
         return {
             'success': True,
@@ -529,7 +535,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'white_time_left_ms': game.white_time_left_ms,
                 'black_time_left_ms': game.black_time_left_ms,
                 'legal_moves': [],
-                'moves_history': list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username')),
+                'moves_history': list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username', 'fen_after')),
                 'rating_changes': rating_result['changes'],
                 'pgn': game.pgn_history
             }
@@ -568,7 +574,7 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 'white_time_left_ms': game.white_time_left_ms,
                 'black_time_left_ms': game.black_time_left_ms,
                 'legal_moves': [],
-                'moves_history': list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username')),
+                'moves_history': list(game.moves.order_by('ply').values('ply', 'san', 'uci', 'player__username', 'fen_after')),
                 'rating_changes': rating_result['changes'],
                 'pgn': game.pgn_history
             }
@@ -637,7 +643,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def get_unread_notifications(self):
-        from .models import Notification
+        from apps.notifications.models import Notification
         notifications = Notification.objects.filter(
             user=self.user,
             is_read=False
@@ -655,12 +661,12 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def mark_notification_read(self, notif_id):
-        from .models import Notification
+        from apps.notifications.models import Notification
         try:
-            notif_id = int(notif_id)
-        except (TypeError, ValueError):
-            notif_id = None
-        if notif_id is None:
+            # Django's <uuid:> converter may pass a UUID object or a string
+            if isinstance(notif_id, str):
+                notif_id = uuid.UUID(notif_id)
+        except (TypeError, ValueError, AttributeError):
             return 0
         try:
             return Notification.objects.filter(id=notif_id, user=self.user).update(is_read=True)

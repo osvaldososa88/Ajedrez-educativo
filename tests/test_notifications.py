@@ -16,7 +16,8 @@ from channels.db import database_sync_to_async
 from django.test import Client
 
 from apps.accounts.models import CustomUser
-from apps.games.models import Game, Notification
+from apps.games.models import Game
+from apps.notifications.models import Notification
 from apps.games.consumers import NotificationConsumer
 from apps.games.services import send_notification
 

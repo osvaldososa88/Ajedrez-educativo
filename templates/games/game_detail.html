@@ -21,6 +21,7 @@
 
         <!-- The Interactive Chess Board -->
         <div class="chessboard" id="chessboard"></div>
+        <div id="board-nav-container"></div>
 
         <!-- Bottom Player -->
         <div class="player-bar">
@@ -180,6 +181,7 @@
     const GAME_ID = "{{ game.id }}";
     const USER_NAME = "{{ request.user.username }}";
     const PLAYER_COLOR = "{{ player_color }}"; // 'white', 'black', or 'spectator'
+    const INITIAL_FEN = "{{ game.fen_current }}";
 </script>
 <script src="{% static 'js/chat.js' %}"></script>
 <script src="{% static 'js/chessboard_app.js' %}"></script>
