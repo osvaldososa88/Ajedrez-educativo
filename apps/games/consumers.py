@@ -75,6 +75,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, content):
         msg_type = content.get('type')
 
+        if msg_type == 'ping':
+            await self.send_json({'type': 'pong'})
+            return
+
         if msg_type == 'make_move':
             uci = content.get('uci')
             if uci:

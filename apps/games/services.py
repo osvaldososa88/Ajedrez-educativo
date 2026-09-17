@@ -10,19 +10,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def send_notification(user, message, game=None):
+def send_notification(user, message, title="Notificación", notif_type="system", game=None, puzzle=None):
     """
     Create a Notification for ``user`` and immediately broadcast it via
     Channels to the user's notification WebSocket group.
-
-    This is the single entry point used everywhere a notification should
-    be visible to the user — bot progression, challenge accepted, etc.
-    Re-using this avoids the common bug of creating a DB notification
-    but forgetting to push it to the frontend.
-
-    ``group_send`` is best-effort: if the channel layer or the WebSocket
-    is unavailable the DB row still persists and will be delivered by the
-    HTTP fallback in notifications.js.
     """
     from apps.notifications.models import Notification
     from asgiref.sync import async_to_sync
@@ -30,8 +21,11 @@ def send_notification(user, message, game=None):
 
     notification = Notification.objects.create(
         user=user,
+        type=notif_type,
+        title=title,
         message=message,
         game=game,
+        puzzle=puzzle,
     )
 
     notif_payload = {

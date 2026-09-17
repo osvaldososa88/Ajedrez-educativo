@@ -90,8 +90,10 @@ def accept_challenge(request, challenge_id):
     challenge.save()
 
     send_notification(
-        challenge.sender,
-        f"¡{challenge.receiver.username} aceptó tu desafío! La partida ha comenzado.",
+        user=challenge.sender,
+        message=f"¡{challenge.receiver.username} aceptó tu desafío! La partida ha comenzado.",
+        title="¡Desafío Aceptado!",
+        notif_type="challenge_accepted",
         game=game,
     )
 

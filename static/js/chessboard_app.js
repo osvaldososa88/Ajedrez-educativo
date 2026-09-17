@@ -58,47 +58,81 @@ class ChessboardApp {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/ws/game/${GAME_ID}/`;
 
-        this.socket = new WebSocket(wsUrl);
+        this.reconnectAttempts = 0;
+        this.pingInterval = null;
 
-        this.socket.onopen = () => {
-            const statusEl = document.getElementById('connection-status');
-            if (statusEl) {
-                statusEl.textContent = 'En línea';
-                statusEl.classList.add('online');
-                statusEl.classList.remove('offline');
+        const connect = () => {
+            if (this.socket && (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN)) {
+                return;
             }
-        };
 
-        this.socket.onclose = () => {
-            const statusEl = document.getElementById('connection-status');
-            if (statusEl) {
-                statusEl.textContent = 'Desconectado';
-                statusEl.classList.add('offline');
-                statusEl.classList.remove('online');
-            }
-        };
+            this.socket = new WebSocket(wsUrl);
 
-        this.socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'init_state' || data.type === 'game_update') {
-                this.updateGameState(data.state);
-            } else if (data.type === 'error') {
-                alert(data.message);
-            } else if (data.type === 'draw_offer') {
-                if (data.offered_by !== USER_NAME) {
-                    const banner = document.getElementById('draw-offer-banner');
-                    const textEl = document.getElementById('draw-offer-text');
-                    if (banner && textEl) {
-                        textEl.textContent = `${data.offered_by} te ofrece tablas`;
-                        banner.style.display = 'block';
-                    }
+            this.socket.onopen = () => {
+                this.reconnectAttempts = 0;
+                const statusEl = document.getElementById('connection-status');
+                if (statusEl) {
+                    statusEl.textContent = 'En línea';
+                    statusEl.classList.add('online');
+                    statusEl.classList.remove('offline');
                 }
-            } else if (data.type === 'chat_message') {
-                if (window.handleChatMessage) window.handleChatMessage(data);
-            } else if (data.type === 'chat_history') {
-                if (window.handleChatHistory) window.handleChatHistory(data);
-            }
+
+                // Heartbeat ping every 25 seconds to keep Nginx/Daphne connection alive
+                if (this.pingInterval) clearInterval(this.pingInterval);
+                this.pingInterval = setInterval(() => {
+                    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                        this.socket.send(JSON.stringify({ type: 'ping' }));
+                    }
+                }, 25000);
+            };
+
+            this.socket.onclose = () => {
+                if (this.pingInterval) clearInterval(this.pingInterval);
+                const statusEl = document.getElementById('connection-status');
+                if (statusEl) {
+                    statusEl.textContent = 'Reconectando...';
+                    statusEl.classList.add('offline');
+                    statusEl.classList.remove('online');
+                }
+
+                // Auto-reconnect with backoff (1s, 2s, 3s...)
+                this.reconnectAttempts++;
+                const delay = Math.min(10000, 1000 * Math.pow(1.5, this.reconnectAttempts));
+                setTimeout(() => connect(), delay);
+            };
+
+            this.socket.onerror = () => {
+                try {
+                    if (this.socket) this.socket.close();
+                } catch (e) {}
+            };
+
+            this.socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'pong') {
+                    return; // Heartbeat response
+                } else if (data.type === 'init_state' || data.type === 'game_update') {
+                    this.updateGameState(data.state);
+                } else if (data.type === 'error') {
+                    alert(data.message);
+                } else if (data.type === 'draw_offer') {
+                    if (data.offered_by !== USER_NAME) {
+                        const banner = document.getElementById('draw-offer-banner');
+                        const textEl = document.getElementById('draw-offer-text');
+                        if (banner && textEl) {
+                            textEl.textContent = `${data.offered_by} te ofrece tablas`;
+                            banner.style.display = 'block';
+                        }
+                    }
+                } else if (data.type === 'chat_message') {
+                    if (window.handleChatMessage) window.handleChatMessage(data);
+                } else if (data.type === 'chat_history') {
+                    if (window.handleChatHistory) window.handleChatHistory(data);
+                }
+            };
         };
+
+        connect();
     }
 
     initEvents() {

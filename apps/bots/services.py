@@ -302,29 +302,37 @@ class BotService:
                 progress.save(update_fields=['unlocked', 'defeated', 'defeated_at', 'updated_at'])
 
             result.update({'handled': True, 'first_defeat': first_defeat})
-            if not first_defeat:
-                return result
 
             # Unlock the next ACTIVE bot in this category (skips deactivated).
             nxt = cls.next_active_bot(bot)
             if nxt:
-                BotProgress.objects.update_or_create(
-                    user=human, bot=nxt, defaults={'unlocked': True},
+                p_nxt, nxt_created = BotProgress.objects.get_or_create(
+                    user=human, bot=nxt, defaults={'unlocked': True}
                 )
-                send_notification(
-                    human,
-                    f"🏆 ¡Le ganaste a {bot.display_name} ({bot.displayed_elo})! "
-                    f"Desbloqueaste a {nxt.display_name} ({nxt.displayed_elo}).",
-                    game=game,
-                )
+                if not p_nxt.unlocked:
+                    p_nxt.unlocked = True
+                    p_nxt.save(update_fields=['unlocked', 'updated_at'])
+
+                if first_defeat or nxt_created:
+                    send_notification(
+                        user=human,
+                        message=f"🏆 ¡Le ganaste a {bot.display_name} ({bot.displayed_elo})! "
+                                f"Desbloqueaste a {nxt.display_name} ({nxt.displayed_elo}).",
+                        title="¡Bot Desbloqueado!",
+                        notif_type="bot_unlocked",
+                        game=game,
+                    )
                 result['unlocked'] = nxt.display_name
             else:
-                send_notification(
-                    human,
-                    f"👑 ¡Completaste todos los bots de nivel "
-                    f"{bot.get_category_display()} derrotando a {bot.display_name}!",
-                    game=game,
-                )
+                if first_defeat:
+                    send_notification(
+                        user=human,
+                        message=f"👑 ¡Completaste todos los bots de nivel "
+                                f"{bot.get_category_display()} derrotando a {bot.display_name}!",
+                        title="¡Nivel Completado!",
+                        notif_type="bot_category_completed",
+                        game=game,
+                    )
         return result
 
     # --- Stats ---------------------------------------------------------------------
