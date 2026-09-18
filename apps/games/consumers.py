@@ -6,7 +6,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
 from apps.core.chess_engine import ChessEngine
-from .models import Game, Move, Challenge, ChatMessage, GlobalChatMessage
+from .models import Game, Move, Challenge, ChatMessage, GlobalChatMessage, TakebackRequest
 from apps.ratings.services import RatingService
 from apps.bots.services import BotService
 import chess
@@ -75,7 +75,15 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, content):
         msg_type = content.get('type')
 
-        if msg_type == 'ping':
+        if msg_type == 'undo':
+            await self.handle_undo()
+        elif msg_type == 'accept_undo':
+            request_id = content.get('request_id')
+            await self.handle_accept_undo(request_id)
+        elif msg_type == 'reject_undo':
+            request_id = content.get('request_id')
+            await self.handle_reject_undo(request_id)
+        elif msg_type == 'ping':
             await self.send_json({'type': 'pong'})
             return
 
@@ -95,10 +103,10 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 await self.handle_send_chat(message)
         elif msg_type == 'get_chat_history':
             await self.handle_get_chat_history()
-        elif msg_type == 'takeback':
-            await self.handle_takeback()
 
     async def handle_make_move(self, uci: str):
+        # existing code remains unchanged
+
         # Perform move validation and execution in DB transaction / sync context
         result = await self.process_move(self.user.id, self.game_id, uci)
 
@@ -357,9 +365,9 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             'rating_changes': rating_result['changes'],
             'pgn': game.generate_pgn(),
             'vs_bot': game.vs_bot,
-            'takebacks_left': getattr(game, 'takebacks_left', 7),
-            'max_takebacks': getattr(game, 'max_takebacks', 7),
-            'visual_delay_ms': visual_delay_ms
+            'visual_delay_ms': visual_delay_ms,
+            'takebacks_left': game.takebacks_left,
+            'max_takebacks': game.max_takebacks,
         }
 
 
@@ -588,68 +596,6 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             }
         }
 
-    async def handle_takeback(self):
-        result = await self.process_takeback(self.user.id, self.game_id)
-        if not result['success']:
-            await self.send_json({
-                'type': 'error',
-                'message': result.get('message', 'No se pudo deshacer la jugada.')
-            })
-            return
-
-        state = await self.build_game_state_payload()
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'broadcast_game_update',
-                'state': state
-            }
-        )
-
-    @database_sync_to_async
-    def process_takeback(self, user_id, game_id):
-        try:
-            game = Game.objects.get(id=game_id)
-        except Game.DoesNotExist:
-            return {'success': False, 'message': 'Partida no encontrada.'}
-
-        if not game.vs_bot or game.status != Game.Status.IN_PROGRESS:
-            return {'success': False, 'message': 'La opción Deshacer solo está disponible en partidas de entrenamiento vs Bot.'}
-
-        if game.takebacks_left <= 0:
-            return {'success': False, 'message': 'Ya no te quedan vidas para retroceder jugadas en esta partida.'}
-
-        moves = list(game.moves.order_by('ply'))
-        if not moves:
-            return {'success': False, 'message': 'Aún no se han realizado movimientos.'}
-
-        # If last move was made by bot and preceding by human -> pop 2
-        # If last move was made by human -> pop 1
-        human_id = user_id
-        last_move = moves[-1]
-
-        if len(moves) >= 2 and last_move.player_id != human_id:
-            to_delete = moves[-2:]
-        else:
-            to_delete = [last_move]
-
-        for m in to_delete:
-            m.delete()
-
-        remaining = list(game.moves.order_by('ply'))
-        if remaining:
-            game.fen_current = remaining[-1].fen_after
-            last_ply = remaining[-1].ply
-            game.turn = Game.Turn.BLACK if (last_ply % 2 == 1) else Game.Turn.WHITE
-        else:
-            game.fen_current = chess.STARTING_FEN
-            game.turn = Game.Turn.WHITE
-
-        game.takebacks_left = max(0, game.takebacks_left - 1)
-        game.pgn_history = game.generate_pgn()
-        game.save()
-
-        return {'success': True}
 
 
 class NotificationConsumer(AsyncJsonWebsocketConsumer):
@@ -833,3 +779,130 @@ class GlobalChatConsumer(AsyncJsonWebsocketConsumer):
             }
             for m in messages
         ]
+
+    # --- Takeback (undo) handling -------------------------------------------------
+    async def handle_undo(self):
+        """Handle undo request from the client.
+        Bot games: immediate double undo (player + bot).
+        PvP games: create a TakebackRequest and notify the opponent.
+        """
+        game = await self.get_game(self.game_id)
+        if not game:
+            return
+        if not game.vs_bot:
+            # PvP: create request
+            request = await self.create_takeback_request(game.id, self.user.id)
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'broadcast_takeback_request',
+                    'request_id': str(request.id),
+                    'requester': self.user.username,
+                }
+            )
+        else:
+            # Bot game: undo player move and bot move if possible
+            if not game.can_takeback(self.user.id):
+                await self.send_json({'type': 'error', 'message': 'No quedan deshacer.'})
+                return
+            success, error = await self.apply_takeback_sync(game.id)
+            if not success:
+                await self.send_json({'type': 'error', 'message': error})
+                return
+            # Refresh game after first undo
+            game = await self.get_game(self.game_id)
+            # Undo bot move (if still possible)
+            if game.vs_bot and game.can_takeback(self.user.id):
+                success, error = await self.apply_takeback_sync(game.id)
+                if not success:
+                    await self.send_json({'type': 'error', 'message': error})
+                    return
+            # Broadcast updated state
+            state = await self.build_game_state_payload()
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {'type': 'broadcast_game_update', 'state': state}
+            )
+
+    async def handle_accept_undo(self, request_id):
+        """Opponent accepts a takeback request."""
+        request = await self.get_takeback_request(request_id)
+        if not request or request.status != TakebackRequest.Status.PENDING:
+            return
+        # Only opponent can accept
+        if request.requester.id == self.user.id:
+            await self.send_json({'type': 'error', 'message': 'No puedes aceptar tu propia solicitud.'})
+            return
+        # Apply a single undo
+        game = await self.get_game(request.game.id)
+        if not game.can_takeback(self.user.id):
+            await self.send_json({'type': 'error', 'message': 'No quedan deshacer.'})
+            return
+        success, error = await self.apply_takeback_sync(game.id)
+        if not success:
+            await self.send_json({'type': 'error', 'message': error})
+            return
+        # Mark request accepted
+        await self.set_takeback_status(request.id, TakebackRequest.Status.ACCEPTED)
+        # Broadcast updated state
+        state = await self.build_game_state_payload()
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {'type': 'broadcast_game_update', 'state': state}
+        )
+
+    async def handle_reject_undo(self, request_id):
+        """Opponent rejects a takeback request."""
+        request = await self.get_takeback_request(request_id)
+        if not request or request.status != TakebackRequest.Status.PENDING:
+            return
+        if request.requester.id == self.user.id:
+            await self.send_json({'type': 'error', 'message': 'No puedes rechazar tu propia solicitud.'})
+            return
+        await self.set_takeback_status(request.id, TakebackRequest.Status.REJECTED)
+        # Notify requester
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'takeback_rejected',
+                'request_id': str(request.id),
+            }
+        )
+
+    async def broadcast_takeback_request(self, event):
+        """Send takeback request to the opponent client."""
+        await self.send_json({
+            'type': 'takeback_request',
+            'request_id': event['request_id'],
+            'requester': event['requester'],
+        })
+
+    async def takeback_rejected(self, event):
+        """Notify the requester that the takeback was rejected."""
+        await self.send_json({
+            'type': 'takeback_rejected',
+            'request_id': event['request_id'],
+        })
+
+    # --- DB sync helpers -------------------------------------------------------
+    @database_sync_to_async
+    def create_takeback_request(self, game_id, requester_id):
+        game = Game.objects.get(id=game_id)
+        requester = game.white_player if game.white_player.id == requester_id else game.black_player
+        return TakebackRequest.objects.create(game=game, requester=requester)
+
+    @database_sync_to_async
+    def get_takeback_request(self, request_id):
+        try:
+            return TakebackRequest.objects.get(id=request_id)
+        except TakebackRequest.DoesNotExist:
+            return None
+
+    @database_sync_to_async
+    def set_takeback_status(self, request_id, status):
+        TakebackRequest.objects.filter(id=request_id).update(status=status)
+
+    @database_sync_to_async
+    def apply_takeback_sync(self, game_id):
+        game = Game.objects.get(id=game_id)
+        return game.apply_takeback()

@@ -175,12 +175,6 @@ class BotService:
         else:
             white_player, black_player = bot.user, user
 
-        max_takebacks = 7
-        if bot.category == Bot.Category.INTERMEDIATE:
-            max_takebacks = 5
-        elif bot.category == Bot.Category.ADVANCED:
-            max_takebacks = 3
-
         # Bot games are untimed (the clock never starts for them; see
         # GameConsumer.process_move), thinking time is unlimited by design.
         time_ms = 10 * 60 * 1000
@@ -194,8 +188,8 @@ class BotService:
             status=Game.Status.IN_PROGRESS,
             is_competitive=False,  # never affects the competitive ELO
             vs_bot=True,
-            takebacks_left=max_takebacks,
-            max_takebacks=max_takebacks,
+            max_takebacks=7,
+            takebacks_left=7,
         )
 
     # --- Bot replies ----------------------------------------------------------

@@ -73,18 +73,13 @@
                         🤝 Tablas
                     </button>
                     {% endif %}
-             </div>
-            {% endif %}
-
-            {% if is_player and game.vs_bot %}
-                <div id="takeback-container" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem; text-align: center;">
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem; font-weight: 600;">Vidas para retroceder:</div>
-                    <div id="hearts-display" style="font-size: 1.25rem; margin-bottom: 0.4rem; letter-spacing: 2px;">
-                        <!-- Dynamically painted or initial hearts -->
-                    </div>
-                    <button id="btn-takeback" class="btn btn-secondary" style="width: 100%; font-size: 0.85rem; border-color: rgba(239, 68, 68, 0.5); color: #ef4444;">
-                        ↩️ Deshacer Jugada (<span id="takebacks-count">{{ game.takebacks_left }}</span>)
+                </div>
+                <!-- Undo button with heart icons -->
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem;">
+                    <button id="btn-undo" class="btn btn-secondary" style="flex: 1; font-size: 0.85rem;">
+                        ↩️ Deshacer
                     </button>
+                    <div id="takeback-hearts" style="display: flex; gap: 2px; align-items: center;" title="Deshacer restantes"></div>
                 </div>
             {% endif %}
 
@@ -191,6 +186,22 @@
 
     </div>
 </div>
+
+<!-- Takeback Request Modal (PvP) -->
+<div id="takeback-request-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content" style="text-align: center;">
+        <h3>↩️ Solicitud de Deshacer</h3>
+        <p id="takeback-request-text" style="margin: 1rem 0; font-size: 1rem; color: var(--text-secondary);">Tu rival quiere deshacer su último movimiento.</p>
+        <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem;">
+            <button id="btn-accept-takeback" class="btn btn-primary" style="font-size: 0.9rem;">
+                ✅ Aceptar
+            </button>
+            <button id="btn-reject-takeback" class="btn btn-danger" style="font-size: 0.9rem;">
+                ❌ Rechazar
+            </button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -200,6 +211,8 @@
     const USER_NAME = "{{ request.user.username }}";
     const PLAYER_COLOR = "{{ player_color }}"; // 'white', 'black', or 'spectator'
     const INITIAL_FEN = "{{ game.fen_current }}";
+    const IS_PLAYER = {{ is_player|yesno:'true,false' }};
+    const VS_BOT = {{ game.vs_bot|yesno:'true,false' }};
 </script>
 <script src="{% static 'js/chat.js' %}"></script>
 <script src="{% static 'js/chessboard_app.js' %}"></script>

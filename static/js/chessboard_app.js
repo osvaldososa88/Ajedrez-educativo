@@ -77,27 +77,27 @@ class ChessboardApp {
                     statusEl.classList.remove('offline');
                 }
 
-                // Heartbeat ping every 5 seconds to keep Nginx/Daphne connection alive
+                // Heartbeat ping every 25 seconds to keep Nginx/Daphne connection alive
                 if (this.pingInterval) clearInterval(this.pingInterval);
                 this.pingInterval = setInterval(() => {
                     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
                         this.socket.send(JSON.stringify({ type: 'ping' }));
                     }
-                }, 5000);
+                }, 25000);
             };
 
             this.socket.onclose = () => {
                 if (this.pingInterval) clearInterval(this.pingInterval);
                 const statusEl = document.getElementById('connection-status');
                 if (statusEl) {
-                    statusEl.textContent = '⚠️ Reconectando...';
+                    statusEl.textContent = 'Reconectando...';
                     statusEl.classList.add('offline');
                     statusEl.classList.remove('online');
                 }
 
-                // Fast auto-reconnect with short backoff (500ms, 1s, 2s...)
+                // Auto-reconnect with backoff (1s, 2s, 3s...)
                 this.reconnectAttempts++;
-                const delay = Math.min(3000, 500 * Math.pow(1.3, this.reconnectAttempts));
+                const delay = Math.min(10000, 1000 * Math.pow(1.5, this.reconnectAttempts));
                 setTimeout(() => connect(), delay);
             };
 
@@ -128,21 +128,27 @@ class ChessboardApp {
                     if (window.handleChatMessage) window.handleChatMessage(data);
                 } else if (data.type === 'chat_history') {
                     if (window.handleChatHistory) window.handleChatHistory(data);
+                } else if (data.type === 'takeback_request') {
+                    // PvP: opponent is asking to undo
+                    if (data.requester !== USER_NAME) {
+                        this.pendingTakebackRequestId = data.request_id;
+                        const modal = document.getElementById('takeback-request-modal');
+                        const textEl = document.getElementById('takeback-request-text');
+                        if (modal && textEl) {
+                            textEl.textContent = `${data.requester} quiere deshacer su último movimiento.`;
+                            modal.style.display = 'flex';
+                        }
+                    }
+                } else if (data.type === 'takeback_rejected') {
+                    alert('Tu solicitud de deshacer fue rechazada.');
                 }
             };
         };
 
         connect();
-    initEvents() {
-        const takebackBtn = document.getElementById('btn-takeback');
-        if (takebackBtn) {
-            takebackBtn.addEventListener('click', () => {
-                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                    this.socket.send(JSON.stringify({ type: 'takeback' }));
-                }
-            });
-        }
+    }
 
+    initEvents() {
         const resignBtn = document.getElementById('btn-resign');
         if (resignBtn) {
             resignBtn.addEventListener('click', () => {
@@ -188,6 +194,40 @@ class ChessboardApp {
                 }
             });
         });
+
+        // --- Undo button ---
+        const undoBtn = document.getElementById('btn-undo');
+        if (undoBtn) {
+            undoBtn.addEventListener('click', () => {
+                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                    this.socket.send(JSON.stringify({ type: 'undo' }));
+                }
+            });
+        }
+
+        // --- PvP Takeback Accept/Reject ---
+        const acceptTakebackBtn = document.getElementById('btn-accept-takeback');
+        if (acceptTakebackBtn) {
+            acceptTakebackBtn.addEventListener('click', () => {
+                if (this.pendingTakebackRequestId && this.socket && this.socket.readyState === WebSocket.OPEN) {
+                    this.socket.send(JSON.stringify({ type: 'accept_undo', request_id: this.pendingTakebackRequestId }));
+                }
+                const modal = document.getElementById('takeback-request-modal');
+                if (modal) modal.style.display = 'none';
+                this.pendingTakebackRequestId = null;
+            });
+        }
+        const rejectTakebackBtn = document.getElementById('btn-reject-takeback');
+        if (rejectTakebackBtn) {
+            rejectTakebackBtn.addEventListener('click', () => {
+                if (this.pendingTakebackRequestId && this.socket && this.socket.readyState === WebSocket.OPEN) {
+                    this.socket.send(JSON.stringify({ type: 'reject_undo', request_id: this.pendingTakebackRequestId }));
+                }
+                const modal = document.getElementById('takeback-request-modal');
+                if (modal) modal.style.display = 'none';
+                this.pendingTakebackRequestId = null;
+            });
+        }
     }
 
     lastMoveUci(state) {
@@ -449,47 +489,13 @@ class ChessboardApp {
             }
             historyEl.scrollTop = historyEl.scrollHeight;
         }
-        // Update takebacks / hearts UI for bot games
-        if (this.gameState && this.gameState.vs_bot) {
-            const heartsEl = document.getElementById('hearts-display');
-            const takebacksCountEl = document.getElementById('takebacks-count');
-            const takebackBtn = document.getElementById('btn-takeback');
-            const remaining = (this.gameState.takebacks_left !== undefined) ? this.gameState.takebacks_left : 7;
-            const maxTakebacks = (this.gameState.max_takebacks !== undefined) ? this.gameState.max_takebacks : 7;
 
-            if (heartsEl) {
-                let heartsHtml = '';
-                for (let i = 0; i < maxTakebacks; i++) {
-                    if (i < remaining) {
-                        heartsHtml += '❤️';
-                    } else {
-                        heartsHtml += '🖤';
-                    }
-                }
-                heartsEl.innerHTML = heartsHtml || '💔 Sin deslices';
-            }
-            if (takebacksCountEl) takebacksCountEl.textContent = remaining;
-            if (takebackBtn) {
-                takebackBtn.disabled = (remaining <= 0 || this.gameState.status !== 'IN_PROGRESS');
-            }
-        }
+        // Update hearts & undo button state
+        this.updateHearts();
     }
 
     updateTimers() {
         if (this.timerInterval) clearInterval(this.timerInterval);
-
-        const bottomTimer = document.getElementById('bottom-timer');
-        const topTimer = document.getElementById('top-timer');
-
-        if (this.gameState && this.gameState.vs_bot) {
-            if (bottomTimer && topTimer) {
-                bottomTimer.textContent = '♾️ Sin tiempo';
-                topTimer.textContent = '♾️ Sin tiempo';
-                bottomTimer.classList.remove('active', 'low');
-                topTimer.classList.remove('active', 'low');
-            }
-            return;
-        }
 
         const formatTime = (ms) => {
             const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -499,6 +505,8 @@ class ChessboardApp {
         };
 
         const isWhite = (PLAYER_COLOR === 'white');
+        const bottomTimer = document.getElementById('bottom-timer');
+        const topTimer = document.getElementById('top-timer');
 
         if (bottomTimer && topTimer) {
             let whiteTime = this.gameState.white_time_left_ms;
@@ -554,6 +562,50 @@ class ChessboardApp {
         titleEl.textContent = resultText;
         reasonEl.textContent = `Motivo: ${state.finish_reason || 'Finalizada'}`;
         modal.style.display = 'flex';
+    }
+
+    updateHearts() {
+        const container = document.getElementById('takeback-hearts');
+        const undoBtn = document.getElementById('btn-undo');
+        if (!container) return;
+
+        const left = (this.gameState && this.gameState.takebacks_left != null) ? this.gameState.takebacks_left : 0;
+        const max = (this.gameState && this.gameState.max_takebacks != null) ? this.gameState.max_takebacks : 7;
+        const isFinished = this.gameState && (this.gameState.status === 'FINISHED' || this.gameState.status === 'ABANDONED');
+
+        // Disable button if no takebacks left or game is over
+        if (undoBtn) {
+            undoBtn.disabled = (left <= 0 || isFinished);
+            undoBtn.title = left <= 0 ? 'No quedan deshacer disponibles' : `Deshacer (${left} restantes)`;
+        }
+
+        container.innerHTML = '';
+        for (let i = 0; i < max; i++) {
+            const heart = document.createElement('span');
+            heart.style.fontSize = '1.1rem';
+            heart.style.lineHeight = '1';
+            heart.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+            if (i < left) {
+                // Full heart
+                if (left >= 5) {
+                    // Red full heart - plenty left
+                    heart.textContent = '❤️';
+                    heart.style.filter = 'none';
+                } else if (left >= 2) {
+                    // Orange heart - getting low
+                    heart.textContent = '🧡';
+                } else {
+                    // Last one - red but pulsing
+                    heart.textContent = '❤️';
+                    heart.style.animation = 'pulse-heart 1s infinite';
+                }
+            } else {
+                // Empty/used heart - gray
+                heart.textContent = '🤍';
+                heart.style.opacity = '0.35';
+            }
+            container.appendChild(heart);
+        }
     }
 }
 

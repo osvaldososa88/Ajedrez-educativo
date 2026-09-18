@@ -87,13 +87,11 @@ class Game(models.Model):
     # Human vs Bot games without extra joins. The authoritative source of truth
     # is the Bot.user link; this flag never changes after creation.
     vs_bot = models.BooleanField(default=False, db_index=True)
-    takebacks_left = models.PositiveSmallIntegerField(default=7, verbose_name="Deshacer jugadas restantes")
-    max_takebacks = models.PositiveSmallIntegerField(default=7, verbose_name="Límite máximo de deshacer jugadas")
     share_token = models.UUIDField(default=uuid.uuid4, editable=False)
     is_public = models.BooleanField(default=False)
-
-
-
+    # Nuevo límite de deshacer jugadas y contador restante
+    max_takebacks = models.PositiveSmallIntegerField(default=7, verbose_name='Límite máximo de deshacer jugadas')
+    takebacks_left = models.PositiveSmallIntegerField(default=7, verbose_name='Deshacer jugadas restantes')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -124,6 +122,47 @@ class Game(models.Model):
 
         if games_to_delete:
             cls.objects.filter(id__in=games_to_delete).delete()
+
+
+    def can_takeback(self, user_id):
+        """Return True if the given user can request a takeback.
+        Conditions:
+        - Game is in progress.
+        - takebacks_left > 0.
+        - User is either white or black player.
+        """
+        if self.status != self.Status.IN_PROGRESS:
+            return False
+        if self.takebacks_left <= 0:
+            return False
+        return user_id in [self.white_player.id, self.black_player.id]
+
+    def apply_takeback(self):
+        """Revert the last move.
+        Updates fen, turn, clocks, decrements takebacks_left and deletes the last Move.
+        Returns a tuple (success: bool, error_message: str|None).
+        """
+        last_move = self.moves.order_by('-ply').first()
+        if not last_move:
+            return False, "No moves to undo."
+        # Determine previous fen
+        prev_move = self.moves.filter(ply__lt=last_move.ply).order_by('-ply').first()
+        self.fen_current = prev_move.fen_after if prev_move else chess.STARTING_FEN
+        # Switch turn back to the player who made the undone move
+        self.turn = self.Turn.WHITE if last_move.player == self.white_player else self.Turn.BLACK
+        # Revert time increment added after the move
+        inc_ms = self.time_control_increment * 1000
+        if self.turn == self.Turn.WHITE:
+            self.white_time_left_ms = max(self.white_time_left_ms - inc_ms, 0)
+        else:
+            self.black_time_left_ms = max(self.black_time_left_ms - inc_ms, 0)
+        # Delete the undone move
+        last_move.delete()
+        # Decrement takebacks
+        self.takebacks_left = max(self.takebacks_left - 1, 0)
+        self.last_move_at = timezone.now()
+        self.save()
+        return True, None
 
     def __str__(self):
         return f"Partida {self.id.hex[:8]} - {self.white_player.username} vs {self.black_player.username}"
@@ -185,6 +224,24 @@ class Game(models.Model):
     @property
     def black_display_name(self):
         return self.black_player.display_name
+
+
+# ---------------------------------------------------------------------
+# Takeback request model
+# ---------------------------------------------------------------------
+class TakebackRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Pendiente'
+        ACCEPTED = 'ACCEPTED', 'Aceptado'
+        REJECTED = 'REJECTED', 'Rechazado'
+
+    game = models.ForeignKey('Game', on_delete=models.CASCADE, related_name='takeback_requests')
+    requester = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+
+    def __str__(self):
+        return f"Takeback request by {self.requester.username} for game {self.game.id.hex[:8]} - {self.status}"
 
 
 class ChatMessage(models.Model):
