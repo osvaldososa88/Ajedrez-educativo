@@ -25,23 +25,45 @@ class BotService:
 
     @staticmethod
     def is_bot_user(user) -> bool:
-        return bool(user and getattr(user, 'is_authenticated', False) and user.is_bot_account)
+        if not user or not getattr(user, 'is_authenticated', False):
+            return False
+        if getattr(user, 'is_bot_account', False):
+            return True
+        from apps.bots.models import Bot
+        try:
+            return hasattr(user, 'bot_profile') and user.bot_profile is not None
+        except Bot.DoesNotExist:
+            return Bot.objects.filter(user=user).exists()
 
     @staticmethod
     def bot_for_user(user):
         if not user:
             return None
+        from apps.bots.models import Bot
         try:
-            return user.bot_profile
+            return getattr(user, 'bot_profile', None)
         except Bot.DoesNotExist:
-            return None
+            return Bot.objects.filter(user=user).first()
 
     @staticmethod
     def human_player(game: Game):
         """The human player of a bot game (None if not a bot game)."""
-        if game.white_player.is_bot_account:
+        if not game.vs_bot:
+            return None
+
+        white_is_bot = BotService.is_bot_user(game.white_player)
+        black_is_bot = BotService.is_bot_user(game.black_player)
+
+        if white_is_bot and not black_is_bot:
             return game.black_player
-        if game.black_player.is_bot_account:
+        if black_is_bot and not white_is_bot:
+            return game.white_player
+
+        # Fallback: check Bot model association directly
+        from apps.bots.models import Bot
+        if Bot.objects.filter(user=game.white_player).exists():
+            return game.black_player
+        if Bot.objects.filter(user=game.black_player).exists():
             return game.white_player
         return None
 
@@ -51,17 +73,30 @@ class BotService:
         if not game.vs_bot:
             return None
         from apps.bots.models import Bot
-        if game.white_player.is_bot_account:
+        from django.db.models import Q
+
+        # Check white player
+        if BotService.is_bot_user(game.white_player):
             try:
-                return game.white_player.bot_profile
+                b = getattr(game.white_player, 'bot_profile', None)
+                if b:
+                    return b
             except Bot.DoesNotExist:
-                return None
-        if game.black_player.is_bot_account:
+                pass
+
+        # Check black player
+        if BotService.is_bot_user(game.black_player):
             try:
-                return game.black_player.bot_profile
+                b = getattr(game.black_player, 'bot_profile', None)
+                if b:
+                    return b
             except Bot.DoesNotExist:
-                return None
-        return None
+                pass
+
+        # Direct DB lookup as fallback
+        return Bot.objects.filter(
+            Q(user=game.white_player) | Q(user=game.black_player)
+        ).first()
 
     # --- Progression -----------------------------------------------------------
 
@@ -72,9 +107,15 @@ class BotService:
     @staticmethod
     def next_active_bot(bot: Bot):
         """Next ACTIVE bot in the same category after `bot` (skips deactivated ones)."""
-        return Bot.objects.filter(
-            category=bot.category, is_active=True, order__gt=bot.order,
+        nxt = Bot.objects.filter(
+            category=bot.category, is_active=True, order__gt=bot.order
         ).order_by('order', 'pk').first()
+        if nxt:
+            return nxt
+        # Fallback if order values are duplicate or equal: use primary key ordering
+        return Bot.objects.filter(
+            category=bot.category, is_active=True, pk__gt=bot.pk
+        ).exclude(pk=bot.pk).order_by('order', 'pk').first()
 
     @staticmethod
     def is_bot_unlocked(user, bot: Bot) -> bool:
@@ -90,11 +131,25 @@ class BotService:
         return BotProgress.objects.filter(user=user, bot=bot, unlocked=True).exists()
 
     @classmethod
+    def sync_bot_user_roles(cls):
+        """Utility to ensure all linked user accounts for bots have role=BOT."""
+        from apps.bots.models import Bot
+        from apps.accounts.models import CustomUser
+        try:
+            for bot in Bot.objects.select_related('user').all():
+                if bot.user and bot.user.role != CustomUser.Role.BOT:
+                    bot.user.role = CustomUser.Role.BOT
+                    bot.user.save(update_fields=['role'])
+        except Exception:
+            pass
+
+    @classmethod
     def bot_states_for_user(cls, user, category: str = None):
         """
         Efficient listing: 1 query for bots (+profile) + 1 for progress rows.
         Returns {bot_id: {'unlocked': bool, 'defeated': bool}}.
         """
+        cls.sync_bot_user_roles()
         bots = Bot.objects.filter(is_active=True).select_related('profile')
         if category:
             bots = bots.filter(category=category)
@@ -266,42 +321,53 @@ class BotService:
         result = {'handled': False}
         if not game.vs_bot:
             return result
-        if game.status == Game.Status.IN_PROGRESS or game.winner is None:
+
+        try:
+            game.refresh_from_db()
+        except Exception:
+            pass
+
+        if game.status == Game.Status.IN_PROGRESS or not game.winner:
             return result
 
         human = cls.human_player(game)
         if human is None:
             return result
-        bot_user = game.black_player if game.white_player_id == human.id else game.white_player
-        if not bot_user.is_bot_account:
+
+        bot = cls.bot_for_game(game)
+        if bot is None:
             return result
 
-        try:
-            bot = bot_user.bot_profile
-        except Bot.DoesNotExist:
-            return result
+        # Ensure bot user role is synchronized to BOT
+        if bot.user and getattr(bot.user, 'role', None) != bot.user.Role.BOT:
+            bot.user.role = bot.user.Role.BOT
+            try:
+                bot.user.save(update_fields=['role'])
+            except Exception:
+                pass
 
+        winner_str = str(game.winner).upper()
         human_is_winner = (
-            (game.winner == Game.Winner.WHITE and game.white_player_id == human.id) or
-            (game.winner == Game.Winner.BLACK and game.black_player_id == human.id)
+            (winner_str == 'WHITE' and game.white_player_id == human.id) or
+            (winner_str == 'BLACK' and game.black_player_id == human.id)
         )
         if not human_is_winner:
             return result
 
         from apps.games.services import send_notification
-        
+
         with transaction.atomic():
             progress, created = BotProgress.objects.get_or_create(
                 user=human, bot=bot,
                 defaults={'unlocked': True, 'defeated': True, 'defeated_at': timezone.now()},
             )
             first_defeat = created or not progress.defeated
-            if not created:
+            if not created or not progress.defeated or not progress.unlocked:
                 progress.unlocked = True
                 progress.defeated = True
                 if progress.defeated_at is None:
                     progress.defeated_at = timezone.now()
-                progress.save(update_fields=['unlocked', 'defeated', 'defeated_at', 'updated_at'])
+                progress.save()
 
             result.update({'handled': True, 'first_defeat': first_defeat})
 
@@ -313,7 +379,7 @@ class BotService:
                 )
                 if not p_nxt.unlocked:
                     p_nxt.unlocked = True
-                    p_nxt.save(update_fields=['unlocked', 'updated_at'])
+                    p_nxt.save()
 
                 if first_defeat or nxt_created:
                     send_notification(
