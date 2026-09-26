@@ -128,6 +128,13 @@ class GameDetailView(LoginRequiredMixin, DetailView):
         context['player_color'] = 'white' if is_white else ('black' if is_black else 'spectator')
         context['moves'] = game.moves.order_by('ply')
         context['is_favorite'] = GameFavorite.objects.filter(user=user, game=game).exists()
+
+        if game.vs_bot:
+            from apps.bots.services import BotService
+            context['bot'] = BotService.bot_for_game(game)
+        elif is_player:
+            context['opponent'] = game.black_player if is_white else game.white_player
+
         return context
 
 @login_required

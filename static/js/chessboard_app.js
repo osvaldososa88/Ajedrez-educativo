@@ -245,7 +245,7 @@ class ChessboardApp {
     updateGameState(state) {
         const prevFen = this.gameState && this.gameState.fen;
         const prevHistoryLen = (this.gameState && this.gameState.moves_history) ? this.gameState.moves_history.length : 0;
-        this.gameState = state;
+        this.gameState = { ...(this.gameState || {}), ...state };
 
         const newHistoryLen = (state.moves_history || []).length;
         if (this.historyIndex === null || this.historyIndex === prevHistoryLen) {
@@ -569,7 +569,7 @@ class ChessboardApp {
         const undoBtn = document.getElementById('btn-undo');
         if (!container) return;
 
-        const left = (this.gameState && this.gameState.takebacks_left != null) ? this.gameState.takebacks_left : 0;
+        const left = (this.gameState && this.gameState.takebacks_left != null) ? this.gameState.takebacks_left : 7;
         const max = (this.gameState && this.gameState.max_takebacks != null) ? this.gameState.max_takebacks : 7;
         const isFinished = this.gameState && (this.gameState.status === 'FINISHED' || this.gameState.status === 'ABANDONED');
 

@@ -167,6 +167,26 @@
         <h2 id="game-over-title">¡Fin de la Partida!</h2>
         <p id="game-over-reason" style="margin: 1rem 0; font-size: 1.1rem; color: var(--text-secondary);"></p>
         <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap;">
+            {% if is_player %}
+                {% if game.vs_bot and bot %}
+                <form method="post" action="{% url 'bot_play' bot.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="color" value="random">
+                    <button type="submit" class="btn btn-success">
+                        🔄 Revancha
+                    </button>
+                </form>
+                {% elif not game.vs_bot and opponent %}
+                <form method="post" action="{% url 'create_challenge' opponent.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="time_control_minutes" value="{{ game.time_control_minutes }}">
+                    <input type="hidden" name="time_control_increment" value="{{ game.time_control_increment }}">
+                    <button type="submit" class="btn btn-success">
+                        🔄 Revancha
+                    </button>
+                </form>
+                {% endif %}
+            {% endif %}
             <a href="{% url 'create_game_analysis_job' game.id %}" id="btn-analyze-modal" class="btn btn-primary">
                 🔍 Analizar Partida
             </a>
