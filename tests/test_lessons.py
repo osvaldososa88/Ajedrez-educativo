@@ -429,6 +429,28 @@ class TestSeed:
 @pytest.mark.django_db
 class TestRousseauImport:
 
+    def test_migracion_genera_tres_respuestas_legales_al_no_capturar(self):
+        from importlib import import_module
+
+        migration = import_module(
+            'apps.lessons.migrations.0007_add_rousseau_non_capture_branches'
+        )
+        tree = migration._build_tree()
+        candidates = tree
+        board = chess.Board()
+        for san in ('e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'f5'):
+            node = next(item for item in candidates if item['san'] == san)
+            board.push_san(san)
+            candidates = node['variations']
+
+        assert [node['san'] for node in candidates] == ['d3', 'Nc3', 'd4']
+        for branch in candidates:
+            branch_board = board.copy()
+            node = branch
+            while node:
+                branch_board.push_san(node['san'])
+                node = (node.get('variations') or [None])[0]
+
     def test_importa_leccion_publicada_para_practicar_con_negras(self, client, django_user_model):
         from django.core.management import call_command
         from apps.lessons.models import Lesson, LessonChapter
