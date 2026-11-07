@@ -263,6 +263,13 @@ class TestVistas:
         ).content.decode()
         assert html.index('id="chessboard"') < html.index('game-sidebar')
 
+    def test_utilidades_del_tablero_se_cargan_antes_del_script_de_lecciones(self, cliente):
+        from apps.lessons.models import LessonChapter
+
+        chapter = LessonChapter.objects.first()
+        html = cliente.get(f'/lessons/capitulo/{chapter.id}/').content.decode()
+        assert html.index('js/chess_ui.js') < html.index('js/lessons_app.js')
+
     def test_arbol_json(self, cliente):
         from apps.lessons.models import LessonChapter
 

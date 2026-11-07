@@ -1,7 +1,8 @@
-const CACHE_NAME = 'ajedrez-educativo-v1';
+const CACHE_NAME = 'ajedrez-educativo-v2';
 const STATIC_ASSETS = [
   '/static/css/styles.css',
   '/static/js/chess_ui.js',
+  '/static/js/lessons_app.js',
   '/static/js/chessboard_app.js',
   '/static/js/analysis_app.js',
   '/static/js/training_app.js',

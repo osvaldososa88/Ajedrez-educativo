@@ -133,10 +133,10 @@
         </div>
     </div>
 
-    {% block extra_js %}{% endblock %}
     {% load static %}
     <script>window.CHESS_PIECE_BASE = "{% static 'img/pieces/' %}{{ user_piece_set|default:'staunton' }}/";</script>
     <script src="{% static 'js/chess_ui.js' %}"></script>
+    {% block extra_js %}{% endblock %}
     <script src="{% static 'js/pwa.js' %}"></script>
     <script src="{% static 'js/notifications.js' %}"></script>
     {% block board_js %}{% endblock %}
