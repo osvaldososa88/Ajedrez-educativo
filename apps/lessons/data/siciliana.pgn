@@ -8,8 +8,6 @@
 [ChapterName "✅ Introducción"]
 [ChapterURL "https://lichess.org/study/pIGm7aJW/SGFfH2jV"]
 [Annotator "https://lichess.org/@/ReyEnigma"]
-[FEN "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1"]
-[SetUp "1"]
 [UTCDate "2023.11.24"]
 [UTCTime "13:48:42"]
 [ChapterMode "gamebook"]
@@ -23,8 +21,7 @@ Es una siciliana poco común, perfecta para sorprender al rival desde las primer
 3️⃣ TÁCTICA: Existen muchas combinaciones que aprovechar con truquitos enigmáticos.
 4️⃣ INESPERADA: Las variantes sorprenderán al rival desde el primer momento.
 
-Vamos a ver la variante PRINCIPAL de esta defensa, que es la más jugada... ¿Comenzamos? ▶ } { [%csl Gc5][%cal Gc7c5] }
- *
+Vamos a ver la variante PRINCIPAL de esta defensa, que es la más jugada... ¿Comenzamos? ▶ } { [%csl Gc5][%cal Gc7c5] } 1. e4 c5 *
 
 
 [Event "SICILIANA Enigmática: ⭕ Variante Principal"]
@@ -195,5 +192,4 @@ https://www.chessenigma.com/siciliana-enigmatica/
 
 ¡Hasta pronto jaquetón! 👋🏼 }
  *
-
 

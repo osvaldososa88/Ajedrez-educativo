@@ -299,13 +299,33 @@ class TestVistas:
             f'/lessons/capitulo/{capitulos[0].id}/'
         ).content.decode()
         assert 'Siguiente' in html
-        assert 'Anterior' not in html      # el primero no tiene anterior
+        assert 'id="lesson-prev-chapter"' in html
+        assert 'hidden disabled>◀ Anterior' in html
 
         html = cliente.get(
             f'/lessons/capitulo/{capitulos[-1].id}/'
         ).content.decode()
         assert 'Anterior' in html
-        assert 'Siguiente' not in html    # el último no tiene siguiente
+        assert 'id="lesson-next-chapter"' in html
+        assert 'hidden disabled>Siguiente' in html
+
+    def test_controles_de_navegacion_apuntan_al_capitulo_siguiente_actual(self, cliente):
+        from apps.lessons.models import Lesson, LessonChapter
+
+        lesson = Lesson.objects.order_by('order').first()
+        chapters = list(lesson.chapters.all())
+        for index, chapter in enumerate(chapters):
+            html = cliente.get(
+                f'/lessons/capitulo/{chapter.id}/'
+            ).content.decode()
+            if index:
+                assert (
+                    f'id="lesson-prev-chapter"'
+                ) in html
+                assert f'data-chapter-id="{chapters[index - 1].id}"' in html
+            if index + 1 < len(chapters):
+                assert 'id="lesson-next-chapter"' in html
+                assert f'data-chapter-id="{chapters[index + 1].id}"' in html
 
 
 @pytest.mark.django_db
@@ -360,6 +380,51 @@ class TestSeed:
             json.dumps(capitulo.tree)
             assert capitulo.start_fen.count(' ') == 5
 
+    def test_siciliana_y_holandesa_se_practican_con_negras(self):
+        from django.core.management import call_command
+        from apps.lessons.models import Lesson, LessonChapter
+
+        call_command('seed_lessons', verbosity=0)
+        lessons = Lesson.objects.filter(
+            slug__in=('siciliana-enigmatica', 'holandesa-enigmatica'),
+        )
+        assert lessons.count() == 2
+        assert set(lessons.values_list('student_color', flat=True)) == {'black'}
+        assert all(
+            chapter.start_fen.split()[1] == 'w'
+            for chapter in LessonChapter.objects.filter(lesson__in=lessons)
+        )
+
+    def test_siciliana_y_holandesa_inician_con_el_turno_de_negras(
+        self, client, django_user_model,
+    ):
+        from django.core.management import call_command
+        from django.urls import reverse
+        from apps.lessons.models import Lesson
+
+        call_command('seed_lessons', verbosity=0)
+        user = django_user_model.objects.create_user(
+            username='black_opening_student', password='test-password'
+        )
+        client.force_login(user)
+
+        for slug in ('siciliana-enigmatica', 'holandesa-enigmatica'):
+            lesson = Lesson.objects.get(slug=slug)
+            chapter = lesson.chapters.order_by('order').first()
+            response = client.post(
+                reverse('chapter_play', args=[chapter.pk]),
+                data=json.dumps({
+                    'action': 'start',
+                    'path': [],
+                    'color': lesson.student_color,
+                }),
+                content_type='application/json',
+            )
+            assert response.status_code == 200
+            state = response.json()
+            assert state['turn'] == 'black', f'{slug}: {state}'
+            assert state['path'], slug
+
 
 @pytest.mark.django_db
 class TestRousseauImport:
@@ -374,7 +439,7 @@ class TestRousseauImport:
 
         assert lesson.is_published is True
         assert lesson.student_color == Lesson.StudentColor.BLACK
-        assert len(chapters) == 5
+        assert len(chapters) == 6
         assert all(chapter.tree and chapter.start_fen.count(' ') == 5 for chapter in chapters)
 
         user = django_user_model.objects.create_user(
@@ -400,6 +465,23 @@ class TestRousseauImport:
         f5_node = next(item for item in candidates if item['san'] == 'f5')
         assert f5_node['required'] is True
         assert f5_node['accepted'] is True
+
+    def test_rousseau_incluye_las_tres_respuestas_sin_capturar(self):
+        from django.core.management import call_command
+        from apps.lessons.models import LessonChapter
+
+        call_command('import_rousseau', verbosity=0)
+        chapter = LessonChapter.objects.get(
+            lesson__slug='gambito-rousseau',
+            order=5,
+        )
+        candidates = chapter.tree
+        for san in ('e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'f5'):
+            node = next(item for item in candidates if item['san'] == san)
+            candidates = node['variations']
+
+        assert {node['san'] for node in candidates} == {'d3', 'Nc3', 'd4'}
+        assert next(node for node in candidates if node['san'] == 'd3')['required']
 
     def test_sesion_jugable_con_negras_y_progreso_persistente(self, client, django_user_model):
         from django.core.management import call_command
@@ -471,6 +553,25 @@ class TestRousseauImport:
         chapter.refresh_from_db()
         assert chapter.intro == 'Edición local que debe conservarse.'
         assert Lesson.objects.filter(slug='gambito-rousseau').count() == 1
+
+    def test_append_missing_anade_capitulo_sin_editar_los_existentes(self):
+        from django.core.management import call_command
+        from apps.lessons.models import LessonChapter
+
+        call_command('import_rousseau', verbosity=0)
+        lesson_chapters = LessonChapter.objects.filter(
+            lesson__slug='gambito-rousseau',
+        )
+        chapter = lesson_chapters.get(order=0)
+        chapter.intro = 'Texto personalizado que debe conservarse.'
+        chapter.save(update_fields=['intro'])
+        lesson_chapters.filter(order=5).delete()
+
+        call_command('import_rousseau', '--append-missing', verbosity=0)
+
+        chapter.refresh_from_db()
+        assert chapter.intro == 'Texto personalizado que debe conservarse.'
+        assert lesson_chapters.count() == 6
 
 
 def _lesson_node(board, san, *, main=False, variations=None, **extra):

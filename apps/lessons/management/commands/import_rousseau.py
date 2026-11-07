@@ -70,18 +70,50 @@ def _build_chapters():
 class Command(BaseCommand):
     help = 'Crea la lección Gambito Rousseau sin sobrescribir contenido existente.'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--append-missing',
+            action='store_true',
+            help='Añade capítulos que falten sin editar los existentes.',
+        )
+
     def handle(self, *args, **options):
-        if Lesson.objects.filter(slug=LESSON['slug']).exists():
+        if (
+            Lesson.objects.filter(slug=LESSON['slug']).exists()
+            and not options['append_missing']
+        ):
             raise CommandError(
                 f'Ya existe la lección "{LESSON["slug"]}"; no se modificó ningún contenido.'
             )
 
         chapters = _build_chapters()
         with transaction.atomic():
-            if Lesson.objects.filter(slug=LESSON['slug']).exists():
-                raise CommandError(
-                    f'Ya existe la lección "{LESSON["slug"]}"; no se modificó ningún contenido.'
+            lesson = Lesson.objects.select_for_update().filter(
+                slug=LESSON['slug'],
+            ).first()
+            if lesson:
+                if not options['append_missing']:
+                    raise CommandError(
+                        f'Ya existe la lección "{LESSON["slug"]}"; '
+                        'no se modificó ningún contenido.'
+                    )
+                existing_orders = set(
+                    lesson.chapters.values_list('order', flat=True)
                 )
+                missing = [
+                    chapter for chapter in chapters
+                    if chapter['order'] not in existing_orders
+                ]
+                LessonChapter.objects.bulk_create([
+                    LessonChapter(lesson=lesson, **chapter)
+                    for chapter in missing
+                ])
+                self.stdout.write(self.style.SUCCESS(
+                    f'Añadidos {len(missing)} capítulos faltantes a "{lesson.title}"; '
+                    'los capítulos existentes no fueron modificados.'
+                ))
+                return
+
             lesson = Lesson.objects.create(
                 slug=LESSON['slug'],
                 title=LESSON['title'],

@@ -261,4 +261,54 @@ CHAPTERS = [
             ],
         },
     },
+    {
+        'title': 'Si no capturan el peón: 4.d3, 4.Nc3 y 4.d4',
+        'intro': (
+            'Si las blancas no aceptan el peón de f5, la transcripción destaca '
+            '4.d3 y el contraataque central 4.d4; también puedes practicar el '
+            'desarrollo 4.Nc3 como alternativa. El instructor propone ...Bc5 '
+            'contra 4.d3. Las demás ramas son continuaciones legales de práctica '
+            'y no se presentan como líneas atribuidas al video.'
+        ),
+        'moves': [
+            ('e4', ''),
+            ('e5', ''),
+            ('Nf3', ''),
+            ('Nc6', ''),
+            ('Bc4', ''),
+            ('f5', 'El Gambito Rousseau ofrece el peón de f y provoca una decisión en el centro.'),
+            ('d3', 'Una forma prudente de sostener el centro sin capturar el peón.'),
+            ('Bc5', 'El instructor recomienda desarrollar el alfil y mantener la presión sobre f2.'),
+        ],
+        'sides': [
+            (7, [
+                [
+                    ('Nc3', 'Desarrollo una pieza sin aceptar el peón; esta rama sirve para practicar otra respuesta.'),
+                    ('d5', 'El avance central ataca el alfil de c4. Esta continuación legal se incluye como práctica.'),
+                ],
+                [
+                    ('d4', 'El video destaca el contraataque central como la respuesta más crítica.'),
+                    ('fxe4', 'El peón captura en e4 y ataca el caballo de f3.'),
+                    ('Nxe5', 'El caballo captura el peón central.'),
+                    ('d5', 'El avance ataca el alfil de c4 y disputa el centro.'),
+                ],
+            ]),
+        ],
+        'required': {
+            'e4 e5 Nf3 Nc6 Bc4': 'f5',
+            'e4 e5 Nf3 Nc6 Bc4 f5': 'd3',
+            'e4 e5 Nf3 Nc6 Bc4 f5 d3': 'Bc5',
+            'e4 e5 Nf3 Nc6 Bc4 f5 Nc3': 'd5',
+            'e4 e5 Nf3 Nc6 Bc4 f5 d4': 'fxe4',
+            'e4 e5 Nf3 Nc6 Bc4 f5 d4 fxe4 Nxe5': 'd5',
+        },
+        'hints': {
+            'e4 e5 Nf3 Nc6 Bc4': [
+                'El gambito está en el peón de f5. Si no lo capturan, elige una respuesta para el centro.',
+            ],
+            'e4 e5 Nf3 Nc6 Bc4 f5': [
+                'El video recomienda desarrollar el alfil contra 4.d3; también puedes explorar el desarrollo de caballo o el golpe central.',
+            ],
+        },
+    },
 ]

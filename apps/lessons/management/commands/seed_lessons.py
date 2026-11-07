@@ -37,6 +37,7 @@ LICKS = [
         'eco': 'B32',
         'icon': '🗡️',
         'color': Lesson.Color.DARK,
+        'student_color': Lesson.StudentColor.BLACK,
         'order': 10,
         'summary': (
             'Una defensa siciliana poco convencional, llena de jugadas sorpresa '
@@ -52,6 +53,7 @@ LICKS = [
         'eco': 'A84',
         'icon': '🏰',
         'color': Lesson.Color.DARK,
+        'student_color': Lesson.StudentColor.BLACK,
         'order': 20,
         'summary': (
             'La Defensa Holandesa con 1.d4 f5: estructuras incómodas de piezas '
@@ -143,6 +145,9 @@ class Command(BaseCommand):
             'summary': spec.get('summary', ''),
             'icon': spec.get('icon', '📘'),
             'color': spec.get('color', Lesson.Color.MIXED),
+            'student_color': spec.get(
+                'student_color', Lesson.StudentColor.WHITE,
+            ),
             'order': spec.get('order', 0),
             'source_url': spec.get('source_url', ''),
             'is_published': True,
@@ -196,6 +201,7 @@ ITALIANA = {
     'eco': 'C50',
     'icon': '🏛️',
     'color': Lesson.Color.LIGHT,
+    'student_color': Lesson.StudentColor.WHITE,
     'order': 5,
     'summary': (
         'La apertura más antigua que se juega todavía. Tres capítulos para '

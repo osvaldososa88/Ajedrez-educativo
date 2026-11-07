@@ -8,8 +8,6 @@
 [ChapterName "Intro"]
 [ChapterURL "https://lichess.org/study/heMoVAkN/0Iyb3HoU"]
 [Annotator "https://lichess.org/@/ReyEnigma"]
-[FEN "rnbqkbnr/ppppp1pp/8/5p2/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2"]
-[SetUp "1"]
 [UTCDate "2023.05.24"]
 [UTCTime "15:54:03"]
 [ChapterMode "gamebook"]
@@ -20,8 +18,7 @@ Al igual que el Sistema Colle Enigmático, esta defensa está repleta de Truquit
 
 A continuación. vamos a aprender la Variante Principal de esta defensa (la más jugada) en la que te explicaré algunas de los planes e ideas claves que debemos tener en cuenta en esta defensa.
 
-¿Comenzamos? ▶ } { [%csl Gf5][%cal Gf7f5] }
- *
+¿Comenzamos? ▶ } { [%csl Gf5][%cal Gf7f5] } 1. d4 f5 *
 
 
 [Event "Aprende la HOLANDESA Enigmática: 🟡Variante principal con e3"]
@@ -597,5 +594,4 @@ Antes de irte... ▶ } 12. f3 Ba6 *
 
 ¡Espero que disfrutes las clases gratuitas y te ayuden a seguir mejorando! :) }
  *
-
 

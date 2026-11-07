@@ -3,6 +3,7 @@
 
     const boardEl = document.getElementById('chessboard');
     const chaptersEl = document.getElementById('lesson-chapters');
+    const chapterNavigationEl = document.querySelector('.lesson-chapter-navigation');
     const choicesEl = document.getElementById('lesson-choices');
     if (!boardEl || !chaptersEl || !choicesEl || !window.ChessUI) return;
 
@@ -111,10 +112,30 @@
         elements.progressBar.value = progress.completed_chapters;
     }
 
+    function updateChapterNavigation() {
+        const index = chapters.findIndex((item) => item.id === activeChapter.id);
+        const previous = chapters[index - 1];
+        const next = chapters[index + 1];
+        const previousButton = document.getElementById('lesson-prev-chapter');
+        const nextButton = document.getElementById('lesson-next-chapter');
+
+        if (previousButton) {
+            previousButton.hidden = !previous;
+            previousButton.disabled = !previous;
+            if (previous) previousButton.dataset.chapterId = previous.id;
+        }
+        if (nextButton) {
+            nextButton.hidden = !next;
+            nextButton.disabled = !next;
+            if (next) nextButton.dataset.chapterId = next.id;
+        }
+    }
+
     function selectChapter(chapterId) {
         const next = chapters.find((item) => item.id === Number(chapterId));
         if (!next || next.id === activeChapter.id) return;
         activeChapter = next;
+        updateChapterNavigation();
         loadChapter(true);
     }
 
@@ -471,9 +492,14 @@
         const button = event.target.closest('[data-chapter-id]');
         if (button) selectChapter(button.dataset.chapterId);
     });
-    document.querySelectorAll('.lesson-chapter-navigation [data-chapter-id]').forEach((button) => {
-        button.addEventListener('click', () => selectChapter(button.dataset.chapterId));
-    });
+    if (chapterNavigationEl) {
+        chapterNavigationEl.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-chapter-id]');
+            if (button && !button.disabled) {
+                selectChapter(button.dataset.chapterId);
+            }
+        });
+    }
     elements.color.addEventListener('change', () => loadChapter(false));
     elements.mode.addEventListener('change', () => {
         exploreVariants = currentMode() === 'guided';
@@ -497,5 +523,6 @@
         navigate(historyPaths[historyIndex]);
     });
 
+    updateChapterNavigation();
     loadChapter(false);
 })();

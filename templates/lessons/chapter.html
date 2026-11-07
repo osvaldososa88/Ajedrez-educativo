@@ -76,10 +76,18 @@
                 </div>
                 <div class="lesson-chapter-navigation">
                     {% if prev_chapter %}
-                    <button type="button" class="btn btn-secondary" data-chapter-id="{{ prev_chapter.id }}">◀ Anterior</button>
+                    <button type="button" id="lesson-prev-chapter"
+                            class="btn btn-secondary" data-chapter-id="{{ prev_chapter.id }}">◀ Anterior</button>
+                    {% else %}
+                    <button type="button" id="lesson-prev-chapter"
+                            class="btn btn-secondary" hidden disabled>◀ Anterior</button>
                     {% endif %}
                     {% if next_chapter %}
-                    <button type="button" class="btn btn-primary" data-chapter-id="{{ next_chapter.id }}">Siguiente ▶</button>
+                    <button type="button" id="lesson-next-chapter"
+                            class="btn btn-primary" data-chapter-id="{{ next_chapter.id }}">Siguiente ▶</button>
+                    {% else %}
+                    <button type="button" id="lesson-next-chapter"
+                            class="btn btn-primary" hidden disabled>Siguiente ▶</button>
                     {% endif %}
                 </div>
             </section>
