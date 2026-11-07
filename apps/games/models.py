@@ -137,28 +137,40 @@ class Game(models.Model):
             return False
         return user_id in [self.white_player.id, self.black_player.id]
 
-    def apply_takeback(self):
-        """Revert the last move.
-        Updates fen, turn, clocks, decrements takebacks_left and deletes the last Move.
+    def apply_takeback(self, plies=1):
+        """Revert the last `plies` half-moves, charging exactly ONE takeback.
+
+        `plies=2` is what a player vs. a bot actually needs: pressing "deshacer"
+        must return the turn, so the bot's reply *and* the player's own move are
+        removed. Even then it costs a single heart — the cost is per BUTTON
+        PRESS, not per move removed.
+
         Returns a tuple (success: bool, error_message: str|None).
         """
-        last_move = self.moves.order_by('-ply').first()
-        if not last_move:
+        undone = 0
+        for _ in range(max(1, int(plies))):
+            last_move = self.moves.order_by('-ply').first()
+            if not last_move:
+                break
+            # Determine previous fen
+            prev_move = self.moves.filter(ply__lt=last_move.ply).order_by('-ply').first()
+            self.fen_current = prev_move.fen_after if prev_move else chess.STARTING_FEN
+            # Switch turn back to the player who made the undone move
+            self.turn = self.Turn.WHITE if last_move.player == self.white_player else self.Turn.BLACK
+            # Revert time increment added after the move
+            inc_ms = self.time_control_increment * 1000
+            if self.turn == self.Turn.WHITE:
+                self.white_time_left_ms = max(self.white_time_left_ms - inc_ms, 0)
+            else:
+                self.black_time_left_ms = max(self.black_time_left_ms - inc_ms, 0)
+            # Delete the undone move
+            last_move.delete()
+            undone += 1
+
+        if not undone:
             return False, "No moves to undo."
-        # Determine previous fen
-        prev_move = self.moves.filter(ply__lt=last_move.ply).order_by('-ply').first()
-        self.fen_current = prev_move.fen_after if prev_move else chess.STARTING_FEN
-        # Switch turn back to the player who made the undone move
-        self.turn = self.Turn.WHITE if last_move.player == self.white_player else self.Turn.BLACK
-        # Revert time increment added after the move
-        inc_ms = self.time_control_increment * 1000
-        if self.turn == self.Turn.WHITE:
-            self.white_time_left_ms = max(self.white_time_left_ms - inc_ms, 0)
-        else:
-            self.black_time_left_ms = max(self.black_time_left_ms - inc_ms, 0)
-        # Delete the undone move
-        last_move.delete()
-        # Decrement takebacks
+
+        # A single press costs a single heart, no matter how many moves went back.
         self.takebacks_left = max(self.takebacks_left - 1, 0)
         self.last_move_at = timezone.now()
         self.save()

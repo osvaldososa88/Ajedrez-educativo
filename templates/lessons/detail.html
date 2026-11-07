@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ lesson.title }} - Lecciones{% endblock %}
+
+{% block content %}
+<a href="{% url 'lesson_index' %}" class="btn btn-secondary" style="margin-bottom: 1rem;">← Todas las lecciones</a>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div style="display:flex; align-items:center; gap: 0.75rem; flex-wrap: wrap;">
+        <span style="font-size: 2rem;">{{ lesson.icon }}</span>
+        <div>
+            <h2 style="margin:0;">{{ lesson.title }}</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.25rem 0 0;">
+                {{ lesson.family }}{% if lesson.eco %} · ECO {{ lesson.eco }}{% endif %}
+                · {{ lesson.get_color_display }}
+            </p>
+        </div>
+    </div>
+    {% if lesson.summary %}
+    <p style="margin-top: 1rem;">{{ lesson.summary }}</p>
+    {% endif %}
+    {% if first_chapter %}
+    <a href="{% url 'chapter_detail' first_chapter.id %}" class="btn btn-primary" style="margin-top: 1rem;">
+        ▶️ Empezar por el capítulo 1
+    </a>
+    {% endif %}
+</div>
+
+<h3 style="margin-bottom: 0.75rem;">Capítulos</h3>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+    {% for chapter in chapters %}
+    <div class="card">
+        <h4 style="margin:0;">{{ chapter.number }}. {{ chapter.title }}</h4>
+        {% if chapter.intro %}
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.5rem 0;">
+            {{ chapter.intro|striptags|truncatechars:140 }}
+        </p>
+        {% endif %}
+        <a href="{% url 'chapter_detail' chapter.id %}" class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;">
+            Estudiar
+        </a>
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary);">Esta lección aún no tiene capítulos.</p>
+    {% endfor %}
+</div>
+{% endblock %}

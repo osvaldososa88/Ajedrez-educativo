@@ -2,7 +2,10 @@
 
 {% block title %}Partida {{ game.id.hex|slice:":8" }} - Ajedrez Escolar{% endblock %}
 
+{% block body_class %}in-game{% endblock %}
+
 {% block content %}
+<a href="{% url 'home' %}" class="in-game-back">← Volver</a>
 <div class="game-container">
 
     <!-- Board Area -->

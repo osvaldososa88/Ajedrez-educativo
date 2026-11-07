@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'apps.notifications',
 
     'apps.training',
+    'apps.lessons',
     'apps.classrooms',
     'apps.tournaments',
     'apps.personalization',

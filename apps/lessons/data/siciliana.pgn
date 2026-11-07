@@ -1,0 +1,199 @@
+[Event "SICILIANA Enigmática: ✅ Introducción"]
+[Date "2023.11.24"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "SICILIANA Enigmática"]
+[ChapterName "✅ Introducción"]
+[ChapterURL "https://lichess.org/study/pIGm7aJW/SGFfH2jV"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1"]
+[SetUp "1"]
+[UTCDate "2023.11.24"]
+[UTCTime "13:48:42"]
+[ChapterMode "gamebook"]
+
+{ ¡Hola jaquetón! Bienvenido al estudio de la Siciliana Enigmática, mi defensa favorita contra 1.e4 😀
+
+Es una siciliana poco común, perfecta para sorprender al rival desde las primeras jugadas. Te recomiendo emplearla por los siguientes motivos:
+
+1️⃣ FÁCIL DE RECORDAR: Se juega por planes e ideas, a diferencia de otras sicilianas, como la Najdorf, donde hay que memorizar miles de variantes concretas.
+2️⃣ ACTIVA: Incomodaremos a nuestro rival desde el principio y jugaremos a ganar con piezas negras.
+3️⃣ TÁCTICA: Existen muchas combinaciones que aprovechar con truquitos enigmáticos.
+4️⃣ INESPERADA: Las variantes sorprenderán al rival desde el primer momento.
+
+Vamos a ver la variante PRINCIPAL de esta defensa, que es la más jugada... ¿Comenzamos? ▶ } { [%csl Gc5][%cal Gc7c5] }
+ *
+
+
+[Event "SICILIANA Enigmática: ⭕ Variante Principal"]
+[Date "2023.11.24"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "B32"]
+[Opening "Sicilian Defense: Löwenthal Variation"]
+[StudyName "SICILIANA Enigmática"]
+[ChapterName "⭕ Variante Principal"]
+[ChapterURL "https://lichess.org/study/pIGm7aJW/YuRPTqrl"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[UTCDate "2023.11.24"]
+[UTCTime "13:48:42"]
+[ChapterMode "gamebook"]
+
+1. e4 { Iniciamos nuestra Siciliana Enigmática con... } { [%cal Gc7c5] } 1... c5 2. Nf3 { Desarrollamos nuestro caballo hacia el centro. } { [%cal Gb8c6] } 2... Nc6 3. d4 { 3.d4 es la principal por parte de las blancas, nuestra jugada enigmática aquí es capturar cxd4. } { [%cal Gc5d4] } 3... cxd4 4. Nxd4 { Con nuestro siguiente movimiento vamos a ocupar el centro con ganancia de tiempo, ¿Cuál es la JUGADA IMPORTANTE⚠️ para lograrlo? } { [%csl Ge7] } 4... e5! { ¡Correcto! 😄
+Ocupamos el centro atacando al caballo enemigo. Ahora las blancas disponen de muchas retiradas de caballo, pero solo una de ellas es la que lucha por mantener la ventaja:
+1️⃣Ce2
+2️⃣Cf5
+3️⃣Cf3
+4️⃣Cb3
+5️⃣Cxc6
+6️⃣Cb5! (la mejor opción)
+Veamos cómo jugar contra cada una de ellas ⏭ } { [%csl Rd4,Re2,Rf3,Rf5,Rb3,Rc6,Gb5][%cal Rd4e2,Rd4f3,Rd4f5,Rd4c6,Rd4b3,Gd4b5] } *
+
+
+[Event "SICILIANA Enigmática: 1️⃣ Ce2"]
+[Date "2023.11.24"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "SICILIANA Enigmática"]
+[ChapterName "1️⃣ Ce2"]
+[ChapterURL "https://lichess.org/study/pIGm7aJW/GKCkvqUa"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bqkbnr/pp1p1ppp/2n5/4p3/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 0 5"]
+[SetUp "1"]
+[UTCDate "2023.11.24"]
+[UTCTime "13:48:42"]
+[ChapterMode "gamebook"]
+
+5. Ne2 { Si el blanco retira su caballo a e2 bloquea la diagonal del alfil de casillas blancas, nosotros continuamos con el desarrollo activando nuestro alfil de casillas negras. } { [%csl Re2][%cal Gf8c5] } 5... Bc5 6. Ng3 { Atacamos el peón débil de f2. } { [%cal Gd8b6] } 6... Qb6 { [%csl Rf2] } 7. Qd2 { Aumentamos la presión con la JUGADA IMPORTANTE⚠️ h5, para castigar todos los saltos del caballo blanco. } { [%cal Gh7h5] } 7... h5! 8. h4 { Aprovechamos la debilidad que ha generado este avance de peón por parte del blanco tratando de llevar un caballo a la casilla g4. } { [%csl Rg4][%cal Gg8f6] } 8... Nf6 9. Nc3 { [%cal Gf6g4] } 9... Ng4 { [%csl Rf2] } 10. Nd1 { [%cal Gd7d6] } 10... d6 11. f3 { [%cal Gg4f6] } 11... Nf6 { El negro consigue una posición muy buena, con pleno control de la diagonal obstaculizando el desarrollo del blanco.
+Analicemos otras retiradas del caballo blanco tras 4...e5 ⏭ } { [%csl Gc5,Ga7][%cal Ra7g1,Ga7a6] } *
+
+
+[Event "SICILIANA Enigmática: 2️⃣ Cf5"]
+[Date "2023.11.24"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "SICILIANA Enigmática"]
+[ChapterName "2️⃣ Cf5"]
+[ChapterURL "https://lichess.org/study/pIGm7aJW/sCVvVybt"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bqkbnr/pp1p1ppp/2n5/4p3/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 0 5"]
+[SetUp "1"]
+[UTCDate "2023.11.24"]
+[UTCTime "13:48:42"]
+[ChapterMode "gamebook"]
+
+5. Nf5 { Desarrollamos nuestro caballo atacando el peón de e4. } { [%csl Rf5][%cal Gg8f6] } 5... Nf6 { [%csl Re4] } 6. Nc3 { Controlamos el centro a la vez que despejamos la diagonal para nuestro alfil de casillas blancas. } { [%cal Gd7d5] } 6... d5 7. exd5 { [%cal Gc8f5] } 7... Bxf5 8. dxc6 { [%cal Gd8d1] } 8... Qxd1+ 9. Nxd1 { [%cal Gb7c6] } 9... bxc6 { [%csl Rc2] } 10. Ne3 { [%cal Gf5g6] } 10... Bg6 11. Bc4 { Continuamos nuestro desarrollo activando el alfil de casillas negras. } { [%cal Gf8c5] } 11... Bc5 12. O-O { [%cal Ge8c8] } 12... O-O-O { Tras enroque largo las negras logran una posición muy cómoda, con mucha actividad para sus piezas.
+Veamos otra posible retirada del caballo en el siguiente capítulo ⏭ } { [%csl Gg6,Gc5][%cal Gh8e8,Gf6e4,Ge4d2] } *
+
+
+[Event "SICILIANA Enigmática: 3️⃣ Cf3"]
+[Date "2023.11.24"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "B33"]
+[Opening "Sicilian Defense: Lasker-Pelikan Variation, Retreat Variation"]
+[StudyName "SICILIANA Enigmática"]
+[ChapterName "3️⃣ Cf3"]
+[ChapterURL "https://lichess.org/study/pIGm7aJW/FN8g69Vo"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bqkbnr/pp1p1ppp/2n5/4p3/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 0 5"]
+[SetUp "1"]
+[UTCDate "2023.11.24"]
+[UTCTime "13:48:42"]
+[ChapterMode "gamebook"]
+
+5. Nf3 { [%csl Rf3][%cal Gg8f6] } 5... Nf6 { [%csl Re4] } 6. Nc3 { ¿Cuál es nuestra jugada enigmática tras Cc3, para seguir atacando el peón de e4 de manera indirecta? } { [%cal Gf8b4] } 6... Bb4 { ¡Correcto jaquetón! :)
+Si el blanco trata de defenderse con Ad2, sería una mala idea, ya que capturaríamos el caballo de c3, seguido de Cxe4, ganando peón. } { [%csl Rc3,Re4] } 7. Bd3 { [%cal Gb4c3] } 7... Bxc3+ { Para dejarle una mala estructura de peones. } 8. bxc3 { [%cal Gd7d6] } 8... d6 9. O-O { [%cal Ge8g8] } 9... O-O 10. Bg5 { [%cal Gh7h6] } 10... h6 11. Bh4 { [%cal Gc8e6] } 11... Be6 { Terminamos nuestro desarrollo habilitando la columna c para nuestra torre, desde donde presionaremos al peón débil de c3.
+¡Vamos con el siguiente capítulo! ⏭ } { [%csl Rc3,Re4,Rc2,Rd3][%cal Ga8c8,Gc6a5] } *
+
+
+[Event "SICILIANA Enigmática: 4️⃣ Cb3"]
+[Date "2023.11.24"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "B33"]
+[Opening "Sicilian Defense: Lasker-Pelikan Variation, Schlechter Variation"]
+[StudyName "SICILIANA Enigmática"]
+[ChapterName "4️⃣ Cb3"]
+[ChapterURL "https://lichess.org/study/pIGm7aJW/U2OmsV2b"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bqkbnr/pp1p1ppp/2n5/4p3/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 0 5"]
+[SetUp "1"]
+[UTCDate "2023.11.24"]
+[UTCTime "13:48:42"]
+[ChapterMode "gamebook"]
+
+5. Nb3 { La retirada del caballo a b3 es una jugada más natural por parte de las blancas en la Siciliana. Nuestra siguiente jugada será Cf6, atacando el peón de e4. } { [%csl Rb3][%cal Gg8f6] } 5... Nf6 { Ahora el blanco tiene distintas opciones para defender el peón de e4, recuerda que puedes verlas todas en profundidad en el curso 👉🏽 https://www.chessenigma.com/siciliana-enigmatica/ Veamos cómo jugar si el blanco lo defiende con Cc3. } { [%csl Re4] } 6. Nc3 { [%cal Gf8b4] } 6... Bb4 { Desarrollamos el alfil con ganancia de tiempo, clavando al caballo defensor. } { [%csl Rc3,Re4,Gf6,Gb4] } 7. Bd3 { Ahora, aprovechando que el rey blanco está en el centro, avanzamos d5. } { [%cal Gd7d5] } 7... d5 8. exd5 { [%cal Gf6d5] } 8... Nxd5 9. Bd2 { [%cal Gd5c3] } 9... Nxc3 { Estropeamos la estructura de peones del rival. } 10. bxc3 { [%cal Gb4d6] } 10... Bd6 11. O-O { [%cal Ge8g8] } 11... O-O 12. Qh5 { El blanco puede pensar en este momento que tiene mucha iniciativa y va a debilitar nuestro enroque si tenemos que jugar g6 para frenar la amenaza sobre h7, pero aquí la JUGADA IMPORTANTE⚠️ es f5! } { [%csl Rh7][%cal Gf7f5] } 12... f5! { Y las negras logran clara ventaja tras esta jugada :)
+Vamos a continuar viendo otras opciones ⏭ } { [%cal Ge5e4,Gc8e6,Gd8c7,Ga8e8] } *
+
+
+[Event "SICILIANA Enigmática: 5️⃣ Cxc6"]
+[Date "2023.11.24"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "SICILIANA Enigmática"]
+[ChapterName "5️⃣ Cxc6"]
+[ChapterURL "https://lichess.org/study/pIGm7aJW/mH4evEgG"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bqkbnr/pp1p1ppp/2n5/4p3/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 0 5"]
+[SetUp "1"]
+[UTCDate "2023.11.24"]
+[UTCTime "13:48:42"]
+[ChapterMode "gamebook"]
+
+5. Nxc6 { [%csl Rc6][%cal Gb7c6] } 5... bxc6 { Nuestra idea va a ser desarrollar el alfil a c5 y lanzar un ataque contra el enemigo. } 6. Bd3 { [%cal Gf8c5] } 6... Bc5 7. O-O { [%cal Gg8f6] } 7... Nf6 8. Nc3 { JUGADA IMPORTANTE⚠️ a5, despejando la casilla a7 por si nuestro alfil de casillas negras la necesita. Retrasamos el enroque porque en muchas ocasiones vamos a lanzar un ataque por el flanco de rey. } { [%cal Ga7a5] } 8... a5 9. Bg5 { [%cal Gh7h6] } 9... h6 10. Bh4 { ¡Allá vamos! } { [%cal Gg7g5] } 10... g5 11. Bg3 { [%csl Re5][%cal Gd7d6] } 11... d6 12. Na4 { De ahí la importancia de la jugada a5, ahora podemos esconder nuestro alfil en a7. } { [%cal Gc5a7] } 12... Ba7 13. c4? { Si el blanco comete alguna imprecisión, como la jugada c4, ahora viene un TRUQUITO ENIGMÁTICO ✨ con h5! amenazando capturar el alfil con h4. } { [%cal Gh6h5] } 13... h5! 14. h4 { Importante no capturar, en vez de eso ubicamos el caballo en g4, atacando el peón de h4 al entrar en juego también nuestra dama. } { [%cal Gf6g4] } 14... Ng4 { Logrando una posición ganadora para las negras :)
+Vamos con la última (y mejor) opción de las blancas tras 4...e5 ⏭ } { [%csl Gd8,Rh4][%cal Gg5h4] } *
+
+
+[Event "SICILIANA Enigmática: 6️⃣ Cb5"]
+[Date "2023.11.24"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "B32"]
+[Opening "Sicilian Defense: Kalashnikov Variation"]
+[StudyName "SICILIANA Enigmática"]
+[ChapterName "6️⃣ Cb5"]
+[ChapterURL "https://lichess.org/study/pIGm7aJW/Ru4dbaOW"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bqkbnr/pp1p1ppp/2n5/4p3/3NP3/8/PPP2PPP/RNBQKB1R w KQkq - 0 5"]
+[SetUp "1"]
+[UTCDate "2023.11.24"]
+[UTCTime "13:48:42"]
+[ChapterMode "gamebook"]
+
+5. Nb5 { La mejor opción por parte del blanco. } { [%csl Gb5][%cal Gd7d6] } 5... d6 { Con d6 comienza nuestra Siciliana Enigmática :) } 6. N1c3 { JUGADA muy IMPORTANTE⚠️ ahora a6! Expulsando al caballo de b5 para que no pueda aumentar su presión sobre c7. } { [%csl Rc7][%cal Rc3d5,Ga7a6] } 6... a6! 7. Na3 { [%cal Gf8e7] } 7... Be7 { Si el rival continúa con Cd5, que parece una jugada muy lógica, no es del todo precisa para el blanco. } 8. Nd5 { [%cal Gg8f6] } 8... Nf6 9. Be3 { [%csl Rb6,Re3,Rd5][%cal Gf6d5] } 9... Nxd5 10. exd5 { Cuando el blanco captura con peón en d5, por regla general, es favorable para el negro. Ahora podríamos continuar simplemente retirando el caballo a b8, pero, en nuestra Siciliana Enigmática, la opción que recomiendo es Cd4! } { [%cal Gc6d4] } 10... Nd4 11. Bxd4 { [%cal Ge5d4] } 11... exd4 12. Qxd4 { Sacrificamos ese peón para que, tras enroque corto, nuestro alfil de casilla negras sea imparable. } { [%cal Ge8g8] } 12... O-O 13. O-O-O { [%csl Ra3][%cal Gb7b5] } 13... b5 14. Bd3 { Y ahora sí, ocupamos la gran diagonal con nuestro alfil de casillas negras. } { [%cal Ge7f6] } 14... Bf6 15. Qe4 { ¡Cuidado con el mate! 😅 } { [%csl Rh7][%cal Gg7g6] } 15... g6 16. h4 { [%csl Re4][%cal Gf8e8] } 16... Re8 17. Qf4 { [%cal Gf6e5] } 17... Be5 18. Qh6 { TRUQUITO ENIGMÁTICO ✨ ¿Con qué jugada efectuamos una doble amenaza? } { [%csl Rf4,Rb2][%cal Rc1h6,Rc1a3] } 18... Qf6 { ¡Correcto! Amenazamos tanto el peón de b2, con ataque doble sobre el rey y el caballo, como Af4+, con ataque doble también sobre la dama y el rey... ¡ganando! :) } { [%csl Gb2,Gf4,Rc1,Rh6,Ra3][%cal Ge5f4,Ge5b2] } *
+
+
+[Event "SICILIANA Enigmática: 👋🏽 Final"]
+[Date "2024.04.19"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "SICILIANA Enigmática"]
+[ChapterName "👋🏽 Final"]
+[ChapterURL "https://lichess.org/study/pIGm7aJW/eZZjhJHN"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "8/8/8/8/8/8/8/8 w - - 0 1"]
+[SetUp "1"]
+[UTCDate "2024.04.19"]
+[UTCTime "12:36:50"]
+[ChapterMode "gamebook"]
+
+{ ¡Enhorabuena por llegar hasta el final! 🎉
+
+Apóyame con un 💖 en el estudio si te ha gustado y, si quieres acceder a la clase de prueba gratis, puedes hacerlo en este enlace👇🏼
+https://www.chessenigma.com/siciliana-enigmatica/
+
+¡Hasta pronto jaquetón! 👋🏼 }
+ *
+
+

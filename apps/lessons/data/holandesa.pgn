@@ -1,0 +1,601 @@
+[Event "Aprende la HOLANDESA Enigmática: Intro"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "Intro"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/0Iyb3HoU"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rnbqkbnr/ppppp1pp/8/5p2/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "15:54:03"]
+[ChapterMode "gamebook"]
+
+{ La Defensa Holandesa Enigmática es una gran elección al poder aplicarla contra prácticamente cualquier apertura de las blancas que no comience con e4.
+
+Al igual que el Sistema Colle Enigmático, esta defensa está repleta de Truquitos Enigmáticos ✨ que nos pueden hacer ganar muchas partidas por la vía rápida si nuestros rivales no se andan con cuidado
+
+A continuación. vamos a aprender la Variante Principal de esta defensa (la más jugada) en la que te explicaré algunas de los planes e ideas claves que debemos tener en cuenta en esta defensa.
+
+¿Comenzamos? ▶ } { [%csl Gf5][%cal Gf7f5] }
+ *
+
+
+[Event "Aprende la HOLANDESA Enigmática: 🟡Variante principal con e3"]
+[Date "2023.05.23"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "A84"]
+[Opening "Dutch Defense: Rubinstein Variation"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "🟡Variante principal con e3"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/sODKJVrQ"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[UTCDate "2023.05.23"]
+[UTCTime "06:53:48"]
+[ChapterMode "gamebook"]
+
+{ [%anno "Hola"] [%evp 0,30,31,23,75,45,45,41,55,54,54,54,40,40,53,25,25,34,52,19,34,17,23,-2,
+-24,-18,-18,-343,-343,-29997,-29998,-29999,-30000] }
+1. d4 { Controlamos el centro } { [%csl Gf7] } 1... f5 2. c4 { Avanzamos nuestro peón central } { [%csl Ge7] } 2... e6 3. Nc3 { Desarrollamos el alfil clavando el caballo } { [%csl Gf8] } 3... Bb4 { [%csl Rc3] } 4. Nf3 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 4... Bxc3+! 5. bxc3 { ¡Correcto, jaquetón! 😄
+Generalmente, no es recomendable intercambiar un alfil por un caballo durante la apertura, pero en el ajedrez siempre hay excepciones y este intercambio puede estar justificado por varias razones.
+La principal ventaja de este intercambio es que logramos desestabilizar la estructura de peones del jugador blanco, quien ahora tiene dos peones doblados. Además, al eliminar el caballo enemigo, aumentamos nuestro control sobre la casilla central e4, que es un punto clave en la posición.
+Continuamos ganando control sobre la casilla clave e4. } { [%csl Rc3,Rc4] } 5... Nf6 6. e3 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 6... b6! { ¡Correcto, jaquetón! 😄
+Una vez que hemos capturado el caballo con nuestro alfil, es importante realizar este plan. El objetivo continuar fortaleciendo nuestro control sobre la casilla e4 y apoyar los fuertes ataques que lanzaremos hacia el enroque. Además, según el juego de las blancas, nuestro alfil también puede dirigirse hacia la casilla "a6" para presionar la principal debilidad de las blancas "c4". } { [%csl Rc4,Re4][%cal Gc8b7,Gb7a6] } 7. Bd3 { Continuamos controlando el centro } 7... Bb7 8. O-O { Ponemos a nuestro rey a salvo } 8... O-O 9. a4 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 9... Ne4! { ¡Correcto, jaquetón! 😄
+Situamos nuestro caballo en la casilla central del territorio enemigo, donde está muy activo para plantea problemas a las blancas.
+Nuestro plan principal en esta variante consiste en mantener nuestro caballo en "e4" durante el mayor tiempo posible y, dependiendo del juego de las blancas, tenemos la opción de lanzar un ataque contra el enroque enemigo o de presionar la principal debilidad de las blancas en el flanco de dama, representada por su peón en "c4".
+Veamos las posibles respuestas del rival ▶ } { [%csl Ge4,Rc4,Rg1] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: Posibles respuestas del blanco"]
+[Date "2023.05.23"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "Posibles respuestas del blanco"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/fsrQ4J5E"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn1q1rk1/pbpp2pp/1p2p3/5p2/P1PPn3/2PBPN2/5PPP/R1BQ1RK1 w - - 1 10"]
+[SetUp "1"]
+[UTCDate "2023.05.23"]
+[UTCTime "10:13:36"]
+[ChapterMode "gamebook"]
+
+{ Las blancas disponen de 3 opciones principales en esta posición. A continuación, vamos a analizar estas tres posibles respuestas del blanco ordenadas de menos a más jugadas:
+
+1️⃣Cd2
+2️⃣Axe4
+3️⃣Dc2
+
+Comenzamos con la jugada Cd2 :) } { [%cal Rf3d2,Gd1c2,Bd3e4] }
+ *
+
+
+[Event "Aprende la HOLANDESA Enigmática: 1️⃣Cd2"]
+[Date "2023.05.23"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "1️⃣Cd2"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/caRBy3sM"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn1q1rk1/pbpp2pp/1p2p3/5p2/P1PPn3/2PBPN2/5PPP/R1BQ1RK1 w - - 1 10"]
+[SetUp "1"]
+[UTCDate "2023.05.23"]
+[UTCTime "10:16:56"]
+[ChapterMode "gamebook"]
+
+10. Nd2 { Esta jugada de retroceso es poco común, considerando que estamos atacando el peón desprotegido en c3.
+¿Cuál es la JUGADA IMPORTANTE ⚠️? } { [%csl Rd2] } 10... Qh4! { ¡Correcto, jaquetón! 😄
+Incorporamos rápidamente la dama al ataque para ejercer presión sobre el enroque enemigo, aprovechando la buena coordinación de nuestras piezas con la cual conseguimos ganar la iniciativa.
+Capturar el peón de "c3" sería una imprecisión, ya que las blancas podrían recuperarlo rápidamente con Dc2 y conseguir una posición favorable.
+Si las blancas optan por jugar 11.Dc2 para ejercer presión sobre nuestro caballo en el centro... } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✨Truquito Enigmático"]
+[Date "2023.05.23"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✨Truquito Enigmático"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/f20HZbX9"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn3rk1/pbpp2pp/1p2p3/5p2/P1PPn2q/2PBP3/3N1PPP/R1BQ1RK1 w - - 3 11"]
+[SetUp "1"]
+[UTCDate "2023.05.23"]
+[UTCTime "10:26:59"]
+[ChapterMode "gamebook"]
+
+11. Qc2?? { ¿Cuál es el Truquito Enigmático? ✨ } 11... Nxd2 12. Bxd2 Bxg2! { ¡Correcto, jaquetón! 😄
+Este sacrificio de alfil en el enroque deja a las blancas en una situación desesperada. Después de Rxg2, Dg4+, Rh1, Df3+ y Rg1, la jugada Tf6 las blancas no tienen una buena defensa contra Tg6+ y, por lo tanto, estaríamos ganando la partida. } { [%cal Rg1g2,Gh4g4,Gg4f3,Gf8f6] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: 🎁Regalo enigmático"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "🎁Regalo enigmático"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/lq9WJhjr"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rnbqkbnr/ppppp1pp/8/5p2/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 1"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "12:26:59"]
+[ChapterMode "gamebook"]
+
+{ ¡Sorpresa! 🎁 Te dejo de regalo el acceso gratuito a las clases de prueba de mi curso de la Holandesa Enigmática y otras de mis aperturas favoritas: https://www.chessenigma.com/acceso-clases-gratis-aperturas/ ¡Disfrútalo! 😄 }
+ *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✅Plan típico"]
+[Date "2023.05.23"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✅Plan típico"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/pRu06kyL"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn3rk1/pbpp2pp/1p2p3/5p2/P1PPn2q/2PBP3/3N1PPP/R1BQ1RK1 w - - 3 11"]
+[SetUp "1"]
+[UTCDate "2023.05.23"]
+[UTCTime "10:51:27"]
+[ChapterMode "gamebook"]
+
+11. g3 { Si en lugar de 11.Dc2, las blancas optan por atacar nuestra dama con g3, tenemos varias jugadas de ataque interesantes como Dh3 (mejor opción) ▶ } { [%csl Rg1][%cal Gh4h3] } 11... Qh3 { En este momento, las blancas deben tener mucho cuidado, ya que creamos una amenaza muy fuerte con Cxc3 y tenemos planes de ataque contundentes, como el paso de nuestra torre por la sexta fila para aumentar la presión en el enroque enemigo.
+Si nuestro rival trata de defenderse avanzando su peón a "f3" con idea de expulsar el caballo y bloquear la diagonal al alfil, esto sería un grave error por... } { [%csl Rd1,Rg1,Rc3][%cal Ge4c3,Gh3g2,Gb7g2,Gf8f6,Gf6h6] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✨Truquito Enigmático"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✨Truquito Enigmático"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/FOaL7WzE"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn3rk1/pbpp2pp/1p2p3/5p2/P1PPn3/2PBP1Pq/3N1P1P/R1BQ1RK1 w - - 1 12"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "14:37:55"]
+[ChapterMode "gamebook"]
+
+12. f3?? { ¿Cuál es el Truquito Enigmático? ✨ } 12... Nxg3! 13. hxg3 Qxg3+! 14. Kh1 Rf6! { ¡Jaque mate imparable! 😄
+También es importante tener en cuenta un patrón de Jaque Mate que debemos conocer cuando el rival realiza el avance "g3"... ▶ } { [%csl Rh1][%cal Gf6h6] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✨Truquito Enigmático"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✨Truquito Enigmático"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/sE8qcGWe"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn3rk1/pbpp2pp/1p2p3/5p2/P1PPn2q/2PBP3/3N1PPP/R1BQ1RK1 w - - 3 11"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "14:42:07"]
+[ChapterMode "gamebook"]
+
+11. g3 { Sacrificamos la dama... } { [%cal Ge4g5] } 11... Ng5 12. gxh4?? { ¿Cuál es el Truquito Enigmático? ✨ } 12... Nh3# { ¡Jaque Mate! 😄
+Veamos otra respuesta más habitual de las blancas: 2️⃣Axe4 } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: 2️⃣Axe4"]
+[Date "2023.05.23"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "2️⃣Axe4"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/Ir6VRWa8"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn1q1rk1/pbpp2pp/1p2p3/5p2/P1PPn3/2PBPN2/5PPP/R1BQ1RK1 w - - 1 10"]
+[SetUp "1"]
+[UTCDate "2023.05.23"]
+[UTCTime "09:23:48"]
+[ChapterMode "gamebook"]
+
+10. Bxe4 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } { [%csl Be4] } 10... fxe4! 11. Nd2 { ¡Correcto, jaquetón! 😄
+Debo admitir que la primera vez que investigué esta línea, me sorprendió un poco descubrir que la recaptura de peón era la mejor opción. Aparentemente, bloquea la diagonal de nuestro propio alfil y lo desactiva del ataque. Sin embargo, esto nos brinda la oportunidad de expulsar al caballo de la defensa y lanzar un rápido ataque contra el enroque enemigo.
+Incorporamos la dama al ataque... } { [%csl Rd2,Rg1,Gd8] } 11... Qh4 { Si las blancas optan por atacarnos la dama con "g3" para disminuir la presión, esto solo empeoraría su posición... } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✅Plan típico"]
+[Date "2023.05.23"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✅Plan típico"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/QRZvgJPJ"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn3rk1/pbpp2pp/1p2p3/8/P1PPp2q/2P1P3/3N1PPP/R1BQ1RK1 w - - 2 12"]
+[SetUp "1"]
+[UTCDate "2023.05.23"]
+[UTCTime "18:38:59"]
+[ChapterMode "gamebook"]
+
+12. g3 { Aprovechamos las debilidades en el enroque... } 12... Qh3 13. a5 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 13... Rf6! { ¡Correcto, jaquetón! 😄
+El pase de la torre por la sexta fila es una maniobra de ataque muy característica de la Defensa Holandesa Enigmática. Su objetivo es apoyar desde atrás a la dama, para continuar presionando a lo largo de la columna débil "h".
+Ante esta amenaza tan fuerte, las blancas podrían decidir desplazar su torre para habilitar la casilla "f1" para su caballo y así detener el ataque. Sin embargo, en ese caso... } 14. Re1 Rxf2 15. Kxf2 Qxh2+ 16. Kf1 Nc6 { ¡Correcto, jaquetón! 😄
+El sacrificio de torre destroza la defensa del rey enemigo y nos conduce a una posición ganada, gracias a la amenaza imparable Tf8+ contra la cual las blancas no encuentran defensa.
+Veamos otros posibles errores en los que pueden caer las blancas. } { [%csl Rf1][%cal Ga8f8] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✨Truquito Enigmático"]
+[Date "2023.05.23"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✨Truquito Enigmático"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/wHNO1VoE"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn1q1rk1/pbpp2pp/1p2p3/8/P1PPp3/2P1PN2/5PPP/R1BQ1RK1 w - - 0 11"]
+[SetUp "1"]
+[UTCDate "2023.05.23"]
+[UTCTime "18:25:37"]
+[ChapterMode "gamebook"]
+
+11. Ne5?? { ¿Cuál es el Truquito Enigmático? ✨ } 11... d6! 12. Ng4 h5! { ¡Correcto, jaquetón! 😄
+Logramos capturar el caballo enemigo, obteniendo una ventaja material en la partida. } { [%csl Rg4] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✨Truquito Enigmático"]
+[Date "2023.05.23"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✨Truquito Enigmático"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/CStAGgzo"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn1q1rk1/pbpp2pp/1p2p3/8/P1PPp3/2P1PN2/5PPP/R1BQ1RK1 w - - 0 11"]
+[SetUp "1"]
+[UTCDate "2023.05.23"]
+[UTCTime "18:30:09"]
+[ChapterMode "gamebook"]
+
+11. Ne1?? { ¿Cuál es el Truquito Enigmático? ✨ } 11... Ba6 12. Qe2 d5 { ¡Correcto, jaquetón! 😄
+Conseguimos capturar el peón débil, obteniendo una ventaja material en la partida.
+Veamos la respuesta más habitual de las blancas: 3️⃣Dc2 } { [%csl Rc4] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: 3️⃣Dc2"]
+[Date "2023.05.23"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "3️⃣Dc2"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/HtWpffOf"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn1q1rk1/pbpp2pp/1p2p3/5p2/P1PPn3/2PBPN2/5PPP/R1BQ1RK1 w - - 1 10"]
+[SetUp "1"]
+[UTCDate "2023.05.23"]
+[UTCTime "09:24:22"]
+[ChapterMode "gamebook"]
+
+10. Qc2 { Esta es la opción más segura y recomendada para las blancas, ya que les permite proteger su peón y ejercer presión sobre nuestro caballo en el centro.
+¿Cuál es la JUGADA IMPORTANTE ⚠️? } { [%csl Gc2] } 10... Nc6! { ¡Correcto, jaquetón! 😄
+Una jugada que busca la iniciativa sacrificando un peón que las blancas no deberían aceptarlo, ya que si lo hacen... } 11. Bxe4 { Capturamos en el centro... } 11... fxe4 12. Qxe4 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 12... Na5! { ¡Correcto, jaquetón! 😄
+Las blancas se encuentran ahora en una situación muy complicada y están prácticamente obligadas a avanzar su peón "d" para evitar que su posición empeore. Cualquier otra jugada conlleva un alto riesgo para su posición.
+Un error frecuente que cometen es retroceder la dama una casilla para proteger su peón, lo cual resulta desfavorable ya que... } { [%csl Re4,Rc4] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✨Truquito Enigmático"]
+[Date "2023.05.23"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✨Truquito Enigmático"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/xz2n41ST"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r2q1rk1/pbpp2pp/1p2p3/n7/P1PPQ3/2P1PN2/5PPP/R1B2RK1 w - - 1 13"]
+[SetUp "1"]
+[UTCDate "2023.05.23"]
+[UTCTime "18:48:35"]
+[ChapterMode "gamebook"]
+
+13. Qd3?? { ¿Cuál es el Truquito Enigmático? ✨ } 13... Rxf3! 14. gxf3 Qg5+! 15. Kh1 Bxf3#! { ¡Jaque mate! 😄
+Veamos ahora la mejor forma de continuar ante la respuesta más recomendada de las blancas, que es avanzar su peón "d"... } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✅Plan típico"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✅Plan típico"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/rxCg7yTw"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r2q1rk1/pbpp2pp/1p2p3/n7/P1PPQ3/2P1PN2/5PPP/R1B2RK1 w - - 1 13"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "08:56:50"]
+[ChapterMode "gamebook"]
+
+13. d5 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 13... Qe8! 14. Rd1 { Incorporamos la dama al ataque... } { [%csl Ge8] } 14... Qh5 { Como resultado, conseguimos una posición muy favorable, con la idea de activar nuestra torre hacia la casilla "e8" para castigar la posición débil de la dama enemiga y preparar un posible sacrificio de calidad con la jugada Txf3.
+Veamos dos posibles errores que las blancas podrían cometer en esta situación... } { [%csl Re4,Rd5,Rc4][%cal Ga8e8] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✨Truquito Enigmático"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✨Truquito Enigmático"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/3Rwfqjdn"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r4rk1/pbpp2pp/1p2p3/n2P3q/P1P1Q3/2P1PN2/5PPP/R1BR2K1 w - - 3 15"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "09:15:30"]
+[ChapterMode "gamebook"]
+
+15. Qd4?? { ¿Cuál es el Truquito Enigmático? ✨ } 15... Nb3! { ¡Correcto, jaquetón! 😄
+́
+Realizamos un doblete con el cual conseguimos una importante ventaja de material.
+Veamos ahora otro posible error que las blancas podrían cometer en esta situación. } { [%csl Rd4,Ra1][%cal Gb3a1,Gb3d4] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✨Truquito Enigmático"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✨Truquito Enigmático"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/b0OimdXX"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r4rk1/pbpp2pp/1p2p3/n2P3q/P1P1Q3/2P1PN2/5PPP/R1BR2K1 w - - 3 15"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "09:18:45"]
+[ChapterMode "gamebook"]
+
+15. Qd3?? { ¿Cuál es el Truquito Enigmático? ✨ } 15... Rxf3! 16. gxf3 Rf8 { ¡Correcto, jaquetón! 😄
+Este sacrificio de calidad resulta muy efectivo debido a que logramos destrozar la defensa del rey enemigo y las blancas no tienen una forma de defenderse en esta posición.
+Veamos ahora la mejor manera de continuar en caso de que las blancas decidan no aceptar el sacrificio y opten por atacar nuestro caballo situado en el centro... } { [%csl Rf3,Rg1][%cal Gf8f3] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✅Plan típico"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✅Plan típico"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/rY0eOKvw"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r2q1rk1/pbpp2pp/1pn1p3/5p2/P1PPn3/2PBPN2/2Q2PPP/R1B2RK1 w - - 3 11"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "09:26:03"]
+[ChapterMode "gamebook"]
+
+11. Nd2 { Capturamos el caballo... } 11... Nxd2 12. Bxd2 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 12... Na5 { ¡Correcto, jaquetón! 😄
+Como siempre suelo mencionar, tener un caballo en un lateral equivale a tener solo la mitad de su potencial. Sin embargo, en este caso en particular está justificado por un motivo estratégico, ya que nuestro objetivo es presionar rápidamente la principal debilidad de las blancas de manera efectiva.
+Es común que las blancas, en este tipo de posiciones, intenten contraatacar rápidamente en el centro preparando la ruptura "e4" en buenas condiciones... } { [%csl Rc4] } 13. f3 { Continuamos atacando la debilidad... } { [%csl Gb7] } 13... Ba6 { En este momento, las blancas se encuentran prácticamente obligadas a avanzar su peón "c" para aliviar el ataque lo que nos permite obtener una sólida posición tras Axd3, Dxd3 y bxc5! donde llevaremos a cabo un juego muy cómodo, aprovechando los peones débiles del flanco de dama de las blancas.
+Un error común sería intentar defender el peón utilizando la dama, lo cual nos permitiría ganar un peón con... } { [%cal Rc4c5] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ✨Truquito Enigmático"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "✨Truquito Enigmático"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/t3AaZ83x"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r2q1rk1/p1pp2pp/bp2p3/n4p2/P1PP4/2PBPP2/2QB2PP/R4RK1 w - - 1 14"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "09:38:55"]
+[ChapterMode "gamebook"]
+
+14. Qa2?? { ¿Cuál es el Truquito Enigmático? ✨ } 14... d5! { ¡Correcto, jaquetón! 😄
+Aprovechamos la clavada para continuar ejerciendo presión sobre la debilidad de las blancas y conseguir gana un peón de ventaja de manera inevitable. } { [%csl Rd3,Ga6][%cal Ga6d3] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: 🧠Entrenamiento de Variantes"]
+[Site "https://lichess.org/study/fWMGJbfM/jYrqMshn"]
+[Date "2021.05.22"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "A84"]
+[Opening "Dutch Defense: Rubinstein Variation"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "🧠Entrenamiento de Variantes"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/4bO1YqcB"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[ChapterMode "gamebook"]
+
+{ [%anno "Hola"] [%evp 0,30,31,23,75,45,45,41,55,54,54,54,40,40,53,25,25,34,52,19,34,17,23,-2,
+-24,-18,-18,-343,-343,-29997,-29998,-29999,-30000] }
+1. d4 { ¡Es tu turno ahora! Sin pistas, intenta recordar las líneas que hemos estudiado anteriormente. } 1... f5 2. c4 e6 3. Nc3 Bb4 4. Nf3 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 4... Bxc3+! 5. bxc3 Nf6 6. e3 { [%anno "Hola"] ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 6... b6! 7. Bd3 Bb7 8. O-O O-O 9. a4 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 9... Ne4! { ¡Correcto, jaquetón! 😄
+Como bien recordarás, en esta posición las blancas tienen tres opciones principales: 1.Cd2, 2.Axe4 y 3.Dc2, pero...
+¿Recuerdas todas las Jugadas Importantes? Veámoslo ▶ } { [%cal Rf3d2,Bd3e4,Gd1c2] } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ❗Jugada Importante"]
+[Site "https://lichess.org/study/KAPPW0mP/WN3go0VO"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "❗Jugada Importante"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/9QU6nxKL"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rnbqk1nr/pppp2pp/4p3/5p2/1bPP4/2N5/PP2PPPP/R1BQKBNR w KQkq - 2 2"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "12:11:57"]
+[ChapterMode "gamebook"]
+
+2. Nf3 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 2... Bxc3+! { ¡Correcto, jaquetón! 😄
+¡Vamos a por la siguiente! ▶ } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ❗Jugada Importante"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "❗Jugada Importante"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/yxq9n1Jp"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rnbqk2r/pppp2pp/4pn2/5p2/2PP4/2P2N2/P3PPPP/R1BQKB1R w KQkq - 0 6"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "12:14:50"]
+[ChapterMode "gamebook"]
+
+6. e3 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 6... b6! { ¡Correcto, jaquetón! 😄
+¡Vamos a por la siguiente! ▶ } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ❗Jugada Importante"]
+[Site "https://lichess.org/study/KAPPW0mP/iM5vrMWC"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "❗Jugada Importante"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/oIIYX27a"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn1q1rk1/pbpp2pp/1p2pn2/5p2/2PP4/2PBPN2/P4PPP/R1BQ1RK1 w - - 4 9"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "12:16:00"]
+[ChapterMode "gamebook"]
+
+9. a4 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 9... Ne4! { ¡Correcto, jaquetón! 😄
+¡Vamos a por la siguiente! ▶ } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ❗Jugada Importante"]
+[Site "https://lichess.org/study/KAPPW0mP/hKI3xW1r"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "❗Jugada Importante"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/sI7Vdm2r"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn1q1rk1/pbpp2pp/1p2p3/5p2/P1PPn3/2PBPN2/5PPP/R1BQ1RK1 w - - 1 10"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "12:17:54"]
+[ChapterMode "gamebook"]
+
+10. Bxe4 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 10... fxe4! { ¡Correcto, jaquetón! 😄
+¡Vamos a por la siguiente! ▶ } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ❗Jugada Importante"]
+[Site "https://lichess.org/study/KAPPW0mP/WhIMhZSn"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "❗Jugada Importante"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/FxSAjIQB"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn1q1rk1/pbpp2pp/1p2p3/5p2/P1PPn3/2PBPN2/5PPP/R1BQ1RK1 w - - 1 10"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "12:18:37"]
+[ChapterMode "gamebook"]
+
+10. Qc2 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 10... Nc6! { ¡Correcto, jaquetón! 😄
+¡Vamos a por la siguiente! ▶ } *
+
+
+[Event "Aprende la HOLANDESA Enigmática: ❗Jugada Importante"]
+[Site "https://lichess.org/study/KAPPW0mP/KvYNhb5l"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "❗Jugada Importante"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/EAJ1mhw6"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r2q1rk1/pbpp2pp/1pn1p3/5p2/P1PP4/2PBP3/2Qn1PPP/R1B2RK1 w - - 3 11"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "12:19:21"]
+[ChapterMode "gamebook"]
+
+11. Bxd2 { ¿Cuál es la JUGADA IMPORTANTE ⚠️? } 11... Na5! { ¡Correcto, jaquetón! 😄
+Antes de irte... ▶ } 12. f3 Ba6 *
+
+
+[Event "Aprende la HOLANDESA Enigmática: Final"]
+[Date "2023.05.24"]
+[Result "*"]
+[Variant "From Position"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Aprende la HOLANDESA Enigmática"]
+[ChapterName "Final"]
+[ChapterURL "https://lichess.org/study/heMoVAkN/vPlESNZY"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "8/8/8/8/8/8/8/8 w - - 0 1"]
+[SetUp "1"]
+[UTCDate "2023.05.24"]
+[UTCTime "12:25:11"]
+[ChapterMode "gamebook"]
+
+{ ¡Enhorabuena por completar el estudio! Apóyame con un 💖 en el estudio si te ha gustado y visita www.chessenigma.com si quieres mejorar en ajedrez.
+
+¡Espero que disfrutes las clases gratuitas y te ayuden a seguir mejorando! :) }
+ *
+
+

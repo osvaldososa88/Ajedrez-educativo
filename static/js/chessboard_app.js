@@ -60,6 +60,21 @@ class ChessboardApp {
 
         this.reconnectAttempts = 0;
         this.pingInterval = null;
+        this.watchdogInterval = null;
+        this.lastMessageAt = Date.now();
+
+        const setStatus = (text, online) => {
+            const statusEl = document.getElementById('connection-status');
+            if (!statusEl) return;
+            statusEl.textContent = text;
+            if (online) {
+                statusEl.classList.add('online');
+                statusEl.classList.remove('offline');
+            } else {
+                statusEl.classList.add('offline');
+                statusEl.classList.remove('online');
+            }
+        };
 
         const connect = () => {
             if (this.socket && (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN)) {
@@ -70,34 +85,48 @@ class ChessboardApp {
 
             this.socket.onopen = () => {
                 this.reconnectAttempts = 0;
-                const statusEl = document.getElementById('connection-status');
-                if (statusEl) {
-                    statusEl.textContent = 'En línea';
-                    statusEl.classList.add('online');
-                    statusEl.classList.remove('offline');
-                }
+                this.lastMessageAt = Date.now();
+                if (this.closeGraceTimer) clearTimeout(this.closeGraceTimer);
+                setStatus('En línea', true);
 
-                // Heartbeat ping every 25 seconds to keep Nginx/Daphne connection alive
+                // Heartbeat ping every 15 seconds to keep Nginx/Daphne/mobile alive
                 if (this.pingInterval) clearInterval(this.pingInterval);
                 this.pingInterval = setInterval(() => {
                     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
                         this.socket.send(JSON.stringify({ type: 'ping' }));
                     }
-                }, 25000);
+                }, 15000);
+
+                // Watchdog: only report "Reconectando..." if NOTHING arrived for 45s.
+                // Thinking about a move never closes the socket, so a silent clock is
+                // NOT a disconnect — this is what used to flash the red badge.
+                if (this.watchdogInterval) clearInterval(this.watchdogInterval);
+                this.watchdogInterval = setInterval(() => {
+                    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+                    if (Date.now() - this.lastMessageAt > 45000) {
+                        setStatus('Reconectando...', false);
+                    }
+                }, 5000);
             };
 
             this.socket.onclose = () => {
                 if (this.pingInterval) clearInterval(this.pingInterval);
-                const statusEl = document.getElementById('connection-status');
-                if (statusEl) {
-                    statusEl.textContent = 'Reconectando...';
-                    statusEl.classList.add('offline');
-                    statusEl.classList.remove('online');
-                }
+                if (this.watchdogInterval) clearInterval(this.watchdogInterval);
 
-                // Auto-reconnect with backoff (1s, 2s, 3s...)
+                // Grace period: a dropped socket is usually a transient blip
+                // (mobile switching networks, screen lock...). Only show the
+                // "Reconectando..." badge if we are STILL offline after 10 s,
+                // so short interruptions don't flash the red indicator.
+                if (this.closeGraceTimer) clearTimeout(this.closeGraceTimer);
+                this.closeGraceTimer = setTimeout(() => {
+                    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+                        setStatus('Reconectando...', false);
+                    }
+                }, 10000);
+
+                // Auto-reconnect with backoff (0.5s, 1s, 2s... max 10s)
                 this.reconnectAttempts++;
-                const delay = Math.min(10000, 1000 * Math.pow(1.5, this.reconnectAttempts));
+                const delay = Math.min(10000, 500 * Math.pow(1.5, this.reconnectAttempts - 1));
                 setTimeout(() => connect(), delay);
             };
 
@@ -108,8 +137,10 @@ class ChessboardApp {
             };
 
             this.socket.onmessage = (event) => {
+                this.lastMessageAt = Date.now();
                 const data = JSON.parse(event.data);
                 if (data.type === 'pong') {
+                    setStatus('En línea', true);
                     return; // Heartbeat response
                 } else if (data.type === 'init_state' || data.type === 'game_update') {
                     this.updateGameState(data.state);

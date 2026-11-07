@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ lesson.title }} - Lecciones{% endblock %}
+
+{% block content %}
+<div class="lesson-session">
+    <header class="card lesson-session-header">
+        <div>
+            <a href="{{ lesson.get_absolute_url }}" class="btn btn-secondary">← {{ lesson.title }}</a>
+            <h2 id="lesson-title" style="margin-top:0.75rem;">{{ lesson.title }}</h2>
+            <p style="color:var(--text-secondary);">{{ lesson.summary }}</p>
+        </div>
+        <div class="lesson-progress" aria-live="polite">
+            <span id="lesson-progress-label">
+                {{ lesson_progress.completed_chapters }} / {{ lesson_progress.total_chapters }} capítulos completados
+            </span>
+            <progress id="lesson-progress-bar" max="{{ lesson_progress.total_chapters|default:1 }}"
+                     value="{{ lesson_progress.completed_chapters }}"></progress>
+        </div>
+    </header>
+
+    <div class="game-container lesson-game lesson-session-layout">
+        <div class="board-wrapper">
+            <div class="lesson-board-toolbar">
+                <label for="lesson-color">Practicar con</label>
+                <select id="lesson-color" class="form-select">
+                    <option value="white" {% if lesson.student_color == 'white' %}selected{% endif %}>Blancas</option>
+                    <option value="black" {% if lesson.student_color == 'black' %}selected{% endif %}>Negras</option>
+                </select>
+                <label for="lesson-mode">Modo</label>
+                <select id="lesson-mode" class="form-select">
+                    <option value="guided">Guiado</option>
+                    <option value="practice">Práctica</option>
+                    <option value="exam">Examen</option>
+                </select>
+            </div>
+            <div id="chessboard" class="chessboard" aria-label="Tablero de ajedrez"></div>
+            <div class="card lesson-move-list">
+                <div id="lesson-moves" aria-live="polite"></div>
+                <div class="lesson-history-controls">
+                    <button id="lesson-back" class="btn btn-secondary" type="button" aria-label="Retroceder">◀ Atrás</button>
+                    <button id="lesson-forward" class="btn btn-secondary" type="button" aria-label="Avanzar">Avanzar ▶</button>
+                </div>
+            </div>
+        </div>
+
+        <aside class="game-sidebar">
+            <section class="card">
+                <h3 id="chapter-heading">{{ chapter.number }}. {{ chapter.title }}</h3>
+                <p id="lesson-intro" class="lesson-intro">{{ chapter.intro }}</p>
+                <p id="lesson-status" class="lesson-status" role="status" aria-live="polite">
+                    Elige el color y realiza las jugadas directamente en el tablero.
+                </p>
+            </section>
+
+            <section class="card">
+                <div class="lesson-actions">
+                    <button type="button" id="lesson-hint" class="btn btn-secondary">Pista</button>
+                    <button type="button" id="lesson-reset" class="btn btn-secondary">↺ Repetir capítulo</button>
+                    <button type="button" id="lesson-evaluate" class="btn btn-secondary">Evaluar posición</button>
+                </div>
+                <div id="lesson-comment" class="lesson-comment" aria-live="polite"></div>
+                <div id="lesson-evaluation" class="lesson-evaluation" aria-live="polite"></div>
+            </section>
+
+            <section class="card">
+                <h4>Capítulos de esta apertura</h4>
+                <div id="lesson-chapters" class="lesson-chapters">
+                    {% for item in chapters %}
+                    <button type="button"
+                            class="btn {% if item.id == chapter.id %}btn-primary{% else %}btn-secondary{% endif %} lesson-chapter"
+                            data-chapter-id="{{ item.id }}">
+                        {{ item.number }}. {{ item.title }}
+                    </button>
+                    {% endfor %}
+                </div>
+                <div class="lesson-chapter-navigation">
+                    {% if prev_chapter %}
+                    <button type="button" class="btn btn-secondary" data-chapter-id="{{ prev_chapter.id }}">◀ Anterior</button>
+                    {% endif %}
+                    {% if next_chapter %}
+                    <button type="button" class="btn btn-primary" data-chapter-id="{{ next_chapter.id }}">Siguiente ▶</button>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="card">
+                <h4>Variantes disponibles</h4>
+                <p class="lesson-help">Las alternativas del árbol son jugadas aceptables. El adversario responde por la línea principal; puedes explorar otras ramas aquí.</p>
+                <button type="button" id="lesson-toggle-branches" class="btn btn-secondary" hidden>
+                    Mostrar ramas
+                </button>
+                <div id="lesson-choices" class="lesson-choices"></div>
+            </section>
+        </aside>
+    </div>
+</div>
+<form hidden>{% csrf_token %}</form>
+{{ session_chapters|json_script:"lesson-session-chapters" }}
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script>
+    window.LESSON_EVAL_URL = "{% url 'analyze_single_fen_api' %}";
+    window.LESSON_INITIAL_CHAPTER_ID = {{ chapter.id }};
+</script>
+<script src="{% static 'js/lessons_app.js' %}"></script>
+{% endblock %}

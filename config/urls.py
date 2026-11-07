@@ -14,6 +14,7 @@ urlpatterns = [
     path('games/', include('apps.games.urls')),
     path('analysis/', include('apps.analysis.urls')),
     path('training/', include('apps.training.urls')),
+    path('lessons/', include('apps.lessons.urls')),
     path('classrooms/', include('apps.classrooms.urls')),
     path('tournaments/', include('apps.tournaments.urls')),
     path('bots/', include('apps.bots.urls')),

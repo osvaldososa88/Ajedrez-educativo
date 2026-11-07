@@ -723,23 +723,17 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
             req = TakebackRequest.objects.create(game=game, requester=requester)
             return {'action': 'pvp_request', 'error': None, 'request_id': req.id}
 
-        # Bot game → apply up to 2 undos immediately
+        # Bot game → undo immediately. Against a bot we must give the turn back
+        # to the player, so BOTH the bot's reply and the player's own move are
+        # removed — but that is still ONE button press, so it costs ONE heart.
         move_count = game.moves.count()
         if move_count == 0:
             return {'action': None, 'error': 'No hay movimientos para deshacer.', 'request_id': None}
 
-        # First undo
-        success, err = game.apply_takeback()
+        plies = 2 if move_count >= 2 else 1
+        success, err = game.apply_takeback(plies=plies)
         if not success:
             return {'action': None, 'error': err or 'Error al deshacer.', 'request_id': None}
-
-        # Second undo (bot move) if possible
-        if move_count >= 2:
-            game.refresh_from_db()
-            if game.takebacks_left > 0 and game.moves.exists():
-                success2, err2 = game.apply_takeback()
-                if not success2:
-                    logger.warning("Second undo failed for game %s: %s", game_id, err2)
 
         return {'action': 'applied', 'error': None, 'request_id': None}
 

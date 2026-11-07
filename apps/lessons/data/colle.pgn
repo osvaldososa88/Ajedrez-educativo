@@ -1,0 +1,545 @@
+[Event "Sistema Colle Enigmático: Posición que debes recordar"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "Posición que debes recordar"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/RJDrDnsP"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "8/8/8/8/3P4/2PBPN2/PP1N1PPP/R1BQ1RK1 w Q - 0 1"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "10:09:49"]
+[ChapterMode "gamebook"]
+
+{ Hola JAQUETONES!!
+
+Bienvenidos a mi estudio sobre el 📗Sistema Colle Enigmático, espero que os guste y os sirva para ganar muchas partidas.
+
+👉Empezamos con la disposición de piezas del Sistema Colle. Si te das cuenta, es muy similar al Ataque Torre donde nuestro alfil de c1 estaría en g5, o al Sistema Londres donde el alfil estaría en f4. } { [%csl Gc3,Gd4,Ge3,Gf3,Gd3,Gd2] }
+ *
+
+
+[Event "Sistema Colle Enigmático: Variante principal"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "D05"]
+[Opening "Queen's Pawn Game: Colle System, Traditional Colle"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "Variante principal"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/9uSIGcqM"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[UTCDate "2021.08.26"]
+[UTCTime "07:05:01"]
+[ChapterMode "gamebook"]
+
+{ Ocupa el centro con tu peón de dama } { [%csl Gd4][%cal Gd2d4] }
+1. d4 d5 { Desarrolla tu caballo al centro } { [%csl Gf3][%cal Gg1f3] } 2. Nf3 Nf6 { Avanza tu otro peón central } { [%csl Ge3][%cal Ge2e3] } 3. e3 c5 { Refuerza el centro con tu otro peón } { [%csl Gc3][%cal Gc2c3] } 4. c3 { Esta jugada es necesaria antes de desarrollar nuestro alfil para habilitar la casilla c2 a nuestro alfil de casillas blancas. } { [%csl Gc3] } 4... e6 { Desarrolla el alfil a la casilla más activa de la posición } { [%csl Gd3][%cal Gf1d3] } 5. Bd3 { Si el negro avanza su peón retrocederemos con nuestro alfil a la casilla c2 para mantenerlo activo en la posición } { [%csl Rc4,Gc2][%cal Rc5c4,Gd3c2] } 5... Nc6 { Desarrolla tu otro caballo al centro } { [%csl Gd2][%cal Gb1d2] } 6. Nbd2 Be7 { Pon a tu rey a salvo } { [%csl Gg1][%cal Ge1g1] } 7. O-O O-O { Desarrolla tu dama para preparar la ruptura e4 en buenas condiciones } { [%csl Ge2][%cal Gd1e2] } 8. Qe2 { ¡ENHORABUENA JAQUETÓN! :)
+Has llegado a la posición ideal del Sistema Colle Enigmático donde todas nuestras piezas están preparadas para realizar la ruptura e4.
+Veamos las posibles respuestas del negro... } *
+
+
+[Event "Sistema Colle Enigmático: Posibles respuestas del negro"]
+[Date "2022.02.08"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "Posibles respuestas del negro"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/JN1zNujU"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bq1rk1/pp2bppp/2n1pn2/2pp4/3P4/2PBPN2/PP1NQPPP/R1B2RK1 b - - 7 8"]
+[SetUp "1"]
+[UTCDate "2022.02.08"]
+[UTCTime "10:21:18"]
+[ChapterMode "gamebook"]
+
+{ Aquí las negras tienen diferentes formas de jugar y las va a marcar el peón de c5:
+
+8... cxd4
+8... c4
+8... b6
+
+VAMOS A COMENZAR CON 8... cxd4 :) } { [%csl Bd4,Rc4,Gb6][%cal Bc5d4,Rc5c4,Gb7b6] }
+ *
+
+
+[Event "Sistema Colle Enigmático: 1️⃣Las negras juegan 8...cxd4"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "1️⃣Las negras juegan 8...cxd4"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/veFD9BxP"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bq1rk1/pp2bppp/2n1pn2/3p4/3p4/2PBPN2/PP1NQPPP/R1B2RK1 w - - 7 8"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "07:20:49"]
+[ChapterMode "gamebook"]
+
+{ ¿Con qué peón deberíamos capturar ? } { [%csl Bd4][%cal Bc5d4] }
+8. exd4 { ¡Exacto! Buena jugada jaquetón, de esta manera conseguimos abrir la columna e y facilitamos el desarrollo de nuestro alfil de c1.
+Esta posición es igual a la variantes del cambio de la Defensa Caro-Kann pero con el alfil de c8 encerrado dentro de la cadena de peones. Puede parecer un detalle sin importancia pero no lo es, marca completamente la diferencia ya que nuestro alfil de d3 va a ser una bestia.
+En el siguiente capítulo te enseño a cómo continuar con un plan de ataque muy rápido y fuerte en esta posición :) } { [%csl Gd3,Rc8] } *
+
+
+[Event "Sistema Colle Enigmático: ⚡Plan de Ataque rápido y efectivo"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "⚡Plan de Ataque rápido y efectivo"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/cZeBKTVD"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bq1rk1/pp2bppp/2n1pn2/3p4/3P4/2PB1N2/PP1NQPPP/R1B2RK1 w - - 0 8"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "07:33:40"]
+[ChapterMode "gamebook"]
+
+{ Juega Ce5 } { [%csl Gf3][%cal Gf3e5] }
+8. Ne5 { ¡Buena jugada! Tras el cambio en d4 tenemos que cambiar el chip. En las aperturas se producen constantemente cambios y tenemos que analizarlos.
+Normalmente los cambios más grandes se producen cuando se modifica la estructura de peones. Antes del cambio en d4, la ruptura e4 era el concepto más importante de la posición, en cambio ahora la batalla estratégica pasa a ser el control de la casilla e5. } { [%csl Ge5] } 8... Qc7 { Juega Cdf3 } { [%csl Gd2][%cal Gd2f3] } 9. Ndf3 { ¡Buena jugada! Ahora podemos continuar desarrollando nuestro alfil de c1 a f4 o g5 } { [%csl Rf4,Rg5][%cal Rc1f4,Rc1g5] } 9... Bd7 { Juega Ag5 } { [%csl Gc1][%cal Gc1g5] } 10. Bg5 { La idea de Ag5 es eliminar la pieza defensora del punto h7 en el momento oportuno } { [%csl Rg5][%cal Rg5f6] } 10... Rfe8 { Juega Tfe1, para ganar un mayor control sobre la casilla e5 } { [%csl Gf1,Re5][%cal Gf1e1] } 11. Rfe1 { ¡Buen movimiento! Nuestras torres por lo general debemos colocarlas en las columnas abiertas y semiabiertas de la posición } 11... Rac8 { Juega Tac1 } { [%csl Ga1][%cal Ga1c1] } 12. Rac1 a6 { Juega Ab1 } { [%csl Rh7,Gd3][%cal Gd3b1] } 13. Bb1 { [%csl Rh7] } 13... b5 { Continúa con Dd3 } { [%csl Ge2][%cal Ge2d3] } 14. Qd3 { Este es un plan de ataque típico en estas posiciones. Recuerda que la dama y el alfil son piezas de ataque de largo alcance que juntas puede hacer mucho daño al enroque enemigo } { [%csl Gd3,Gb1,Rh7][%cal Gd3h7] } 14... b4? { ¿Cuál es la jugada enigmática en esta posición? } 15. Bxf6 { ¡Buena jugada! Eliminando ahora sí la pieza defensora del rival } 15... Bxf6 { ¿Y ahora...? } 16. Qxh7+ { ¡CORRECTO JAQUETÓN! :)
+Has conseguido arruinar la posición del rival y ahora su rey está en peligro.
+En el siguiente capitulo vamos a ver cómo jugar contra la jugada 8... c4 de las negras.
+¡SEGUIMOS! } { [%csl Rg8] } *
+
+
+[Event "Sistema Colle Enigmático: 2️⃣Las negras juegan 8...c4"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "2️⃣Las negras juegan 8...c4"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/rc79t6cD"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bq1rk1/pp2bppp/2n1pn2/3p4/2pP4/2PBPN2/PP1NQPPP/R1B2RK1 w - - 7 8"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "07:53:16"]
+[ChapterMode "gamebook"]
+
+{ ¿A qué casilla debe ir nuestro alfil? } { [%csl Rc4][%cal Rc5c4] }
+8. Bc2 { ¡CORRECTO JAQUETÓN! :)
+Este avance de peón se trata de un error estratégico muy común entre aficionados y principales debido a que liberar la tensión central solo beneficia al blanco que ahora pueden realizar la ruptura e4 en mejores condiciones } { [%csl Rc4] } 8... b5 { Realiza la ruptura principal del Sistema Colle Enigmático } { [%csl Ge4][%cal Ge3e4] } 9. e4 { ¡CORRECTO JAQUETÓN! :)
+Recuerda que cuando realices la ruptura e4... ¡hay que celebrarlo! } 9... a5 { Continúa avanzando tu peón central } { [%csl Ge5][%cal Ge4e5] } 10. e5 { ¡ENHORABUENA JAQUETÓN! :)
+Este avance nos permite ganar más espacio en el centro del tablero y tenemos planes de ataque muy fuertes sobre el enroque enemigo.
+En el siguiente capítulo vamos a ver un TRUQUITO ENIGMÁTICO ✨ de esta variante en el que suelen caer muchos rivales... } { [%cal Gc2h7,Gf1e1,Gd2f1,Gf1g3] } *
+
+
+[Event "Sistema Colle Enigmático: 👎Error Típico del rival"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "👎Error Típico del rival"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/cX7fyHdI"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bq1rk1/p3bppp/2n1pn2/1p6/2pPp3/2P2N2/PPBNQPPP/R1B2RK1 w - - 0 10"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "08:03:29"]
+[ChapterMode "gamebook"]
+
+{ Recaptura el peón con tu caballo } { [%csl Ge4][%cal Gd2e4] }
+10. Nxe4 Nxe4?? { ¿Cuál es el TRUQUITO ENIGMÁTICO ✨ en esta posición? } (10... Bb7 11. Nfg5! { Aquí estamos amenazando ganar un peón tras Cxf6+ y Axh7 con un fuerte ataque al enroque del rival. } { [%cal Re4f6,Gg5h7,Gc2h7] } 11... h6? { Si las negras nos expulsan el caballo, tenemos otro TRUQUITO ENIGMÁTICO: } (11... Rc8? { [%csl Gc8] } 12. Nxf6+ Bxf6 13. Bxh7+ $40 Kh8 14. Qh5 Bxg5 15. Bxg5 f6 16. Bg6+ Kg8 17. Qh7#) 12. Nxf6+ Bxf6 13. Qe4 { [%cal Re4h7] } 13... g6 14. Nxe6!! fxe6?? 15. Qxg6+ $18 { Si quieres ver como el propio Edgar Colle (especialista en esta apertura) remató esta posición no te pierdas el vídeo de partidas modelo que puedes ver en mi canal de Youtube: https://youtu.be/rbjwAZw2m-8 }) 11. Qxe4 { ¡CORRECTO JAQUETÓN! :)
+Hemos conseguido realizar un ATAQUE DOBLE con amenaza de jaque mate y sobre el caballo indefenso del rival.
+En el siguiente capitulo vamos a ver cómo jugar contra la jugada 8...b6 de las negras. } { [%csl Gh7,Gc6][%cal Ge4h7,Ge4c6] } *
+
+
+[Event "Sistema Colle Enigmático: 3️⃣Las negras juegan 8...b6"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "3️⃣Las negras juegan 8...b6"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/UZYuBgoZ"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bq1rk1/p3bppp/1pn1pn2/2pp4/3P4/2PBPN2/PP1NQPPP/R1B2RK1 w - - 7 8"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "08:22:00"]
+[ChapterMode "gamebook"]
+
+{ ¿Qué ruptura debemos realizar en esta posición? :) }
+8. e4 { ¡CORRECTO JAQUETÓN! :)
+La ruptura e4 es nuestro objetivo principal en la fase de la apertura.
+En el siguiente capítulo os enseño un TRUQUITO ENIGMÁTICO ✨ de esta variante en el que caen también muchos rivales... } 8... dxe4 { Vamos a ver primero cómo jugar con 8... dxe4 } { [%cal Rd5e4] } (8... dxe4 { Vamos a ver primero cómo jugar con 8... dxe4 } { [%cal Rd5e4] }) (8... cxd4) *
+
+
+[Event "Sistema Colle Enigmático: Muchos caen en este TRUQUITO 😋"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "Muchos caen en este TRUQUITO 😋"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/dTjDUM3F"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bq1rk1/p3bppp/1pn1pn2/2p5/3Pp3/2PB1N2/PP1NQPPP/R1B2RK1 w - - 0 9"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "08:29:27"]
+[ChapterMode "gamebook"]
+
+{ Recaptura el peón con el caballo } { [%csl Ge4][%cal Gd2e4] }
+9. Nxe4 Bb7 { Salta con tu caballo hacia el enroque enemigo } { [%csl Gg5][%cal Gf3g5] } (9... cxd4?? 10. Nxf6+ Bxf6 11. Qe4 { con ataque doble al caballo de c6 y al punto h7 con amenaza de jaque mate. } { [%csl Rc6,Rh7][%cal Ge4c6,Ge4h7] }) 10. Nfg5 h6?? { Nuestro rival ha caído en otro TRUQUITO ENIGMÁTICO ✨
+Captura el caballo defensor del enroque } { [%csl Gf6][%cal Ge4f6] } 11. Nxf6+ Bxf6 { Crea una amenaza de jaque mate con tu dama } { [%csl Ge4][%cal Ge2e4] } 12. Qe4 g6 { Sacrifica tu caballo por el peón enemigo } { [%csl Gg5][%cal Gg5e6] } 13. Nxe6!! { ¡Muy buen sacrificio de pieza! Veamos el por qué :) } { [%csl Rd8,Rf8] } 13... fxe6 { ¿Qué peón deberíamos capturar? } { [%csl Ge6,Gg6][%cal Ge4e6,Ge4g6] } 14. Qxg6+ { ¡CORRECTO JAQUETÓN! :)
+La dama sigue apoyada por el alfil que causa estragos en la posición negra. } { [%csl Gg6,Rg8][%cal Gd3g6] } 14... Bg7 { Da jaque con tu dama } { [%csl Gh7][%cal Gg6h7] } 15. Qh7+ { Sacamos al rey a pasear :) } 15... Kf7 { Da otro jaque con tu alfil } { [%csl Gg6][%cal Gd3g6] } 16. Bg6+ { ¡CORRECTO JAQUETÓN! :)
+Si el rey decide mantener la defensa sobre el alfil... } 16... Kf6 { Retrocede con tu alfil una casilla } { [%csl Gh5][%cal Gg6h5] } 17. Bh5 $18 { ¡ENHORABUENA JAQUETÓN! :)
+Las negras están completamente perdidas en esta posición.
+Vamos a ver ahora una JUGADA IMPORTANTE ⚠️ de recordar en esta variante... } { [%csl Gh6,Gg6,Rf6][%cal Gc1h6,Gh7g6] } *
+
+
+[Event "Sistema Colle Enigmático: 👎Error Típico del rival"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "👎Error Típico del rival"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/KPb8OU8Y"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bq1rk1/p3bppp/1pn1pn2/8/3pN3/2PB1N2/PP2QPPP/R1B2RK1 w Qq - 0 1"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "17:12:23"]
+[ChapterMode "gamebook"]
+
+{ Nuestro rival ha vuelto a caer en un TRUQUITO ENIGMÁTICO.
+
+Juega Cxf6+ } { [%csl Ge4][%cal Rc5d4,Ge4f6] }
+1. Nxf6+ Bxf6 { ¿Cuál es ahora la jugada enigmática? } 2. Qe4 { ¡Correcto! Muy bien JAQUETÓN, otra vez has conseguido hacer el mismo ataque doble que la anterior posición.
+Vamos a ver ahora qué ocurre si las negras deciden no capturar en e4 y jugar con 8... cxd4 } { [%cal Ge4c6,Ge4h7] } *
+
+
+[Event "Sistema Colle Enigmático: 🧠Importante recordar esta jugada"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "🧠Importante recordar esta jugada"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/6MjESbVw"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bq1rk1/p3bppp/1pn1pn2/3p4/3pP3/2PB1N2/PP1NQPPP/R1B2RK1 w - - 0 9"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "08:30:00"]
+[ChapterMode "gamebook"]
+
+{ Siempre que las negras capturen nuestro peón debemos valorar la posibilidad de avanzar nuestro otro peón. } { [%csl Ge5,Rd4][%cal Ge4e5,Rc5d4] }
+9. e5 { Esta jugada es clave para tomar la iniciativa y mantener la ventaja de espacio en el centro del tablero. Además, evitamos entrar en una posición con peón de dama aislado que no nos interesa.
+El negro no puede seguir capturando con su peón debido a que perdería material tras exf6 :) } 9... Nd7 { Recaptura el peón } { [%csl Gd4][%cal Gc3d4] } (9... dxc3 { Las negras no pueden capturar en c3 ya que perderían material. } 10. exf6 cxd2 11. fxe7 dxc1=Q 12. exf8=Q+ Qxf8 13. Raxc1 { [%csl Gc1,Gf1,Ra8] }) 10. cxd4 { Estamos en una posición típica de la Defensa francesa que nos favorece gracias a nuestro potentísimo alfil de casillas blancas. El negro tratara de cambiar los alfiles. } { [%csl Gd3,Rc8] } 10... Nb4 { ¿Cuál es la JUGADA IMPORTANTE ⚠️ en esta posición? } 11. Bb5! { ¡CORRECTO JAQUETÓN! :)
+Con esta jugada conseguimos bloquear la salida del alfil de casillas blancas del rival. } { [%csl Rc8] } 11... a6 { Retrocede una casilla con tu alfil } { [%csl Ga4][%cal Gb5a4] } 12. Ba4 $40 { Ahora nuestra idea será expulsa el caballo enemigo y recolocar nuestro alfil en la diagonal que apunta hacia el enroque enemigo con planes de ataque muy directos.
+En los siguientes capítulos vamos a ver algunas de las líneas secundarias que pueden jugar las negras contra el Sistema Colle Enigmático... } { [%csl Rh7,Ga3,Gc2,Gd3][%cal Ga2a3,Ge2d3,Ga4c2] } *
+
+
+[Event "Sistema Colle Enigmático: ¿Recuerdas el orden principal?"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "D05"]
+[Opening "Queen's Pawn Game: Colle System, Traditional Colle"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "¿Recuerdas el orden principal?"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/jYoM79vx"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[UTCDate "2021.08.26"]
+[UTCTime "11:19:25"]
+[ChapterMode "gamebook"]
+
+{ Comenzamos con la jugada... }
+1. d4 d5 { Y continuamos con... } 2. Nf3 Nf6 { Ahora jugamos... } 3. e3 e6 { Seguimos desarrollando piezas con... } 4. Bd3 c5 { ATENCIÓN: Esta jugada es muy importante que la recuerdes... } 5. c3 { ¡Buena movimiento JAQUETÓN! De esta manera habilitamos la casilla c2 para nuestro alfil, ahora si el rival juega c4 sería una jugada dudosa que explicaremos más adelante cómo castigarla :) } { [%cal Gd3c2,Rc5c4] } 5... Nc6 { Seguimos con... } 6. Nbd2 Be7 { Seguimos con... } 7. O-O O-O { Y terminamos con... } 8. Qe2 { ¡ENHORABUENA JAQUETÓN! :)
+Ya conoces el orden habitual del Sistema Colle Enigmático } *
+
+
+[Event "Sistema Colle Enigmático: 🛑Líneas secundarias para evitar el Sistema Colle"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "D04"]
+[Opening "Queen's Pawn Game: Colle System"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "🛑Líneas secundarias para evitar el Sistema Colle"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/EG9Mcy6w"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 0 1"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "09:06:22"]
+[ChapterMode "gamebook"]
+
+{ ¿Cuál es la jugada enigmática que sigue el orden habitual del Sistema Colle? }
+1. e3 { ¡Exacto! Buena memoria JAQUETÓN :) Ahora las negras podrían desarrollar su alfil fuera de la cadena de peones antes de hacer la jugada e6.
+Las dos opciones que vamos a estudiar son las siguientes:
+3...Ag4 (clavando nuestro caballo de f3).
+3...Af5.
+VAMOS A COMENZAR CON 3...Ag4 } *
+
+
+[Event "Sistema Colle Enigmático: 1️⃣Las negras juegan 3...Ag4"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "1️⃣Las negras juegan 3...Ag4"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/7E3ofUDE"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/4PN2/PPP2PPP/RNBQKB1R b KQkq - 0 1"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "09:11:45"]
+[ChapterMode "gamebook"]
+
+1... Bg4 { Tengo que confesar que cuando veo que me hacen esta jugada me pongo muy feliz porque la mayoría de jugadores caen en un TRUQUITO ENIGMÁTICO.
+Mi recomendación aquí es jugar con 4. h3! } { [%csl Gh2][%cal Gh2h3] } 2. h3!? { Ahora nuestro rival tiene dos opciones:
+La primera sería capturar el caballo de f3, que ganaríamos la pareja de alfiles lo cual nos beneficia.
+La segunda opción, que es la que vamos a ver a continuación, sería retirarse a la casilla h5 manteniendo la clavada a lo que vamos a responder con g4! } { [%cal Gg4h5,Rg4f3] } 2... Bh5 { Juega g4 } { [%csl Gg2][%cal Gg2g4] } (2... Bxf3 { Si nos come en f3 ganaríamos la pareja de alfiles lo cual son buenas noticias para nosotros. } 3. Qxf3) 3. g4 $140 { ¡MUY AGRESIVOS! } 3... Bg6 { Juega Ce5 } { [%csl Gf3][%cal Gf3e5] } 4. Ne5 { ¡BUENA JUGADA! A pesar de que este movimiento va en contra de todas las reglas de las aperturas, el ajedrez es muy concreto y existen excepciones. Esta es una de ellas.
+La idea de esta jugada es continuar con h4 y presionar mucho a ese alfil que se va a arrepentir de haber salido de c8. De hecho, en esta posición la única jugada para las negras es 4. Cfd7. Una jugada que la mayoría no suele hacer.
+Por ejemplo, si en lugar de 4...Cfd7 las negras hiciesen otra jugada aparentemente normal como:
+4...c6,
+4... e6
+4...Cbd7
+Ya habrían caído en nuestro TRUQUITO ENIGMÁTICO que te voy a enseñar en los siguientes capítulos :) } { [%csl Rg6][%cal Gh3h4] } 4... Nfd7 $7 { Juega Cxg6 } { [%csl Ge5][%cal Ge5g6] } 5. Nxg6 { Igualmente y a pesar de que nuestro rival haya elegido la mejor jugada, vamos a quedarnos en una buena posición al haber conseguido la pareja de alfiles. } 5... hxg6 { Juega Ag2 } { [%csl Gf1][%cal Gf1g2] } 6. Bg2 $14 { Nuestro plan va a ser continuar con la jugada c4 poniendo muchísima presión en la gran diagonal y aprovechar al máximo la pareja de alfiles que nos beneficia.
+Vamos a ver ahora que ocurre si las negras en lugar de 4...Cfd7 juegan con:
+4...Cbd7
+4... e6 } { [%csl Gc2,Gg2][%cal Gc2c4,Gg2a8] } *
+
+
+[Event "Sistema Colle Enigmático: 👊Castigando el desarrollo natural"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "👊Castigando el desarrollo natural"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/pquohOYi"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r2qkb1r/pppnpppp/5nb1/3pN3/3P2P1/4P2P/PPP2P2/RNBQKB1R w KQkq - 3 5"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "09:22:39"]
+[ChapterMode "gamebook"]
+
+{ Juega h4! } { [%csl Gh3][%cal Rb8d7,Gh3h4] }
+5. h4! { ¡Muy buena jugada JAQUETÓN! Nuestro rival ya ha caído en el TRUQUITO ENIGMÁTICO :) } { [%csl Rg6] } 5... h6 { Las negras tratan de dar una escapatoria a su alfil de g6 ante la amenaza de h5, pero ya es demasiado tarde.
+Juega Cxg6 } { [%csl Rg6,Ge5][%cal Rg6h7,Ge5g6] } 6. Nxg6 { ¡Gran jugada! Hemos conseguido arruinar la estructura de peones de nuestro rival y ahora nos toca castigar las debilidades. } 6... fxg6 { Juega Ad3 } { [%csl Gf1,Rg6][%cal Gf1d3] } 7. Bd3 { Nuestro rival tiene problemas para defender su debilidad en g6, y tiene que continuar con una jugada muy forzada. } { [%csl Rg6] } 7... Kf7 { Única jugada para defender el peón ya que otra jugada como por ejemplo 7..Ce4, hacemos f3 y ahora el rival no puede impedir perder su caballo por la amenaza Axg6++.
+Juega f4 } { [%csl Gf2][%cal Gf2f4] } 8. f4 $16 { Buena jugada para impedir el único contra juego de las negras y hemos conseguido llegar a una posición con ventaja decisiva.
+Vamos a ver ahora qué ocurre si las negras en lugar de hacer 5...h6 deciden capturar nuestro caballo situado en e5 con 5...Cxe5 } { [%csl Re7][%cal Re7e5] } *
+
+
+[Event "Sistema Colle Enigmático: ⭐Mi Trampa Favorita (a veces funciona contra GMs!)"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "⭐Mi Trampa Favorita (a veces funciona contra GMs!)"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/jdvpa68a"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r2qkb1r/ppp1pppp/5nb1/3pn3/3P2PP/4P3/PPP2P2/RNBQKB1R w KQ - 0 8"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "09:26:18"]
+[ChapterMode "gamebook"]
+
+{ Cxe5 es otra jugada habitual por parte de las negras en esta posición, pero es un error gravísimo, veamos por qué.
+
+Juega dxe5 } { [%csl Gd4][%cal Rd7e5,Gd4e5] }
+8. dxe5 { Ahora amenazamos al caballo que independientemente a dónde se retire, por ejemplo a las casillas e4 o d7, vamos a atrapar al alfil de g6 consiguiendo ventaja de material. } { [%cal Re5f6] } 8... Nd7 { Juega h5 } { [%csl Gh4][%cal Gh4h5] } 9. h5 { La única casilla que tienen las negras para evitar que capturemos su alfil es e4 } { [%cal Rh5g6,Gg6e4] } 9... Be4 { ¿Cuál es la jugada enigmática ganadora en esta posición? } 10. f3 $16 { ¡CORRECTO! El alfil está atrapado, el rival no puede evitar de ninguna forma que capturemos su alfil en la siguiente jugada.
+Vamos a ver ahora otra línea secundaría para las negras, que comienza con 3...Af5 y también existen TRUQUITOS ENIGMÁTICOS :) } { [%csl Re4] } *
+
+
+[Event "Sistema Colle Enigmático: 2️⃣Las negras juegan 3...Af5"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "D04"]
+[Opening "Queen's Pawn Game: Colle System, Anti-Colle"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "2️⃣Las negras juegan 3...Af5"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/Xendnbq8"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/4PN2/PPP2PPP/RNBQKB1R b KQkq - 0 1"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "09:33:36"]
+[ChapterMode "gamebook"]
+
+1... Bf5 { Aquí mi recomendación es jugar con 4. Ad3 } { [%csl Gf1][%cal Gf1d3] } 2. Bd3!? { La idea de esta jugada es luchar por el control de la casilla e4 para crear la ruptura típica del Sistema Colle. } 2... Bxd3 { Juega Dxd3 } 3. Qxd3 { Aquí ya estamos amenazando un TRUQUITO ENIGMÁTICO. Por ejemplo, si las negras jugasen algo normal como 3... e6, continuaríamos con Db5+ y estaríamos ganando un peón. Es por eso que las negras continúan su desarrollo evitando el jaque. } { [%csl Re8,Rb7][%cal Gd3b5] } 3... Nbd7 { Enrócate } { [%csl Ge1][%cal Ge1g1] } (3... e6 4. Qb5+! { ganando un peón de ventaja. } { [%cal Rb5e8,Rb5b7] }) 4. O-O { Ponemos a nuestro rey a salvo y nuestro plan es preparar la ruptura en e4 } 4... e6 { Juega Cbd2 } { [%csl Gb1][%cal Gb1d2] } 5. Nbd2 Bd6 { Juega e4 } { [%csl Ge3][%cal Ge3e4] } (5... c5) 6. e4 { ¡BIEN JUGADO! Recuerda que siempre que consigamos romper en e4 en el Sistema Colle hay que celebrarlo :) } 6... dxe4 { Juega Cxe4 } { [%csl Gd2][%cal Gd2e4] } 7. Nxe4 Nxe4 { Juega Dxe4 } { [%csl Gd3][%cal Gd3e4] } 8. Qxe4 { ¡GENIAL! Estamos amenazando capturar el peón de b7 y vamos a quedarnos en una posición muy activa después de Ag5-Tad1-Tfe1.
+Vamos a ver la siguiente línea 3...g6 } { [%csl Rb7,Ge4][%cal Gc1g5,Gf1e1,Ga1d1,Re4b7] } *
+
+
+[Event "Sistema Colle Enigmático: 3️⃣Las negras juegan 3...g6"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "3️⃣Las negras juegan 3...g6"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/HJ1eMyVc"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/4PN2/PPP2PPP/RNBQKB1R b KQkq - 0 1"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "09:41:21"]
+[ChapterMode "gamebook"]
+
+1... g6 { Aquí mi recomendación es jugar con b4! } { [%csl Gb2][%cal Gb2b4] } 2. b4 { La idea es evitar la ruptura c5 de las negras que harían más fuerte a su alfil de fianchetto, a la vez conseguimos ganar espacio en el flanco de dama. } { [%cal Rc7c5] } 2... Bg7 { Juega Ae2 } { [%csl Gf1][%cal Gf1e2] } 3. Be2 { y siempre que nos hagan... } 3... a5 { Siempre que nos hagan esta jugada, vamos a continuar con b5 ya que de lo contrario, si por ejemplo hacemos una jugada como bxa5, estaríamos debilitando nuestra estructura de peones del flanco de dama. } { [%csl Gb4][%cal Gb4b5] } 4. b5 { ¡BUENA JUGADA! Dificultamos el desarrollo del caballo de b8 de nuestro rival. Nuestro plan va a ser jugar con c4 y enroque corto consiguiendo una posición muy cómoda.
+Vamos a ver ahora la última línea con 3...b6 :) } { [%csl Rb8][%cal Rb5a6,Rb5c6,Gc2c4,Ge1g1] } *
+
+
+[Event "Sistema Colle Enigmático: 4️⃣Las negras juegan 3...b6"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "4️⃣Las negras juegan 3...b6"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/HK5kxA02"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rnbqkb1r/p1pp1ppp/1p2pn2/8/3P4/4PN2/PPP2PPP/RNBQKB1R w KQkq - 0 1"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "09:45:58"]
+[ChapterMode "gamebook"]
+
+{ Aquí mi recomendación es seguir el orden habitual con 4. Ad3 } { [%csl Gf1][%cal Gf1d3] }
+1. Bd3 { Si nuestro rival nos lo permite, vamos a jugar con e4 para conseguir dominar el centro. } { [%csl Ge3][%cal Ge3e4] } 1... Bb7 { Todavía no podemos jugar con e4, así que continuaríamos con el desarrollo normal con 5. Cbd2. } { [%cal Rb7e4,Rf6e4] } 2. Nbd2 { Juega e4, ¡y no te olvides de celebrarlo! :) } 2... Be7 3. e4 { Ahora e4 llega en muy buenas condiciones, conseguimos ventaja de espacio en la posición y vamos a continuar mejorando nuestra posición con jugadas como 0-0, Te1, De2... y posibles planes con el avance e5!
+Veamos ahora si recuerdas los TRUQUITOS ENIGMÁTICOS del Sistema Colle, ¡no pares ahora JAQUETÓN! :) } { [%csl Ge1,Ge4][%cal Ge1g1,Ge4e5] } *
+
+
+[Event "Sistema Colle Enigmático: 🔎TRUQUITO ENIGMÁTICO❓"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "🔎TRUQUITO ENIGMÁTICO❓"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/6trTSWKK"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r2q1rk1/pb2bppp/2n1pn2/1p4N1/2pPN3/2P5/PPB1QPPP/R1B2RK1 b Qq - 0 1"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "09:49:58"]
+[ChapterMode "gamebook"]
+
+{ Las blancas amenazan ganar un peón con la jugada Cxf6+ y Axh7, es por eso que las negras juegan... } { [%csl Rh7] }
+1... h6?? { UPS, nuestro rival ha caído en la trampa, ¿Recuerdas la combinación ganadora? } 2. Nxf6+ Bxf6 { ¿Y ahora...? } 3. Qe4 g6 { ¿Y...? } 4. Nxe6 { ¡Buen sacrificio de pieza JAQUETÓN! :) } 4... fxe6 { Ahora la dama tiene dos posibles capturas de peón, ¿cuál es la captura correcta? } { [%csl Ge6,Gg6] } 5. Qxg6+ { ¡BUENA ELECCIÓN JAQUETÓN! Ya que tras Dxe6+ las negras pueden continuar con Rg7 sin muchos problemas. } 5... Bg7 { ¿Cómo sacamos al rey a pasear? } 6. Qh7+ { ¡CORRECTO! No pierdas la concentración ahora } 6... Kf7 { ¿Cómo continuarías ahora? } 7. Bg6+ { ¡ESTÁS QUE TE SALES JAQUETÓN! Ya casi lo tienes } 7... Kf6 { ¿Cuál es el mejor remate enigmático en esta posición? } 8. Bh5 $18 { ¡Gran jugada! ¡Enhorabuena JAQUETÓN! Lo has conseguido :)
+Vamos a por el siguiente TRUQUITO ENIGMÁTICO } { [%csl Rf6] } *
+
+
+[Event "Sistema Colle Enigmático: 🔎TRUQUITO ENIGMÁTICO❓"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "🔎TRUQUITO ENIGMÁTICO❓"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/HhGzTuVD"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "r1bq1rk1/p3bppp/1pn1pn2/2p5/3PN3/2PB1N2/PP2QPPP/R1B2RK1 b Qq - 0 1"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "09:53:57"]
+[ChapterMode "gamebook"]
+
+{ Las negras realizan la jugada... }
+1... cxd4?? { ¿Cuál sería la jugada enigmática en esta posición? } 2. Nxf6+ Bxf6 { Y ahora continuamos con... } 3. Qe4 $18 { ¡Enhorabuena JAQUETÓN! Bien visto el ataque doble al caballo de c6 y al punto de h7 con amenaza de jaque mate.
+Continuamos con el siguiente TRUQUITO ENIGMÁTICO :) } { [%csl Rc6,Rh7] } *
+
+
+[Event "Sistema Colle Enigmático: 🔎TRUQUITO ENIGMÁTICO❓"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "🔎TRUQUITO ENIGMÁTICO❓"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/kFQcd0yN"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn1qkb1r/ppp1pppp/5nb1/3pN3/3P2P1/4P2P/PPP2P2/RNBQKB1R b KQkq - 0 1"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "09:56:51"]
+[ChapterMode "gamebook"]
+
+{ En esta posición, las negras tienen que hacer la jugada Cfd7 si no quieren empeorar su posición, pero qué ocurre si las negras juegan... }
+1... Nbd7? { ¿Cuál es la jugada enigmática en esta posición? } (1... Nbd7? { ¿Cuál es la jugada enigmática en esta posición? } 2. h4! { ¡Gran jugada JAQUETÓN! Sigue así :) } 2... Nxe5?? { Continuamos con... } 3. dxe5 Nd7 { Y ahora... } 4. h5 Be4 { ¿Cuál sería el remate enigmático? } 5. f3 $16 { ¡Muy buen cálculo! Ahora el afil está atrapado y no tiene forma de evitar que lo capturen en la siguiente jugada.
+Vamos a por el siguiente TRUQUITO ENIGMÁTICO!! } { [%csl Re4] }) (1... e6? { Aquí jugaríamos... } { [%csl Ge6] } 2. h4! h6 3. Nxg6 fxg6 4. Bd3 Kf7 5. f4 $16 { [%csl Ge5] }) (1... c6? 2. h4! h6 3. Nxg6 fxg6 4. Bd3 Kf7 5. Nd2 Nbd7 6. f4 $16 { [%csl Ge5] }) 2. h4! { ¡Gran jugada JAQUETÓN! Sigue así :) } 2... Nxe5?? { Continuamos con... } 3. dxe5 Nd7 { Y ahora... } 4. h5 Be4 { ¿Cuál sería el remate enigmático? } 5. f3 $16 { ¡Muy buen cálculo! Ahora el afil está atrapado y no tiene forma de evitar que lo capturen en la siguiente jugada.
+Vamos a por el siguiente TRUQUITO ENIGMÁTICO!! } { [%csl Re4] } *
+
+
+[Event "Sistema Colle Enigmático: 🔎TRUQUITO ENIGMÁTICO❓"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "🔎TRUQUITO ENIGMÁTICO❓"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/mas2PlqT"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "rn1qkb1r/ppp1pppp/5n2/3p4/3P4/3QPN2/PPP2PPP/RNB1K2R b KQkq - 0 1"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "10:00:53"]
+[ChapterMode "gamebook"]
+
+{ Las negras continúan su desarrollo con la jugada... }
+1... e6? { ¿Cuál es la jugada enigmática en esta posición? } 2. Qb5+! { ¡Muy bien visto JAQUETÓN! Sigue así :) } { [%csl Re8,Rb7] } 2... Nbd7 { Y ahora... } 3. Qxb7 $16 { ¡AHORA SÍ QUE SÍ! Enhorabuena, has conseguido ganar un peón en la apertura :) } *
+
+
+[Event "Sistema Colle Enigmático: 👋Final"]
+[Date "2021.08.26"]
+[Result "*"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Sistema Colle Enigmático"]
+[ChapterName "👋Final"]
+[ChapterURL "https://lichess.org/study/s7FKYibt/K1eDWEAT"]
+[Annotator "https://lichess.org/@/ReyEnigma"]
+[FEN "8/8/8/8/3P4/2PBPN2/PP1N1PPP/R2QK2R w - - 0 1"]
+[SetUp "1"]
+[UTCDate "2021.08.26"]
+[UTCTime "10:03:15"]
+
+{ 👍Si te ha gustado, no olvides dejarme un ♥ y coméntame por el chat que otras aperturas o defensas te gustaría aprender.
+
+¡Muchas gracias y un fuerte abrazo enigmático!
+
+✅100 CONSEJOS para MEJORAR en Ajedrez: https://lichess.org/study/KgyDnUgh
+
+📘Curso GRATIS de Estrategia para Principiantes: https://www.reyenigma.com/ } { [%csl Gd3,Gc3,Gd4,Ge3,Gf3,Gd2] }
+ *
+
+

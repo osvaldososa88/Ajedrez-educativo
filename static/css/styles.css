@@ -100,6 +100,13 @@ body {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  /* Hay muchos apartados (Compañeros, Bots, Desafíos, Historial, Entrenamiento,
+     Lecciones, Aulas, Torneos, Progreso, Chat...) más el panel de usuario. Sin
+     permitir el salto de línea, los últimos enlaces se salían de la pantalla y
+     el usuario no encontraba "Lecciones". */
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .nav-link {
@@ -1176,6 +1183,51 @@ body {
 }
 
 /* ============================================
+   Partida en móvil: tablero arriba del todo,
+   sin navbar ni footer (estilo Lichess)
+   ============================================ */
+/* En escritorio no hace falta: la navbar ya ofrece la navegación */
+.in-game-back {
+  display: none;
+}
+@media (max-width: 900px) {
+  body.in-game .navbar {
+    display: none;
+  }
+  body.in-game .container {
+    margin-top: 0.5rem;
+  }
+  body.in-game .game-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  body.in-game .board-wrapper {
+    order: -1;
+  }
+  body.in-game footer {
+    display: none;
+  }
+  /* Barra mínima (clicable) para volver al resto de la app durante la partida */
+  .in-game-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 200;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(15, 23, 42, 0.9);
+    border-bottom-right-radius: 8px;
+    border: 1px solid var(--border-color);
+    text-decoration: none;
+  }
+}
+
+/* ============================================
    Anรกlisis - Responsive Mรณvil (Entrenador arriba)
    ============================================ */
 
@@ -1215,6 +1267,197 @@ body {
   }
 }
 
+/* ============================================
+   Lecciones de apertura (libros de jugadas)
+   ============================================ */
+
+.lesson-game .board-wrapper {
+  align-items: stretch;
+}
+
+.lesson-move-list {
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+}
+
+/* Cada alternativa es un botón con la jugada y la explicación del autor. */
+.lesson-choice {
+  white-space: normal;
+  line-height: 1.4;
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+}
+.lesson-choice:hover,
+.lesson-choice:focus-visible {
+  border-color: var(--accent-color);
+}
+
+.lesson-comment {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  /* En móvil el tablero va primero, igual que en las partidas. */
+  .lesson-game .board-wrapper {
+    order: -1;
+  }
+  .lesson-game .game-sidebar {
+    order: 1;
+  }
+  /* Objetivos táctiles comfortable en el móvil. */
+  .lesson-choice {
+    min-height: 44px;
+    padding: 0.75rem 0.9rem;
+  }
+}
+
+.lesson-session {
+  display: grid;
+  gap: 1rem;
+}
+
+.lesson-session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.lesson-progress {
+  display: grid;
+  gap: 0.4rem;
+  min-width: min(280px, 100%);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.lesson-progress progress {
+  width: 100%;
+  accent-color: var(--success-color);
+}
+
+.lesson-session-layout {
+  align-items: start;
+}
+
+.lesson-board-toolbar,
+.lesson-history-controls,
+.lesson-actions,
+.lesson-chapter-navigation {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.lesson-board-toolbar {
+  justify-content: flex-end;
+  width: min(100%, 720px);
+  margin-bottom: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.lesson-board-toolbar .form-select {
+  width: auto;
+  min-width: 110px;
+  padding: 0.5rem 0.65rem;
+}
+
+.lesson-session .chessboard {
+  width: min(100%, 720px);
+  aspect-ratio: 1;
+  touch-action: manipulation;
+}
+
+.lesson-board-disabled .square {
+  cursor: default;
+}
+
+.lesson-move-list {
+  width: min(100%, 720px);
+}
+
+.lesson-history-controls {
+  justify-content: space-between;
+  margin-top: 0.65rem;
+}
+
+.lesson-history-controls .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.lesson-intro,
+.lesson-help {
+  margin-top: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  white-space: pre-line;
+}
+
+.lesson-status {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: rgba(59, 130, 246, 0.12);
+  font-size: 0.9rem;
+}
+
+.lesson-status[data-kind="success"] {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.lesson-status[data-kind="error"] {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.lesson-comment,
+.lesson-evaluation {
+  margin-top: 0.75rem;
+  white-space: pre-line;
+  font-size: 0.9rem;
+}
+
+.lesson-choices,
+.lesson-chapters {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.lesson-branch,
+.lesson-chapter {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 44px;
+  text-align: left;
+  white-space: normal;
+}
+
+.lesson-chapter-navigation {
+  margin-top: 0.75rem;
+}
+
+.lesson-chapter-navigation .btn {
+  flex: 1;
+  min-height: 44px;
+}
+
+@media (max-width: 600px) {
+  .lesson-session-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .lesson-board-toolbar {
+    justify-content: flex-start;
+  }
+
+  .lesson-board-toolbar .form-select {
+    flex: 1;
+  }
+}
 
 /* ============================================
    Selector de Tipo de Problema (Creador)
